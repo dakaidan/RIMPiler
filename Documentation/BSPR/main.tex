@@ -2,14 +2,25 @@
 %! Date = 01/11/23
 
 % Preamble
-\documentclass[11pt]{article}
+\documentclass[11pt]{report}
 
 % Packages
 \usepackage{amsmath}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{biblatex}
+\addbibresource{references.bib}
 
 % Document
 \begin{document}
 
     \input{title}
+    \input{background-and-context}
+    \input{literature-review}
+    \input{requirements}
+    \input{specification}
+    \input{design}
+
+    \printbibliography
 
 \end{document}
