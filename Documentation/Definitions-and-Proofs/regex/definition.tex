@@ -1,0 +1,22 @@
+\section{Regular Expression Definition}\label{sec:regular-expression-definition}
+
+We define a language as a set of strings, where a string $s$ is a finite or infinite sequence of characters from some alphabet $\Sigma$.
+We will also define the operation of string concatenation denoted by $@$, where $s_1 @ s_2$ is the concatenation of strings $s_1$ and $s_2$.
+Similarly, we can extend this to the concatenation of languages, where $L_1 @ L_2 = \{s_1 @ s_2 | s_1 \in L_1, s_2 \in L_2\}$.
+Finally, we define the power of a language $L^n$ as the concatenation of $n$ copies of $L$, where $L^0 = \{\epsilon\}$, and $\forall n \geq 0 \ L^n = L^{n-1} @ L$.
+
+We then define a regular expression $r$ over some alphabet $\Sigma$ which accepts a language $L(r)$.
+
+Regular expressions are then defined recursively as follows:
+\begin{enumerate}
+    \item[-] $0$, where $L(0) = \emptyset$
+    \item[-] $1$, where $L(1) = \{\epsilon\}$
+    \item[-] $a$, where $a \in \Sigma$ and $L(a) = \{a\}$
+    \item[-] $[c|c-c]$ where we can define a set of characters and character ranges, where $L([c|c-c]) = \{c | c \in \Sigma \land c \in [c|c-c]\}$
+    \item[-] $r_1 + r_2$, where $L(r_1 + r_2) = L(r_1) \cup L(r_2)$
+    \item[-] $r_1 \cdot r_2$, where $L(r_1 \cdot r_2) = L(r_1) @ L(r_2)$
+    \item[-] $r^*$, where $L(r^*) = \bigcup_{i=0}^{\infty} L(r)^i$
+    \item[-] $r^+$, where $L(r^+) = \bigcup_{i=1}^{\infty} L(r)^i$
+    \item[-] $r?$, where $L(r?) = L(r) \cup \{\epsilon\}$
+    \item[-] $s:r$ which allows us to name a regular expression $r$ as $s$
+\end{enumerate}

@@ -1,6 +1,38 @@
 \chapter*{Background and Context}
 
-Give background information, and context of the motivation for the project.
+\section{Reversible Computing}\label{sec:reversible-computing}
+Reversible computing is a model of computation in which the original state of the system can be recovered from the final state of the system\cite{LogicalBasis}.
+Reversible computing is a wide-reaching, yet relatively under researched area of computer science with the potential to impact many areas of computer science, including low-power computing\cite{LandauerLimit}, high-speed computing, quantum computing, and more.
+% Cite some papers here for each of these maybe by Kaylan S. Perumalla, he seems to be around the classical aspects
 
-Background: Information and definitions almost for any relevant domain specific information.
-Motivation: Why is this important, what is missing, what is new, and why do I want to do this?
+\subsection{Classical Computing}\label{subsec:classical-computing}
+In classical computing reversible computing has many applications, but one of the most prominent, which cannot be overcome by other means, is to reduce power consumption below the Landauer limit\cite{LandauerLimit}.
+The ability to potentially reduce power consumption below the Landauer limit has many applications, including both low-power computing, which in the age of mobile computing is a very important area, and high-speed computing, which has applications in all performance critical areas of computing.
+
+% cite this article https://spectrum.ieee.org/landauer-limit-demonstrated
+While we are still a ways from achieving this, as the landauer limit is around 100,000 time less energy per bit erasure than current computers.
+The study of all facets of reversible computing is key to achieving this goal.
+
+\subsection{Quantum Computing}\label{subsec:quantum-computing}
+% Discuss the benefit and importance of quantum computing
+Quantum computing allows us to solve problems which are intractable on classical computers, such as integer factorisation, which is the basis of many modern encryption algorithms.
+The quantum model of computing largely relies on the reversible model of computation in order to prevent decoherence.
+
+Reversible computing allows the system to be run deterministically in either direction, ensuring there is no loss of information.
+% cite Nielsen M.A., Chuang I.L. Quantum Computation and Quantum Information. Cambridge University Press; Cambridge, UK: 2000. here
+In quantum computing, the conservation of information is vital to maintaining coherence of the system, and thus, reversible computation plays a key role in quantum computing.
+
+\section{Programing Languages}\label{sec:programing-languages}
+Programming languages are a key part of how we build systems, they abstract away much of the complexity or messiness of the underlying system, and provides us with a language which we can quickly build intuition and reason about.
+We can see in languages such as Janus\cite{JanusLetter} the language offers a high level inferable syntax which allows us to reason about a program.
+However, what it does not provide is a complete abstraction from the model of computation, this can be seen through restrictions in things like assignment.
+While this does not restrict the ability of the language, it does add additional barriers to developers, requiring them to adjust to the model of computation being used.
+
+\section{Compilers}\label{sec:compilers}
+Compilers are vital to working with high-level programming languages, applying translations to the code to allow it to be run on the target system which would be impractical to do manually for any non-trivial program.
+Additionally, compilers can do much more such as optimise the code, and provide feedback to the developer such as warnings and errors.
+This allows the developer to produce better code with less issues than it may have otherwise had.
+
+% Give background information, and context of the motivation for the project.
+
+% Background: Information and definitions almost for any relevant domain specific information. Motivation: Why is this important, what is missing, what is new, and why do I want to do this?

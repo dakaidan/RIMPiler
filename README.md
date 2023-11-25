@@ -7,15 +7,13 @@ A compiler for the RIMP programming language.
 - [ ] Implement a compiler for RIMP to RSSA
 - [ ] Implement code generation for RSSA to PISA
 - [ ] Implement optimisations in RSSA
-- [ ] Implement debugging basic debugging features
+- [ ] Implement array support in RIMP
 
 ## Stretch Goals
 
-- [ ] Implement a debugger using small-step semantics for RIMP, allowing for you to step forward and backwards.
-  - [ ] Small-step semantics for RIMP
-  - [ ] Runtime to support stepping backwards
-- [ ] Implement support for arrays
-- [ ] Implement support for threads
+- [ ] Implement procedure calls
+- [ ] Implement pointers
+- [ ] Implement structs
 
 ## Documents
 

@@ -1,0 +1,38 @@
+use super::{*};
+use super::regex::{*};
+
+#[test]
+fn to_line_column_test() {
+    let string = "abc\ndef\nghi";
+    assert_eq!(to_line_column(string, 0, 0), (2, 3));
+    assert_eq!(to_line_column(string, 1, 0), (3, 3));
+    assert_eq!(to_line_column(string, 2, 5), (4, 3));
+
+    let string = "abc";
+    assert_eq!(to_line_column(string, 0, 0), (0, 3));
+    assert_eq!(to_line_column(string, 0, 5), (0, 8));
+    assert_eq!(to_line_column(string, 5, 5), (5, 8));
+
+    let string = "";
+    assert_eq!(to_line_column(string, 0, 0), (0, 0));
+
+    let string = "\n";
+    assert_eq!(to_line_column(string, 0, 0), (1, 0));
+    assert_eq!(to_line_column(string, 1, 0), (2, 0));
+    assert_eq!(to_line_column(string, 0, 5), (1, 0));
+}
+
+#[test]
+fn test_lex() {
+    let re = Re::star(
+        Re::alt(
+            Re::record("0".to_owned(), Re::char('a')),
+            Re::record("1".to_owned(), Re::char('b')),
+        )
+    );
+    let result = re.lex("ab".to_owned());
+    assert_eq!(result, Ok(vec![
+        ("0".to_owned(), "a".to_owned(), Location::new(1, 1)),
+        ("1".to_owned(), "b".to_owned(), Location::new(1, 2))
+    ]));
+}

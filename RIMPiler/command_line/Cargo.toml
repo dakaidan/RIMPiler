@@ -1,0 +1,8 @@
+[package]
+name = "RIMPiler"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+regex = { path = "../../regex" }
+RIMPiler_frontend = { path = "../frontend" }
