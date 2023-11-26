@@ -23,7 +23,7 @@ fn to_line_column_test() {
 }
 
 #[test]
-fn test_lex() {
+fn lex() {
     let re = Re::star(
         Re::alt(
             Re::record("0".to_owned(), Re::char('a')),
@@ -32,7 +32,40 @@ fn test_lex() {
     );
     let result = re.lex("ab".to_owned());
     assert_eq!(result, Ok(vec![
-        ("0".to_owned(), "a".to_owned(), Location::new(1, 1)),
-        ("1".to_owned(), "b".to_owned(), Location::new(1, 2))
+        ("0".to_owned(), "a".to_owned(), Location::new(1, 0)),
+        ("1".to_owned(), "b".to_owned(), Location::new(1, 1))
+    ]));
+}
+
+#[test]
+fn tokenise() {
+    #[derive(Clone, Eq, PartialEq, Debug)]
+    enum TestToken {
+        A,
+        B,
+    }
+
+    impl Token for TestToken {
+        fn new(lexeme: String, record_identifier: String) -> Result<Box<Self>, String> {
+            match record_identifier.as_str() {
+                "0" => Ok(Box::new(TestToken::A)),
+                "1" => Ok(Box::new(TestToken::B)),
+                _ => Err(format!("Unknown record identifier: {}", record_identifier)),
+            }
+        }
+    }
+
+    let re = Re::star(
+        Re::alt(
+            Re::record("0".to_owned(), Re::char('a')),
+            Re::record("1".to_owned(), Re::char('b')),
+        )
+    );
+
+    let lexer = Lexer::new(re);
+    let result = lexer.tokenise::<TestToken>("ab");
+    assert_eq!(result, Ok(vec![
+        TokenMeta::new("a".to_owned(), Location::new(1, 0), "0".to_owned()).unwrap(),
+        TokenMeta::new("b".to_owned(), Location::new(1, 1), "1".to_owned()).unwrap(),
     ]));
 }

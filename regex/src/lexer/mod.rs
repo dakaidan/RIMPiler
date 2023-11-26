@@ -2,11 +2,12 @@ mod regex;
 #[cfg(test)]
 mod tests;
 
+use std::fmt::Display;
 use crate::lexer::regex::LexError;
 use super::re::{*};
 
-pub trait Token {
-    fn new(string: String, record_identifier: String) -> Self;
+pub trait Token: Clone + Eq {
+    fn new(string: String, record_identifier: String) -> Result<Box<Self>, String>;
 }
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
@@ -33,6 +34,13 @@ impl Location {
     }
 }
 
+impl Display for Location {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "[{}, {}]", self.line, self.column)
+    }
+}
+
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub struct TokenMeta<T>
     where T: Token
 {
@@ -44,27 +52,35 @@ pub struct TokenMeta<T>
 impl<T> TokenMeta<T>
     where T: Token
 {
-    pub fn new(lexeme: String, location: Location, record_identifier: String) -> Self {
-        Self {
-            token: T::new(lexeme.clone(), record_identifier),
-            lexeme,
-            location,
+    pub fn new(lexeme: String, location: Location, record_identifier: String) -> Result<Self, String> {
+        let token = T::new(lexeme.clone(), record_identifier);
+        match token {
+            Ok(token) => {
+                Ok(Self {
+                    token: *token,
+                    lexeme,
+                    location,
+                })
+            }
+            Err(error) => {
+                Err(error)
+            }
         }
     }
 }
 
-struct Lexer {
+pub struct Lexer {
     regex: Re,
 }
 
 impl Lexer {
-    fn new(regex: Re) -> Self {
+    pub fn new(regex: Re) -> Self {
         Self {
             regex,
         }
     }
 
-    fn tokenise<T>(&self, input: &str) -> Result<Vec<TokenMeta<T>>, LexError>
+    pub fn tokenise<T>(&self, input: &str) -> Result<Vec<TokenMeta<T>>, LexError>
         where T: Token
     {
        let result =  self.regex.lex(input.to_owned());
@@ -72,11 +88,24 @@ impl Lexer {
         match result {
             Ok(environment) => {
                 environment.iter().map(|(record_identifier, lexeme, location)| {
-                    Ok(TokenMeta::new(lexeme.clone(), *location, record_identifier.clone()))
+                    let result = TokenMeta::new(lexeme.clone(), *location, record_identifier.clone());
+                    match result {
+                        Ok(token_meta) => {
+                            Ok(token_meta)
+                        }
+                        Err(error) => {
+                            Err(
+                                LexError::new(
+                                    error,
+                                    *location
+                                )
+                            )
+                        }
+                    }
                 }).collect()
             }
             Err(error) => {
-                panic!("Lexing failed: {:?}", error);
+                Err(error)
             }
         }
     }

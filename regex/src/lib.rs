@@ -1,2 +1,2 @@
 pub mod re;
-mod lexer;
+pub mod lexer;

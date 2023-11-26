@@ -1,12 +1,12 @@
 \section*{Grammar}
 
 \begin{grammar}
-    <Program> ::= <Block>
+    <Program> ::= <Statements>
     \alt <ArithmeticExpression>
     \alt <BooleanExpression>
 
     <Statement> ::= skip
-    \alt 'int' identifier ':=' <ArithmeticExpression>
+    \alt <type> identifier ':=' <ArithmeticExpression>
     \alt 'if' <BooleanExpression> 'then' <Block> 'else' <Block>
     \alt 'while' <BooleanExpression> 'do' <Block>
 
@@ -37,10 +37,12 @@
 
     <BooleanTerm> ::= <BooleanFactor> '\&\&'<BooleanExpression>
     \alt <BooleanFactor>'||'<BooleanExpression>
-    \alt '!!' <BooleanExpression>
+    \alt '!' <BooleanExpression>
     \alt <BooleanFactor>
 
     <BooleanFactor> ::= '('<BooleanExpression>')'
     \alt boolean
+
+    <type> ::= 'int'
 \end{grammar}
 

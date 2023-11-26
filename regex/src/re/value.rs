@@ -11,6 +11,14 @@ pub enum Value {
     Record(String, Box<Value>),
 }
 
+impl std::ops::BitAnd for Value {
+    type Output = Self;
+
+    fn bitand(self, rhs: Self) -> Self::Output {
+        Value::Seq(Box::new(self), Box::new(rhs))
+    }
+}
+
 impl Value {
     fn flatten(&self) -> String{
         match self {

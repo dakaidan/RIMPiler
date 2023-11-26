@@ -7,7 +7,16 @@ pub struct LexError {
     pub location: Location,
 }
 
-#[derive(Debug)]
+impl LexError {
+    pub fn new(message: String, location: Location) -> Self {
+        Self {
+            message,
+            location,
+        }
+    }
+}
+
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub struct LexResult {
     pub value: Value,
 }
@@ -40,7 +49,6 @@ pub(crate) fn to_line_column(string: &str, line: usize, column: usize) -> (usize
 
 impl Re {
     fn try_lex(&self, string: String, column: usize, line: usize) -> Result<LexResult, LexError> {
-        println!("{}: {} -> {}", line, column, string);
         if string.is_empty() {
             if self.nullable() {
                 Ok(
@@ -50,7 +58,7 @@ impl Re {
                 )
             } else {
                 Err(LexError {
-                    message: format!("Expected EOF at line {}, column {}", line, column),
+                    message: format!("Expected EOF"),
                     location: Location::new(line, column)
                 })
             }
@@ -61,7 +69,7 @@ impl Re {
             let (simplified, rectification) = derivative.simplify_with_rectification();
             if simplified == Re::Zero {
                 Err(LexError {
-                    message: format!("Unexpected character '{}' at line {}, column {}", c, line, column),
+                    message: format!("Unexpected character '{}'", c),
                     location: Location::new(line, column)
                 })
             } else {
@@ -79,8 +87,6 @@ impl Re {
                 }
 
                 let result = simplified.try_lex(remaining.to_owned(), column, line);
-
-                println!("{}: {} -> {}", line, column, c);
 
                 match result {
                     Ok(value) => Ok(
@@ -101,8 +107,9 @@ impl Re {
                 let mut column = 0;
                 Ok(
                     value.environment().iter().map(|(record_identifier, lexeme)| {
+                        let (l, c) = (line, column);
                         (line, column) = to_line_column(lexeme, line, column);
-                        (record_identifier.clone(), lexeme.clone(), Location::new(line, column))
+                        (record_identifier.clone(), lexeme.clone(), Location::new(l, c))
                     }).collect()
                 )
             },

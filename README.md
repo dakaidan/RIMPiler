@@ -1,13 +1,13 @@
 # RIMPiler
 
-A compiler for the RIMP programming language.
+A compiler for the rimp programming language.
 
 ## Core Aims
 
-- [ ] Implement a compiler for RIMP to RSSA
+- [ ] Implement a compiler for rimp to RSSA
 - [ ] Implement code generation for RSSA to PISA
 - [ ] Implement optimisations in RSSA
-- [ ] Implement array support in RIMP
+- [ ] Implement array support in rimp
 
 ## Stretch Goals
 

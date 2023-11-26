@@ -1,6 +1,7 @@
 use std::time::Instant;
 use super::super::{*};
 use crate::re::{*};
+use crate::re::value::Value;
 
 #[test]
 fn range_macro() {
@@ -550,6 +551,30 @@ fn re_prefix_matcher_fmt() {
         }),
         "PrefixMatcher: re: a, matched: \"a\", remaining: \"bc\""
     );
+}
+
+#[test]
+fn environment() {
+    assert_eq!(Value::Empty.environment(), Vec::new());
+    assert_eq!(Value::Char('a').environment(), Vec::new());
+    assert_eq!(Value::Seq(Box::new(Value::Char('a')), Box::new(Value::Char('b'))).environment(), Vec::new());
+    assert_eq!(Value::Left(Box::new(Value::Char('a'))).environment(), Vec::new());
+    assert_eq!(Value::Right(Box::new(Value::Char('a'))).environment(), Vec::new());
+    assert_eq!(Value::Stars(vec![Value::Char('a')]).environment(), Vec::new());
+    assert_eq!(Value::Record("a".to_string(), Box::new(Value::Char('a'))).environment(), vec![("a".to_string(), "a".to_string())]);
+}
+
+#[test]
+fn make_empty() {
+    assert_eq!(Re::One.make_empty(), Value::Empty);
+    assert_eq!(Re::Alt(Box::new(Re::One), Box::new(Re::Char('a'))).make_empty(), Value::Left(Box::new(Value::Empty)));
+    assert_eq!(Re::Alt(Box::new(Re::Char('a')), Box::new(Re::One)).make_empty(), Value::Right(Box::new(Value::Empty)));
+    assert_eq!(Re::Seq(Box::new(Re::One), Box::new(Re::One)).make_empty(), Value::Seq(Box::new(Value::Empty), Box::new(Value::Empty)));
+    assert_eq!(Re::Star(Box::new(Re::One)).make_empty(), Value::Stars(vec![]));
+    assert_eq!(Re::Plus(Box::new(Re::One)).make_empty(), Value::Stars(vec![Value::Empty]));
+    assert_eq!(Re::Optional(Box::new(Re::One)).make_empty(), Value::Stars(vec![]));
+    assert_eq!(Re::Optional(Box::new(Re::Char('a'))).make_empty(), Value::Stars(vec![]));
+    assert_eq!(Re::Record("a".to_string(), Box::new(Re::One)).make_empty(), Value::Record("a".to_string(), Box::new(Value::Empty)));
 }
 
 #[ignore = "this test takes a long time"]
