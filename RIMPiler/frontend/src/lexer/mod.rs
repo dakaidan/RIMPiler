@@ -47,7 +47,7 @@ struct Tokeniser<T> {
     /*
     Comments can be:
         // (letters | symbols | digits | whitespace)* \n
-        /* (letters | symbols | digits | whitespace)* */
+        /* (letters | symbols | digits | whitespace | newline)* */
     */
     comment: Re,
     /*
@@ -104,7 +104,6 @@ impl Tokeniser<InitialisationRequired> {
             comment: (Re::Char('/') & Re::Char('/') & Re::Star(
                 Box::new(Re::Range(vec![
                     Range::Range(' ' ..='~'),
-                    Range::Char('\n'),
                     Range::Char('\t'),
                 ]))
             ) & Re::Char('\n'))
