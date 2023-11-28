@@ -3,7 +3,7 @@ resolver="2"
 
 members = [
     "RIMPiler/command_line",
-    "RIMPiler/utilities",
     "RIMPiler/frontend",
     "regex",
+    "utilities",
 ]
