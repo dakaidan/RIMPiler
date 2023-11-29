@@ -1,6 +1,6 @@
-use regex::lexer::Token;
+use regex::lexer::{Token, TokenMeta};
 
-#[derive(Debug, Eq, PartialEq, Clone)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy)]
 pub enum Keyword {
     Skip,
     If,
@@ -26,9 +26,9 @@ impl Keyword {
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Clone)]
-pub enum BinaryOperator {
-    Plus,
+#[derive(Debug, Eq, PartialEq, Clone, Copy)]
+pub enum Operator {
+    Add,
     Minus,
     Multiply,
     Divide,
@@ -40,43 +40,31 @@ pub enum BinaryOperator {
     NotEqual,
     And,
     Or,
+    Not,
 }
 
-impl BinaryOperator {
+impl Operator {
     fn new(string: String) -> Self {
         match string.as_str() {
-            "+" => BinaryOperator::Plus,
-            "-" => BinaryOperator::Minus,
-            "*" => BinaryOperator::Multiply,
-            "/" => BinaryOperator::Divide,
-            "^" => BinaryOperator::Exponent,
-            "==" => BinaryOperator::Equal,
-            "=" => BinaryOperator::Assign,
-            "<" => BinaryOperator::LessThan,
-            ">" => BinaryOperator::GreaterThan,
-            "!=" => BinaryOperator::NotEqual,
-            "&&" => BinaryOperator::And,
-            "||" => BinaryOperator::Or,
+            "+" => Operator::Add,
+            "-" => Operator::Minus,
+            "*" => Operator::Multiply,
+            "/" => Operator::Divide,
+            "^" => Operator::Exponent,
+            "==" => Operator::Equal,
+            "=" => Operator::Assign,
+            "<" => Operator::LessThan,
+            ">" => Operator::GreaterThan,
+            "!=" => Operator::NotEqual,
+            "&&" => Operator::And,
+            "||" => Operator::Or,
+            "!" => Operator::Not,
             _ => unreachable!("Should only be called by the Lexer, invalid binary operator, {}", string),
         }
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Clone)]
-pub enum UnaryOperator {
-    Not,
-}
-
-impl UnaryOperator {
-    fn new(string: String) -> Self {
-        match string.as_str() {
-            "!" => UnaryOperator::Not,
-            _ => unreachable!("Should only be called by the Lexer, invalid unary operator, {}", string),
-        }
-    }
-}
-
-#[derive(Debug, Eq, PartialEq, Clone)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy)]
 pub enum Bracket {
     LeftParenthesis,
     RightParenthesis,
@@ -100,8 +88,7 @@ impl Bracket {
 pub enum RIMPToken {
     Keyword(Keyword),
     Identifier(String),
-    BinaryOperator(BinaryOperator),
-    UnaryOperator(UnaryOperator),
+    Operator(Operator),
     Number(i32),    // I believe PISA only supports 32-bit integers, if so, no need to lex larger
     Bracket(Bracket),
     Semicolon,
@@ -117,6 +104,58 @@ impl RIMPToken {
             Err(_) => return Err(format!("Invalid 32 bit number, {}", string)),
         }
     }
+
+    // a clone function which uses copy as much as possible, unless
+    // it is an identifier, in which case it clones the string
+    fn copy_clone(&self) -> Self {
+        match self {
+            RIMPToken::Keyword(keyword) => RIMPToken::Keyword(*keyword),
+            RIMPToken::Identifier(identifier) => RIMPToken::Identifier(identifier.clone()),
+            RIMPToken::Operator(binary_operator) => RIMPToken::Operator(*binary_operator),
+            RIMPToken::Operator(unary_operator) => RIMPToken::Operator(*unary_operator),
+            RIMPToken::Number(number) => RIMPToken::Number(*number),
+            RIMPToken::Bracket(bracket) => RIMPToken::Bracket(*bracket),
+            RIMPToken::Semicolon => RIMPToken::Semicolon,
+            RIMPToken::Whitespace => RIMPToken::Whitespace,
+            RIMPToken::Comment => RIMPToken::Comment,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct Tokens {
+    tokens: Vec<TokenMeta<RIMPToken>>
+}
+
+impl Tokens {
+    pub fn new(tokens: Vec<TokenMeta<RIMPToken>>) -> Tokens {
+        let mut toks = tokens.clone();
+        toks.reverse();
+        Tokens { tokens: toks }
+    }
+
+    pub fn next(&mut self) -> Option<TokenMeta<RIMPToken>> {
+        self.tokens.pop()
+    }
+
+    // Since we need strings, this is the best case cloning we can do
+    pub fn peek(&self) -> Option<TokenMeta<RIMPToken>> {
+        match self.tokens.last() {
+            Some(token) => Some(TokenMeta {
+                token: token.token.copy_clone(),
+                location: token.location,
+                lexeme: token.lexeme.clone(),
+            }),
+            None => None,
+
+        }
+    }
+}
+
+impl From<Vec<TokenMeta<RIMPToken>>> for Tokens {
+    fn from(tokens: Vec<TokenMeta<RIMPToken>>) -> Self {
+        Tokens::new(tokens)
+    }
 }
 
 impl Token for RIMPToken {
@@ -124,8 +163,7 @@ impl Token for RIMPToken {
         let tok = match record_identifier.as_str() {
             "keyword" => Ok(RIMPToken::Keyword(Keyword::new(string))),
             "identifier" => Ok(RIMPToken::Identifier(string)),
-            "binary operator" => Ok(RIMPToken::BinaryOperator(BinaryOperator::new(string))),
-            "unary operator" => Ok(RIMPToken::UnaryOperator(UnaryOperator::new(string))),
+            "operator" => Ok(RIMPToken::Operator(Operator::new(string))),
             "number" => {
                 let number = RIMPToken::parse_number(string);
                 match number {

@@ -1,4 +1,5 @@
 use utilities::args_parser::{*};
+
 fn get_args() -> CommandLineResult {
     let parser = CommandLineArgumentsBuilder::new()
         .add_argument(

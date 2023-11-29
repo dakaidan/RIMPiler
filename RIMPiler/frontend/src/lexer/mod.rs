@@ -1,5 +1,5 @@
 #![warn(non_snake_case)]
-mod tokens;
+pub mod tokens;
 #[cfg(test)]
 mod tests;
 
@@ -8,15 +8,16 @@ use regex::re::{Range, Re};
 
 /*
 We need a lexer for the following grammar:
-    <Program> ::= <Statements> | <ArithmeticExpression> | <BooleanExpression>
+    <Program> ::= <Statements>
 
-    <Statement> ::= skip | <type> identifier ':=' <ArithmeticExpression>
+    <Statement> ::= skip | <type> identifier '=' <ArithmeticExpression>
+    | identifier '=' <ArithmeticExpression>
     | 'if' <BooleanExpression> 'then' <Block> 'else' <Block>
     | 'while' <BooleanExpression> 'do' <Block>
 
-    <Statements> ::= <Statement>';'<Statement> | <Statement>
+    <Statements> ::= <Statement>';'<Statement> | <Statement>;
 
-    <Block> ::= '"{"'<Statements>'"}"' |  <Statement>
+    <Block> ::= '"{"'<Statements>'"}"' |  {<Statement>;}
 
     <ArithmeticExpression> ::= <ArithmeticTerm> '+' <ArithmeticExpression>
     | <ArithmeticTerm> '-' <ArithmeticExpression> | <ArithmeticTerm>
@@ -35,7 +36,7 @@ We need a lexer for the following grammar:
     <BooleanTerm> ::= <BooleanFactor> '\&\&'<BooleanExpression>
     | <BooleanFactor>'||'<BooleanExpression> | '!' <BooleanExpression> | <BooleanFactor>
 
-    <BooleanFactor> ::= '('<BooleanExpression>')' | boolean
+    <BooleanFactor> ::= '('<BooleanExpression>')'
 
     <type> ::= 'int'
 */
@@ -43,7 +44,7 @@ We need a lexer for the following grammar:
 pub struct InitialisationRequired;
 pub struct Initialised;
 
-struct Tokeniser<T> {
+pub struct Tokeniser<T> {
     /*
     Comments can be:
         // (letters | symbols | digits | whitespace)* \n
@@ -67,14 +68,9 @@ struct Tokeniser<T> {
     identifier: Re,
     /*
     BinaryOperators can be:
-        + | - | * | / | ^ | = | == | < | > | != | && | ||
+        + | - | * | / | ^ | = | == | < | > | != | && | || | !
      */
-    binary_operator: Re,
-    /*
-    UnaryOperators can be:
-        !
-     */
-    unary_operator: Re,
+    operator: Re,
     /*
     Semicolons can be:
         ;
@@ -99,7 +95,7 @@ struct Tokeniser<T> {
 }
 
 impl Tokeniser<InitialisationRequired> {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             comment: (Re::Char('/') & Re::Char('/') & Re::Star(
                 Box::new(Re::Range(vec![
@@ -136,7 +132,7 @@ impl Tokeniser<InitialisationRequired> {
                 Range::Range('A'..='Z'),
                 Range::Range('0'..='9'),
             ])))),
-            binary_operator: (Re::Range(vec![
+            operator: (Re::Range(vec![
                 Range::Char('+'),
                 Range::Char('-'),
                 Range::Char('*'),
@@ -145,9 +141,9 @@ impl Tokeniser<InitialisationRequired> {
                 Range::Char('='),
                 Range::Char('<'),
                 Range::Char('>'),
+                Range::Char('!')
             ]) | Re::seq_from("!=".to_string()) | Re::seq_from("==".to_string())
                 | Re::seq_from("&&".to_string()) | Re::seq_from("||".to_string())),
-            unary_operator: Re::Char('!'),
             semicolon: Re::Char(';'),
             brackets: Re::Range(vec![
                 Range::Char('('),
@@ -166,11 +162,10 @@ impl Tokeniser<InitialisationRequired> {
         }
     }
 
-    fn initialise(&mut self) -> Tokeniser<Initialised> {
+    pub fn initialise(&mut self) -> Tokeniser<Initialised> {
         self.rimp = Re::Plus(Box::new(
             Re::Record(String::from("keyword"), Box::new(self.keyword.clone()))
-            | Re::Record(String::from("binary operator"), Box::new(self.binary_operator.clone()))
-            | Re::Record(String::from("unary operator"), Box::new(self.unary_operator.clone()))
+            | Re::Record(String::from("operator"), Box::new(self.operator.clone()))
             | Re::Record(String::from("bracket"), Box::new(self.brackets.clone()))
             | Re::Record(String::from("semicolon"), Box::new(self.semicolon.clone()))
             | Re::Record(String::from("whitespace"), Box::new(self.whitespace.clone()))
@@ -184,8 +179,7 @@ impl Tokeniser<InitialisationRequired> {
             number: self.number.clone(),
             keyword: self.keyword.clone(),
             identifier: self.identifier.clone(),
-            binary_operator: self.binary_operator.clone(),
-            unary_operator: self.unary_operator.clone(),
+            operator: self.operator.clone(),
             semicolon: self.semicolon.clone(),
             brackets: self.brackets.clone(),
             whitespace: self.whitespace.clone(),
