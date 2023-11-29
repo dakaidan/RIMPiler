@@ -97,33 +97,23 @@ impl Display for Statement {
         match self {
             Statement::Skip => write!(f, "skip"),
             Statement::If(condition, then_block, else_block) => {
-                write!(f, "if {}\n", condition);
-
-                for statement in then_block.clone().into_iter() {
-                    write!(f, "\t{}\n", statement);
-                }
-
-                write!(f, "else\n");
-
-                for statement in else_block.clone().into_iter() {
-                    write!(f, "\t{}\n", statement);
-                }
-
-                write!(f, "end")
-
+                write!(
+                    f,
+                    "if {}\n{}\nelse\n{}\nend",
+                    condition,
+                    then_block.iter().map(|s| format!("\t{}", s)).collect::<String>(),
+                    else_block.iter().map(|s| format!("\t{}", s)).collect::<String>(),
+                )
             }
             Statement::While(condition, block) => {
-                write!(f, "while {}\n", condition);
-
-                for statement in block.clone().into_iter() {
-                    write!(f, "\t{}\n", statement);
-                }
-
-                write!(f, " end")
+                write!(
+                    f,
+                    "while {}\n{}\n end",
+                    condition,
+                    block.iter().map(|s| format!("\t{}", s)).collect::<String>(),
+                )
             }
-            Statement::Assignment(assignment) => {
-                write!(f, "{}", assignment)
-            }
+            Statement::Assignment(assignment) => write!(f, "{}", assignment),
         }
     }
 }
@@ -132,10 +122,11 @@ impl Display for Program {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
             Program::Statements(block) => {
-                for statement in block.clone().into_iter() {
-                    write!(f, "{}\n", statement);
-                }
-                write!(f, "EOF")
+                write!(
+                    f,
+                    "{}",
+                    block.iter().map(|s| format!("{}\n", s)).collect::<String>()
+                )
             }
         }
     }

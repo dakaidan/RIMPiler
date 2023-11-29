@@ -46,7 +46,7 @@ fn tokenise() {
     }
 
     impl Token for TestToken {
-        fn new(lexeme: String, record_identifier: String) -> Result<Box<Self>, String> {
+        fn new(_: String, record_identifier: String) -> Result<Box<Self>, String> {
             match record_identifier.as_str() {
                 "0" => Ok(Box::new(TestToken::A)),
                 "1" => Ok(Box::new(TestToken::B)),

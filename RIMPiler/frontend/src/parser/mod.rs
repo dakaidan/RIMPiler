@@ -32,12 +32,12 @@ fn expect_operator(operator: Operator, tokens: &mut Tokens) -> Result<(), TokenM
     match next_token {
         Some(token) => {
             if token.token != RIMPToken::Operator(operator) {
-                return Err(token);
+                Err(token)
             } else {
-                return Ok(());
+                Ok(())
             }
         }
-        None => return Err(TokenMeta::new("".to_string(), Location::default(), "operator".to_string()).unwrap()),
+        None => Err(TokenMeta::new("".to_string(), Location::default(), "operator".to_string()).unwrap()),
     }
 }
 
@@ -59,12 +59,12 @@ fn expect_keyword(keyword: Keyword, tokens: &mut Tokens) -> Result<(), TokenMeta
     match next_token {
         Some(token) => {
             if token.token != RIMPToken::Keyword(keyword) {
-                return Err(token);
+                Err(token)
             } else {
-                return Ok(());
+                Ok(())
             }
         }
-        None => return Err(TokenMeta::new("".to_string(), Location::default(), "keyword".to_string()).unwrap()),
+        None => Err(TokenMeta::new("".to_string(), Location::default(), "keyword".to_string()).unwrap()),
     }
 }
 
@@ -73,12 +73,12 @@ fn expect_bracket(bracket: Bracket, tokens: &mut Tokens) -> Result<(), TokenMeta
     match next_token {
         Some(token) => {
             if token.token != RIMPToken::Bracket(bracket) {
-                return Err(token);
+                Err(token)
             } else {
-                return Ok(());
+                Ok(())
             }
         }
-        None => return Err(TokenMeta::new("".to_string(), Location::default(), "bracket".to_string()).unwrap()),
+        None => Err(TokenMeta::new("".to_string(), Location::default(), "bracket".to_string()).unwrap()),
     }
 }
 
@@ -87,12 +87,12 @@ fn expect_semicolon(tokens: &mut Tokens) -> Result<(), TokenMeta<RIMPToken>> {
     match next_token {
         Some(token) => {
             if token.token != RIMPToken::Semicolon {
-                return Err(token);
+                Err(token)
             } else {
-                return Ok(());
+                Ok(())
             }
         }
-        None => return Err(TokenMeta::new("".to_string(), Location::default(), "semicolon".to_string()).unwrap()),
+        None => Err(TokenMeta::new("".to_string(), Location::default(), "semicolon".to_string()).unwrap()),
     }
 }
 
@@ -388,7 +388,7 @@ fn parse_boolean_expression(tokens: &mut Tokens, min_binding_power: u8) -> Parse
         and we can always quickly fall back to parser combinators later if we need to.
     */
 
-    let mut left_hand_side = match tokens.peek() {
+    let left_hand_side = match tokens.peek() {
         Some(token) => {
             match token.token {
                 RIMPToken::Bracket(b) if b == Bracket::LeftParenthesis => {

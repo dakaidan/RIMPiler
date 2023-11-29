@@ -112,7 +112,6 @@ impl RIMPToken {
             RIMPToken::Keyword(keyword) => RIMPToken::Keyword(*keyword),
             RIMPToken::Identifier(identifier) => RIMPToken::Identifier(identifier.clone()),
             RIMPToken::Operator(binary_operator) => RIMPToken::Operator(*binary_operator),
-            RIMPToken::Operator(unary_operator) => RIMPToken::Operator(*unary_operator),
             RIMPToken::Number(number) => RIMPToken::Number(*number),
             RIMPToken::Bracket(bracket) => RIMPToken::Bracket(*bracket),
             RIMPToken::Semicolon => RIMPToken::Semicolon,

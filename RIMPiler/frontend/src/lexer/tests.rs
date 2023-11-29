@@ -1,6 +1,4 @@
 use regex::lexer::{Location, TokenMeta};
-use regex::re::Range::Range;
-use regex::re::Re;
 use utilities::files::load_file;
 use crate::lexer::tokens::{Keyword, RIMPToken};
 use super::Tokeniser;
