@@ -11,14 +11,14 @@
     If collatz = 1, then n is a Collatz number.
 */
 
-int n = 20; // number to be checked
+int n = 1977931; // number to be checked
 int collatz = 0;
 
 while n > 1 do {
   // --- We have no modulo operator in RIMP, so this calculates the remainder ---
-  int q = a / b;
-  int p = q * b;
-  int r = a - p;
+  int q = n / 2;
+  int p = q * 2;
+  int r = n - p;
   // --- End of remainder calculation ---
   if r == 0
   then {n = n/2;}

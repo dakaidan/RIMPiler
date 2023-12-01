@@ -95,11 +95,11 @@ impl Display for Assignment {
 impl Display for Statement {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
-            Statement::Skip => write!(f, "skip"),
+            Statement::Skip => write!(f, "skip\n"),
             Statement::If(condition, then_block, else_block) => {
                 write!(
                     f,
-                    "if {}\n{}\nelse\n{}\nend",
+                    "if {}\n{}\nelse\n{}end\n",
                     condition,
                     then_block.iter().map(|s| format!("\t{}", s)).collect::<String>(),
                     else_block.iter().map(|s| format!("\t{}", s)).collect::<String>(),
@@ -108,12 +108,14 @@ impl Display for Statement {
             Statement::While(condition, block) => {
                 write!(
                     f,
-                    "while {}\n{}\n end",
+                    "while {}\n{} end\n",
                     condition,
                     block.iter().map(|s| format!("\t{}", s)).collect::<String>(),
                 )
             }
-            Statement::Assignment(assignment) => write!(f, "{}", assignment),
+            Statement::Assignment(assignment) => write!(f, "{}\n", assignment),
+            Statement::ReverseAssignment(assignment) => write!(f, "({})'\n", assignment),
+            Statement::ReversePoint => write!(f, "---------------rp---------------'\n"),
         }
     }
 }

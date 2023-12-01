@@ -17,6 +17,8 @@ pub enum Statement {
     If(Box<BooleanExpression>, Box<Block>, Box<Block>),
     While(Box<BooleanExpression>, Box<Block>),
     Assignment(Assignment),
+    ReverseAssignment(Assignment),
+    ReversePoint,
 }
 
 #[derive(Debug, Eq, PartialEq, Clone, Hash)]
@@ -65,4 +67,12 @@ pub enum BooleanExpression {
     Logical(BooleanOperator, Box<BooleanExpression>, Box<BooleanExpression>),
     Relational(RelationOperator, Box<ArithmeticExpression>, Box<ArithmeticExpression>),
     Unary(UnaryBooleanOperator, Box<BooleanExpression>),
+}
+
+#[derive(Debug, Eq, PartialEq, Clone, Hash)]
+pub enum ASTNode {
+    Program(Program),
+    Statement(Statement),
+    ArithmeticExpression(ArithmeticExpression),
+    BooleanExpression(BooleanExpression),
 }

@@ -1,7 +1,9 @@
+use std::fmt::Display;
 use regex::lexer::{Location, TokenMeta};
 use crate::AST::{ArithmeticExpression, ArithmeticOperator, Assignment, Block, BooleanExpression, BooleanOperator, Program, RelationOperator, Statement, UnaryArithmeticOperator, UnaryBooleanOperator};
 use crate::lexer::tokens::{Bracket, Keyword, Operator, RIMPToken, Tokens};
 use crate::parser::ErrorType::{UnexpectedEndOfFile, UnexpectedToken};
+use crate::post_parse::transformer::transform;
 
 mod precedence;
 mod tests;
@@ -17,6 +19,16 @@ pub struct Error {
     message: String,
     location: Option<Location>,
     error_type: ErrorType,
+}
+
+impl Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match &self.location {
+            Some(location) => write!(f, "Error at line {}, column {}: {}", location.line, location.column, self.message),
+            None => write!(f, "Error: {}", self.message),
+        }
+    }
+
 }
 
 impl Error {
@@ -94,6 +106,15 @@ fn expect_semicolon(tokens: &mut Tokens) -> Result<(), TokenMeta<RIMPToken>> {
         }
         None => Err(TokenMeta::new("".to_string(), Location::default(), "semicolon".to_string()).unwrap()),
     }
+}
+
+pub fn parse(tokens: &mut Tokens) -> ParseResult<Program> {
+    let result = parse_program(tokens);
+    if result.is_err() {
+        return Err(result.unwrap_err());
+    }
+
+    Ok(transform(&result.unwrap()))
 }
 
 pub fn parse_program(tokens: &mut Tokens) -> ParseResult<Program> {

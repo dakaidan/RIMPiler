@@ -298,6 +298,24 @@ impl Display for CommandLineResult {
 }
 
 impl CommandLineArguments {
+    fn get_specification_by_name(&self, name: &str) -> Option<&CommandLineSpecification> {
+        for specification in self.specifications.values() {
+            match specification {
+                CommandLineSpecification::Argument(_, names, _, _, _) => {
+                    if names.long == name || names.short == name {
+                        return Some(specification);
+                    }
+                }
+                CommandLineSpecification::Flag(_, names, _) => {
+                    if names.long == name || names.short == name {
+                        return Some(specification);
+                    }
+                }
+            }
+        }
+        None
+    }
+
     pub fn parse(&self) -> Result<CommandLineResult, String> {
         let mut result = CommandLineResult {
             arguments: HashMap::new(),
@@ -310,13 +328,13 @@ impl CommandLineArguments {
         while let Some(arg) = args.next() {
             if arg.starts_with("--") {
                 let identifier = arg[2..].to_string();
-                if let Some(specification) = self.specifications.get(&Identifier { name: identifier.clone() }) {
+                if let Some(specification) = self.get_specification_by_name(&identifier) {
                     match specification {
-                        CommandLineSpecification::Argument(_, _, argument_type, _, _) => {
+                        CommandLineSpecification::Argument(id, _, argument_type, _, _) => {
                             if let Some(value) = args.next() {
                                 match argument_type {
                                     CommandLineArgumentType::String => {
-                                        result.arguments.insert(identifier, value);
+                                        result.arguments.insert(id.to_string(), value);
                                     }
                                     CommandLineArgumentType::Integer => {
                                         match value.parse::<i32>() {
@@ -333,8 +351,8 @@ impl CommandLineArguments {
                                 return Err(format!("Error: argument {} must be followed by a value.", identifier));
                             }
                         }
-                        CommandLineSpecification::Flag(_, _, _) => {
-                            result.flags.insert(identifier);
+                        CommandLineSpecification::Flag(id, _, _) => {
+                            result.flags.insert(id.to_string());
                         }
                     }
                 } else {
@@ -342,13 +360,13 @@ impl CommandLineArguments {
                 }
             } else if arg.starts_with("-") {
                 let identifier = arg[1..].to_string();
-                if let Some(specification) = self.specifications.get(&Identifier { name: identifier.clone() }) {
+                if let Some(specification) = self.get_specification_by_name(&identifier) {
                     match specification {
-                        CommandLineSpecification::Argument(_, _, argument_type, _, _) => {
+                        CommandLineSpecification::Argument(id, _, argument_type, _, _) => {
                             if let Some(value) = args.next() {
                                 match argument_type {
                                     CommandLineArgumentType::String => {
-                                        result.arguments.insert(identifier, value);
+                                        result.arguments.insert(id.to_string(), value);
                                     }
                                     CommandLineArgumentType::Integer => {
                                         match value.parse::<i32>() {
@@ -365,8 +383,8 @@ impl CommandLineArguments {
                                 return Err(format!("Error: argument {} must be followed by a value.", identifier));
                             }
                         }
-                        CommandLineSpecification::Flag(_, _, _) => {
-                            result.flags.insert(identifier);
+                        CommandLineSpecification::Flag(id, _, _) => {
+                            result.flags.insert(id.to_string());
                         }
                     }
                 } else {
