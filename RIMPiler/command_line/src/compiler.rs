@@ -20,7 +20,9 @@ impl Compiler {
             return Err(ast.unwrap_err().to_string());
         }
 
-        println!("ast: {}", ast.clone().unwrap());
+        let ast = ast.unwrap();
+
+        println!("ast: \n{}", ast.clone());
 
         Ok(())
     }

@@ -1,7 +1,10 @@
 // display functions for AST
 
+use crate::AST::{
+    ArithmeticExpression, ArithmeticOperator, Assignment, BooleanExpression, BooleanOperator,
+    Program, RelationOperator, Statement, UnaryArithmeticOperator, UnaryBooleanOperator,
+};
 use std::fmt::{Display, Formatter};
-use crate::AST::{ArithmeticExpression, ArithmeticOperator, Assignment, BooleanExpression, BooleanOperator, Program, RelationOperator, Statement, UnaryArithmeticOperator, UnaryBooleanOperator};
 
 impl Display for ArithmeticOperator {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
@@ -101,8 +104,14 @@ impl Display for Statement {
                     f,
                     "if {}\n{}\nelse\n{}end\n",
                     condition,
-                    then_block.iter().map(|s| format!("\t{}", s)).collect::<String>(),
-                    else_block.iter().map(|s| format!("\t{}", s)).collect::<String>(),
+                    then_block
+                        .iter()
+                        .map(|s| format!("\t{}", s))
+                        .collect::<String>(),
+                    else_block
+                        .iter()
+                        .map(|s| format!("\t{}", s))
+                        .collect::<String>(),
                 )
             }
             Statement::While(condition, block) => {

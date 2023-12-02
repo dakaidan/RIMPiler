@@ -69,7 +69,13 @@ impl Display for Description {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum CommandLineSpecification {
     Flag(Identifier, Names, Description),
-    Argument(Identifier, Names, CommandLineArgumentType, Required, Description),
+    Argument(
+        Identifier,
+        Names,
+        CommandLineArgumentType,
+        Required,
+        Description,
+    ),
 }
 
 impl Display for CommandLineSpecification {
@@ -78,8 +84,18 @@ impl Display for CommandLineSpecification {
             CommandLineSpecification::Flag(identifier, names, description) => {
                 write!(f, "{}: {} ({})", identifier, names, description)
             }
-            CommandLineSpecification::Argument(identifier, names, argument_type, required, description) => {
-                write!(f, "{}: {} ({}, {})\t\t{}", identifier, names, argument_type, required, description)
+            CommandLineSpecification::Argument(
+                identifier,
+                names,
+                argument_type,
+                required,
+                description,
+            ) => {
+                write!(
+                    f,
+                    "{}: {} ({}, {})\t\t{}",
+                    identifier, names, argument_type, required, description
+                )
             }
         }
     }
@@ -91,13 +107,15 @@ pub struct ArgumentBuilder {
     long_name: String,
     argument_type: Option<CommandLineArgumentType>,
     required: bool,
-    description: String
+    description: String,
 }
 
 impl ArgumentBuilder {
     pub fn new(identifier: &str) -> Self {
         ArgumentBuilder {
-            identifier: Identifier { name: identifier.to_string() },
+            identifier: Identifier {
+                name: identifier.to_string(),
+            },
             short_name: String::new(),
             long_name: String::new(),
             argument_type: None,
@@ -154,10 +172,19 @@ impl ArgumentBuilder {
 
         CommandLineSpecification::Argument(
             self.identifier,
-            Names { short: self.short_name, long: self.long_name },
+            Names {
+                short: self.short_name,
+                long: self.long_name,
+            },
             self.argument_type.unwrap(),
-            if self.required { Required::Required } else { Required::Optional },
-            Description { description: self.description }
+            if self.required {
+                Required::Required
+            } else {
+                Required::Optional
+            },
+            Description {
+                description: self.description,
+            },
         )
     }
 }
@@ -166,13 +193,15 @@ pub struct FlagBuilder {
     identifier: Identifier,
     short_name: String,
     long_name: String,
-    description: String
+    description: String,
 }
 
 impl FlagBuilder {
     pub fn new(identifier: &str) -> Self {
         FlagBuilder {
-            identifier: Identifier { name: identifier.to_string() },
+            identifier: Identifier {
+                name: identifier.to_string(),
+            },
             short_name: String::new(),
             long_name: String::new(),
             description: String::new(),
@@ -204,14 +233,19 @@ impl FlagBuilder {
 
         CommandLineSpecification::Flag(
             self.identifier,
-            Names { short: self.short_name, long: self.long_name },
-            Description { description: self.description }
+            Names {
+                short: self.short_name,
+                long: self.long_name,
+            },
+            Description {
+                description: self.description,
+            },
         )
     }
 }
 
 pub struct CommandLineArguments {
-    specifications: HashMap<Identifier, CommandLineSpecification>
+    specifications: HashMap<Identifier, CommandLineSpecification>,
 }
 
 impl Display for CommandLineArguments {
@@ -232,20 +266,21 @@ impl Display for CommandLineArguments {
 }
 
 pub struct CommandLineArgumentsBuilder {
-    specifications: HashMap<Identifier, CommandLineSpecification>
+    specifications: HashMap<Identifier, CommandLineSpecification>,
 }
 
 impl CommandLineArgumentsBuilder {
     pub fn new() -> Self {
         CommandLineArgumentsBuilder {
-            specifications: HashMap::new()
+            specifications: HashMap::new(),
         }
     }
 
     pub fn add_argument(mut self, argument: ArgumentBuilder) -> Self {
         let specification = argument.build();
         if let CommandLineSpecification::Argument(identifier, _, _, _, _) = &specification {
-            self.specifications.insert(identifier.clone(), specification);
+            self.specifications
+                .insert(identifier.clone(), specification);
         } else {
             panic!("Cannot add argument: specification is not an argument.");
         }
@@ -255,7 +290,8 @@ impl CommandLineArgumentsBuilder {
     pub fn add_flag(mut self, flag: FlagBuilder) -> Self {
         let specification = flag.build();
         if let CommandLineSpecification::Flag(identifier, _, _) = &specification {
-            self.specifications.insert(identifier.clone(), specification);
+            self.specifications
+                .insert(identifier.clone(), specification);
         } else {
             panic!("Cannot add flag: specification is not a flag.");
         }
@@ -267,21 +303,21 @@ impl CommandLineArgumentsBuilder {
             FlagBuilder::new("help")
                 .short_name("h")
                 .long_name("help")
-                .description("Prints this help message.")
+                .description("Prints this help message."),
         );
         self
     }
 
     pub fn build(self) -> CommandLineArguments {
         CommandLineArguments {
-            specifications: self.specifications
+            specifications: self.specifications,
         }
     }
 }
 
 pub struct CommandLineResult {
     pub arguments: HashMap<String, String>,
-    pub flags: HashSet<String>
+    pub flags: HashSet<String>,
 }
 
 impl Display for CommandLineResult {
@@ -319,7 +355,7 @@ impl CommandLineArguments {
     pub fn parse(&self) -> Result<CommandLineResult, String> {
         let mut result = CommandLineResult {
             arguments: HashMap::new(),
-            flags: HashSet::new()
+            flags: HashSet::new(),
         };
 
         let mut args = std::env::args();
@@ -339,16 +375,24 @@ impl CommandLineArguments {
                                     CommandLineArgumentType::Integer => {
                                         match value.parse::<i32>() {
                                             Ok(value) => {
-                                                result.arguments.insert(identifier, value.to_string());
+                                                result
+                                                    .arguments
+                                                    .insert(identifier, value.to_string());
                                             }
                                             Err(_) => {
-                                                return Err(format!("Error: argument {} must be an integer.", identifier));
+                                                return Err(format!(
+                                                    "Error: argument {} must be an integer.",
+                                                    identifier
+                                                ));
                                             }
                                         }
                                     }
                                 }
                             } else {
-                                return Err(format!("Error: argument {} must be followed by a value.", identifier));
+                                return Err(format!(
+                                    "Error: argument {} must be followed by a value.",
+                                    identifier
+                                ));
                             }
                         }
                         CommandLineSpecification::Flag(id, _, _) => {
@@ -371,16 +415,24 @@ impl CommandLineArguments {
                                     CommandLineArgumentType::Integer => {
                                         match value.parse::<i32>() {
                                             Ok(value) => {
-                                                result.arguments.insert(identifier, value.to_string());
+                                                result
+                                                    .arguments
+                                                    .insert(identifier, value.to_string());
                                             }
                                             Err(_) => {
-                                                return Err(format!("Error: argument {} must be an integer.", identifier));
+                                                return Err(format!(
+                                                    "Error: argument {} must be an integer.",
+                                                    identifier
+                                                ));
                                             }
                                         }
                                     }
                                 }
                             } else {
-                                return Err(format!("Error: argument {} must be followed by a value.", identifier));
+                                return Err(format!(
+                                    "Error: argument {} must be followed by a value.",
+                                    identifier
+                                ));
                             }
                         }
                         CommandLineSpecification::Flag(id, _, _) => {

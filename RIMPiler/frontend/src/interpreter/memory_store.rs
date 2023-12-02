@@ -11,7 +11,7 @@ impl Default for Integer {
     fn default() -> Self {
         Self {
             value: 0,
-            history: Vec::from([0])
+            history: Vec::from([0]),
         }
     }
 }
@@ -44,7 +44,7 @@ impl Integer {
         self.value = value;
     }
 
-    pub fn un_assign(&mut self, value: i32) {
+    pub fn un_assign(&mut self, _: i32) {
         self.value = self.value - self.history.last().unwrap();
         self.history.pop();
     }

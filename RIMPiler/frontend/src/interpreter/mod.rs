@@ -1,16 +1,50 @@
 mod memory_store;
+#[cfg(test)]
+mod tests;
 
+use crate::interpreter::memory_store::Integer;
+use crate::AST::{
+    ArithmeticExpression, ArithmeticOperator, Assignment, Block, BooleanExpression,
+    BooleanOperator, Program, RelationOperator, Statement, UnaryArithmeticOperator,
+    UnaryBooleanOperator,
+};
 use memory_store::MemoryStore;
-use crate::AST::{ArithmeticExpression, ArithmeticOperator, Assignment, Block, BooleanExpression, BooleanOperator, Program, RelationOperator, Statement, UnaryArithmeticOperator, UnaryBooleanOperator};
 
 pub struct InterpreterEngine {
     memory_store: MemoryStore,
+    reverse_point_snapshot: Option<MemoryStore>,
+    final_memory_point_snapshot: Option<MemoryStore>,
 }
 
 impl InterpreterEngine {
     pub fn new() -> Self {
         Self {
             memory_store: MemoryStore::new(),
+            reverse_point_snapshot: None,
+            final_memory_point_snapshot: None,
+        }
+    }
+
+    pub fn get_final_memory_point_snapshot(&self) -> &Option<MemoryStore> {
+        &self.final_memory_point_snapshot
+    }
+
+    pub fn get_reverse_point_snapshot(&self) -> &Option<MemoryStore> {
+        &self.reverse_point_snapshot
+    }
+
+    pub fn get_result(&self, variable: &String) -> Option<Integer> {
+        match &self.reverse_point_snapshot {
+            None => None,
+            Some(memory_store) => {
+                let value = memory_store.get(variable);
+
+                if value.is_none() {
+                    return None;
+                }
+
+                Some(value.unwrap().clone())
+            }
         }
     }
 
@@ -27,7 +61,7 @@ impl InterpreterEngine {
             }
         }
 
-        println!("\n---- Final memory store ----\n{}\n---- Final memory store ----", self.memory_store);
+        self.final_memory_point_snapshot = Some(self.memory_store.clone());
 
         Ok(())
     }
@@ -50,7 +84,7 @@ impl InterpreterEngine {
                 }
             }
             Statement::ReversePoint => {
-                println!("\n---- Reverse point ----\n{}\n---- Reverse point ----", self.memory_store)
+                self.reverse_point_snapshot = Some(self.memory_store.clone());
             }
             Statement::If(boolean_expression, if_block, else_block) => {
                 let result = self.interpret_if(boolean_expression, if_block, else_block);
@@ -107,7 +141,12 @@ impl InterpreterEngine {
         Ok(())
     }
 
-    fn interpret_if(&mut self, boolean_expression: &BooleanExpression, if_block: &Block, else_block: &Block) -> Result<(), String> {
+    fn interpret_if(
+        &mut self,
+        boolean_expression: &BooleanExpression,
+        if_block: &Block,
+        else_block: &Block,
+    ) -> Result<(), String> {
         let result = self.interpret_boolean_expression(boolean_expression);
 
         if result.is_err() {
@@ -133,7 +172,11 @@ impl InterpreterEngine {
         Ok(())
     }
 
-    fn interpret_while(&mut self, boolean_expression: &BooleanExpression, block: &Block) -> Result<(), String> {
+    fn interpret_while(
+        &mut self,
+        boolean_expression: &BooleanExpression,
+        block: &Block,
+    ) -> Result<(), String> {
         let result = self.interpret_boolean_expression(boolean_expression);
 
         if result.is_err() {
@@ -173,7 +216,10 @@ impl InterpreterEngine {
         Ok(())
     }
 
-    fn interpret_boolean_expression(&mut self, boolean_expression: &BooleanExpression) -> Result<bool, String> {
+    fn interpret_boolean_expression(
+        &mut self,
+        boolean_expression: &BooleanExpression,
+    ) -> Result<bool, String> {
         match boolean_expression {
             BooleanExpression::Relational(operator, left_hand_side, right_hand_side) => {
                 let left_hand_side = self.interpret_arithmetic_expression(left_hand_side);
@@ -202,7 +248,7 @@ impl InterpreterEngine {
                         Ok(left_hand_side.unwrap() != right_hand_side.unwrap())
                     }
                 }
-            },
+            }
             BooleanExpression::Logical(operator, left_hand_side, right_hand_side) => {
                 let left_hand_side = self.interpret_boolean_expression(left_hand_side);
 
@@ -217,14 +263,10 @@ impl InterpreterEngine {
                 }
 
                 match operator {
-                    BooleanOperator::And => {
-                        Ok(left_hand_side.unwrap() && right_hand_side.unwrap())
-                    }
-                    BooleanOperator::Or => {
-                        Ok(left_hand_side.unwrap() || right_hand_side.unwrap())
-                    }
+                    BooleanOperator::And => Ok(left_hand_side.unwrap() && right_hand_side.unwrap()),
+                    BooleanOperator::Or => Ok(left_hand_side.unwrap() || right_hand_side.unwrap()),
                 }
-            },
+            }
             BooleanExpression::Unary(operator, operand) => {
                 let operand = self.interpret_boolean_expression(operand);
 
@@ -233,15 +275,16 @@ impl InterpreterEngine {
                 }
 
                 match operator {
-                    UnaryBooleanOperator::Negation => {
-                        Ok(!operand.unwrap())
-                    }
+                    UnaryBooleanOperator::Negation => Ok(!operand.unwrap()),
                 }
             }
         }
     }
 
-    fn interpret_arithmetic_expression(&mut self, arithmetic_expression: &ArithmeticExpression) -> Result<i32, String> {
+    fn interpret_arithmetic_expression(
+        &mut self,
+        arithmetic_expression: &ArithmeticExpression,
+    ) -> Result<i32, String> {
         match arithmetic_expression {
             ArithmeticExpression::Variable(variable) => {
                 let value = self.memory_store.get(variable);
@@ -252,9 +295,7 @@ impl InterpreterEngine {
 
                 Ok(value.unwrap().get())
             }
-            ArithmeticExpression::Integer(i) => {
-                Ok(i.clone())
-            }
+            ArithmeticExpression::Integer(i) => Ok(i.clone()),
             ArithmeticExpression::Unary(operator, operand) => {
                 let operand = self.interpret_arithmetic_expression(operand);
 
@@ -263,9 +304,7 @@ impl InterpreterEngine {
                 }
 
                 match operator {
-                    UnaryArithmeticOperator::Negation => {
-                        Ok(-operand.unwrap())
-                    }
+                    UnaryArithmeticOperator::Negation => Ok(-operand.unwrap()),
                 }
             }
             ArithmeticExpression::Operation(operator, left_hand_side, right_hand_side) => {
@@ -298,7 +337,11 @@ impl InterpreterEngine {
                         if right_hand_side.clone().unwrap() > 0 {
                             Ok(left_hand_side.unwrap().pow(right_hand_side.unwrap() as u32))
                         } else {
-                            Err(format!("Cannot raise {} to the power of {}", left_hand_side.unwrap(), right_hand_side.unwrap()))
+                            Err(format!(
+                                "Cannot raise {} to the power of {}",
+                                left_hand_side.unwrap(),
+                                right_hand_side.unwrap()
+                            ))
                         }
                     }
                 }

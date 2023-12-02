@@ -1,4 +1,7 @@
-use crate::AST::{Assignment, Block, BooleanExpression, Program, RelationOperator, Statement, ArithmeticExpression};
+use crate::AST::{
+    ArithmeticExpression, Assignment, Block, BooleanExpression, Program, RelationOperator,
+    Statement,
+};
 
 pub fn invert_and_combine(program: &Program) -> Program {
     let inverted = invert(program);
@@ -27,7 +30,7 @@ fn invert_program(program: &Program) -> Program {
             let mut new_statements = Vec::with_capacity(statements.len());
 
             // TODO: Fix this complete mess
-            for _ in 0..statements.len() {
+            for _ in 1..statements.len() {
                 new_statements.push(Statement::Skip);
             }
 
@@ -41,9 +44,10 @@ fn invert_program(program: &Program) -> Program {
                         }
                     }
                 }
-                println!("len: {}, index: {}", statements.len(), index);
-                println!("indexing from end: {}", statements.len() - index - 1);
-                new_statements.insert(statements.len() - index - 1, invert_statement(statement, &last_variable_name));
+                new_statements.insert(
+                    statements.len() - index - 1,
+                    invert_statement(statement, &last_variable_name),
+                );
             }
 
             Program::Statements(new_statements)
@@ -59,38 +63,45 @@ fn invert_statement(statement: &Statement, last_variable_name: &Option<String>) 
         Statement::While(boolean_expression, block) => {
             invert_while_statement(boolean_expression, block, last_variable_name)
         }
-        Statement::Assignment(assignment) => {
-            invert_assignment(assignment)
-        }
-        Statement::Skip => {
-            Statement::Skip
-        }
-        Statement::ReverseAssignment(assignment) => {
-            Statement::Assignment(assignment.clone())
-        }
-        Statement::ReversePoint => {
-            Statement::ReversePoint
-        }
+        Statement::Assignment(assignment) => invert_assignment(assignment),
+        Statement::Skip => Statement::Skip,
+        Statement::ReverseAssignment(assignment) => Statement::Assignment(assignment.clone()),
+        Statement::ReversePoint => Statement::ReversePoint,
     }
 }
 
-fn invert_if_statement(boolean_expression: &BooleanExpression, if_block: &Block, else_block: &Block) -> Statement {
-    Statement::If(Box::new(boolean_expression.clone()),
-                  Box::new(invert_block(if_block)),
-                  Box::new(invert_block(else_block)))
+fn invert_if_statement(
+    boolean_expression: &BooleanExpression,
+    if_block: &Block,
+    else_block: &Block,
+) -> Statement {
+    Statement::If(
+        Box::new(boolean_expression.clone()),
+        Box::new(invert_block(if_block)),
+        Box::new(invert_block(else_block)),
+    )
 }
 
-fn invert_while_statement(_: &BooleanExpression, block: &Block, last_variable_name: &Option<String>) -> Statement {
+fn invert_while_statement(
+    _: &BooleanExpression,
+    block: &Block,
+    last_variable_name: &Option<String>,
+) -> Statement {
     if last_variable_name.is_none() {
-        unreachable!("This should only be called on an AST that has gone through semantic transformations")
+        unreachable!(
+            "This should only be called on an AST that has gone through semantic transformations"
+        )
     }
 
-    Statement::While(Box::new(BooleanExpression::Relational(
-        RelationOperator::GreaterThan,
-        Box::new(ArithmeticExpression::Variable(last_variable_name.clone().unwrap())),
-        Box::new(ArithmeticExpression::Integer(0)),
-    )),
-                     Box::new(invert_block(block))
+    Statement::While(
+        Box::new(BooleanExpression::Relational(
+            RelationOperator::GreaterThan,
+            Box::new(ArithmeticExpression::Variable(
+                last_variable_name.clone().unwrap(),
+            )),
+            Box::new(ArithmeticExpression::Integer(0)),
+        )),
+        Box::new(invert_block(block)),
     )
 }
 
@@ -101,7 +112,7 @@ fn invert_assignment(assignment: &Assignment) -> Statement {
 fn invert_block(block: &Block) -> Block {
     let mut new_block = Vec::with_capacity(block.len());
     // TODO: And this one
-    for _ in 0..block.len() {
+    for _ in 1..block.len() {
         new_block.push(Statement::Skip);
     }
     let mut last_variable_name = None;
@@ -114,7 +125,10 @@ fn invert_block(block: &Block) -> Block {
                 }
             }
         }
-        new_block.insert(block.len() - index - 1, invert_statement(statement, &last_variable_name));
+        new_block.insert(
+            block.len() - index - 1,
+            invert_statement(statement, &last_variable_name),
+        );
     }
 
     new_block

@@ -2,7 +2,8 @@
 mod tests;
 pub mod value;
 
-#[macro_export] macro_rules! range {
+#[macro_export]
+macro_rules! range {
     ($e:expr) => {
         Range::Char($e)
     };
@@ -25,9 +26,11 @@ impl std::fmt::Display for Range {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
             Range::Char(c) => write!(f, "{}", c.escape_default()),
-            Range::Range(range) => write!(f, "{}-{}",
-                                          range.start().escape_default(),
-                                          range.end().escape_default()
+            Range::Range(range) => write!(
+                f,
+                "{}-{}",
+                range.start().escape_default(),
+                range.end().escape_default()
             ),
         }
     }
@@ -126,13 +129,13 @@ impl Re {
             if s.len() == 1 {
                 Re::Char(first.unwrap())
             } else {
-                Re::Seq(Box::new(Re::Char(first.unwrap())),
-                        Box::new(Re::seq_from(s[1..].to_string()))
+                Re::Seq(
+                    Box::new(Re::Char(first.unwrap())),
+                    Box::new(Re::seq_from(s[1..].to_string())),
                 )
             }
         }
     }
-
 
     pub fn zero() -> Re {
         Re::Zero
@@ -393,10 +396,20 @@ pub struct PrefixMatcher {
 impl std::fmt::Display for PrefixMatcher {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self.matched {
-            Some(ref matched) => write!(f, "PrefixMatcher: re: {}, matched: \"{}\", remaining: \"{}\"", self.re, matched, self.remaining.as_ref().unwrap()),
+            Some(ref matched) => write!(
+                f,
+                "PrefixMatcher: re: {}, matched: \"{}\", remaining: \"{}\"",
+                self.re,
+                matched,
+                self.remaining.as_ref().unwrap()
+            ),
             None => {
                 if self.used {
-                    write!(f, "PrefixMatcher: re: {}, matched: None, remaining: None", self.re)
+                    write!(
+                        f,
+                        "PrefixMatcher: re: {}, matched: None, remaining: None",
+                        self.re
+                    )
                 } else {
                     write!(f, "PrefixMatcher: re: {}", self.re)
                 }

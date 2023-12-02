@@ -40,7 +40,11 @@ pub enum ArithmeticExpression {
     Variable(String),
     Integer(i32),
     Unary(UnaryArithmeticOperator, Box<ArithmeticExpression>),
-    Operation(ArithmeticOperator, Box<ArithmeticExpression>, Box<ArithmeticExpression>),
+    Operation(
+        ArithmeticOperator,
+        Box<ArithmeticExpression>,
+        Box<ArithmeticExpression>,
+    ),
 }
 
 #[derive(Debug, Eq, PartialEq, Clone, Hash)]
@@ -64,15 +68,15 @@ pub enum UnaryBooleanOperator {
 
 #[derive(Debug, Eq, PartialEq, Clone, Hash)]
 pub enum BooleanExpression {
-    Logical(BooleanOperator, Box<BooleanExpression>, Box<BooleanExpression>),
-    Relational(RelationOperator, Box<ArithmeticExpression>, Box<ArithmeticExpression>),
+    Logical(
+        BooleanOperator,
+        Box<BooleanExpression>,
+        Box<BooleanExpression>,
+    ),
+    Relational(
+        RelationOperator,
+        Box<ArithmeticExpression>,
+        Box<ArithmeticExpression>,
+    ),
     Unary(UnaryBooleanOperator, Box<BooleanExpression>),
-}
-
-#[derive(Debug, Eq, PartialEq, Clone, Hash)]
-pub enum ASTNode {
-    Program(Program),
-    Statement(Statement),
-    ArithmeticExpression(ArithmeticExpression),
-    BooleanExpression(BooleanExpression),
 }

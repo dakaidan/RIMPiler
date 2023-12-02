@@ -1,10 +1,10 @@
-use super::{*};
+use super::*;
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum Value {
     Empty,
     Char(char), // Also used for range
-    Seq(Box<Value>,  Box<Value>),
+    Seq(Box<Value>, Box<Value>),
     Left(Box<Value>),
     Right(Box<Value>),
     Stars(Vec<Value>), // Also used for optional, and plus
@@ -20,7 +20,7 @@ impl std::ops::BitAnd for Value {
 }
 
 impl Value {
-    fn flatten(&self) -> String{
+    fn flatten(&self) -> String {
         match self {
             Value::Empty => String::new(),
             Value::Char(c) => c.to_string(),
@@ -79,9 +79,8 @@ impl Re {
                 } else {
                     Value::Right(Box::new(r2.make_empty()))
                 }
-            },
-            Re::Seq(r1, r2) =>
-                Value::Seq(Box::new(r1.make_empty()), Box::new(r2.make_empty())),
+            }
+            Re::Seq(r1, r2) => Value::Seq(Box::new(r1.make_empty()), Box::new(r2.make_empty())),
             Re::Star(_) => Value::Stars(Vec::new()),
             Re::Plus(r) => Value::Stars(Vec::from([r.make_empty()])),
             Re::Optional(_) => Value::Stars(Vec::new()),
@@ -92,49 +91,54 @@ impl Re {
 
     pub(crate) fn injection(&self, c: char, value: &mut Value) -> Value {
         match (self, value) {
-            (Re::Star(r), Value::Seq(v1, st)) if match **st {
-                Value::Stars(_) => true,
-                _ => false,
-            } => {
-                let Value::Stars(vs) = st.as_mut() else { unreachable!() };
+            (Re::Star(r), Value::Seq(v1, st))
+                if match **st {
+                    Value::Stars(_) => true,
+                    _ => false,
+                } =>
+            {
+                let Value::Stars(vs) = st.as_mut() else {
+                    unreachable!()
+                };
                 let mut v = Vec::from([r.injection(c, v1)]);
                 v.extend(vs.to_owned());
                 Value::Stars(v)
-            },
-            (Re::Seq(r1, _), Value::Left(l)) if match **l {
-                Value::Seq(_, _) => true,
-                _ => false,
-            } => {
-                let Value::Seq(v1, v2) = l.as_mut() else { unreachable!() };
+            }
+            (Re::Seq(r1, _), Value::Left(l))
+                if match **l {
+                    Value::Seq(_, _) => true,
+                    _ => false,
+                } =>
+            {
+                let Value::Seq(v1, v2) = l.as_mut() else {
+                    unreachable!()
+                };
                 Value::Seq(Box::new(r1.injection(c, v1.as_mut())), v2.to_owned())
             }
             (Re::Seq(r1, _), Value::Seq(v1, v2)) => {
                 Value::Seq(Box::new(r1.injection(c, v1.as_mut())), v2.to_owned())
             }
-            (Re::Seq(r1, r2), Value::Right(v)) => {
-                Value::Seq(Box::new(r1.make_empty()), Box::new(r2.injection(c, v.as_mut())))
-            }
-            (Re::Alt(r1, _), Value::Left(v)) => {
-                Value::Left(Box::new(r1.injection(c, v)))
-            }
-            (Re::Alt(_, r2), Value::Right(v)) => {
-                Value::Right(Box::new(r2.injection(c, v)))
-            }
-            (Re::Char(_), Value::Empty) => {
-                Value::Char(c)
-            }
-            (Re::Range(_), Value::Empty) => {
-                Value::Char(c)
-            }
-            (Re::Plus(r), Value::Seq(v1, st)) if match **st {
-                Value::Stars(_) => true,
-                _ => false,
-            } => {
-                let Value::Stars(vs) = st.as_mut() else { unreachable!() };
+            (Re::Seq(r1, r2), Value::Right(v)) => Value::Seq(
+                Box::new(r1.make_empty()),
+                Box::new(r2.injection(c, v.as_mut())),
+            ),
+            (Re::Alt(r1, _), Value::Left(v)) => Value::Left(Box::new(r1.injection(c, v))),
+            (Re::Alt(_, r2), Value::Right(v)) => Value::Right(Box::new(r2.injection(c, v))),
+            (Re::Char(_), Value::Empty) => Value::Char(c),
+            (Re::Range(_), Value::Empty) => Value::Char(c),
+            (Re::Plus(r), Value::Seq(v1, st))
+                if match **st {
+                    Value::Stars(_) => true,
+                    _ => false,
+                } =>
+            {
+                let Value::Stars(vs) = st.as_mut() else {
+                    unreachable!()
+                };
                 let mut v = Vec::from([r.injection(c, v1)]);
                 v.extend(vs.to_owned());
                 Value::Stars(v)
-            },
+            }
             (Re::Optional(r), v) => {
                 let v = r.injection(c, v);
                 if v == Value::Empty {
@@ -143,10 +147,8 @@ impl Re {
                     Value::Stars(Vec::from([v]))
                 }
             }
-            (Re::Record(name, r), v) => {
-                Value::Record(name.clone(), Box::new(r.injection(c, v)))
-            }
-            _ => unreachable!("injection called on Re {:?}", self)
+            (Re::Record(name, r), v) => Value::Record(name.clone(), Box::new(r.injection(c, v))),
+            _ => unreachable!("injection called on Re {:?}", self),
         }
     }
 
@@ -156,46 +158,49 @@ impl Re {
                 let (r1s, f1) = r1.simplify_with_rectification();
                 let (r2s, f2) = r2.simplify_with_rectification();
                 match (r1s.to_owned(), r2s.to_owned()) {
-                    (Re::Zero, simplified_re) => (simplified_re, Box::new(move |v| Value::Right(Box::new(f2(v))))),
-                    (simplified_re, Re::Zero) => (simplified_re, Box::new(move |v| Value::Left(Box::new(f1(v))))),
-                    (simplified_re1, simplified_re2) if simplified_re1 == simplified_re2 =>
-                        (simplified_re1, Box::new(move |v| Value::Left(Box::new(f1(v))))),
-                    (simplified_re1, simplified_re2) => {
-                        (Re::Alt(Box::new(simplified_re1), Box::new(simplified_re2)),
-                         Box::new(move |v| {
-                             match v {
-                                 Value::Left(v) => Value::Left(Box::new(f1(*v))),
-                                 Value::Right(v) => Value::Right(Box::new(f2(*v))),
-                                 _ => unreachable!(),
-                             }
-                         })
-                        )
-                    }
+                    (Re::Zero, simplified_re) => (
+                        simplified_re,
+                        Box::new(move |v| Value::Right(Box::new(f2(v)))),
+                    ),
+                    (simplified_re, Re::Zero) => (
+                        simplified_re,
+                        Box::new(move |v| Value::Left(Box::new(f1(v)))),
+                    ),
+                    (simplified_re1, simplified_re2) if simplified_re1 == simplified_re2 => (
+                        simplified_re1,
+                        Box::new(move |v| Value::Left(Box::new(f1(v)))),
+                    ),
+                    (simplified_re1, simplified_re2) => (
+                        Re::Alt(Box::new(simplified_re1), Box::new(simplified_re2)),
+                        Box::new(move |v| match v {
+                            Value::Left(v) => Value::Left(Box::new(f1(*v))),
+                            Value::Right(v) => Value::Right(Box::new(f2(*v))),
+                            _ => unreachable!(),
+                        }),
+                    ),
                 }
             }
             Re::Seq(r1, r2) => {
                 let (r1s, f1) = r1.simplify_with_rectification();
                 let (r2s, f2) = r2.simplify_with_rectification();
                 match (r1s.to_owned(), r2s.to_owned()) {
-                    (Re::Zero, _) => (Re::Zero, Box::new(|_: Value| -> Value {unreachable!()})),
-                    (_, Re::Zero) => (Re::Zero, Box::new(|_: Value| -> Value {unreachable!()})),
-                    (Re::One, simplified_re) => (simplified_re, Box::new(move |v| {
-                        Value::Seq(Box::new(f1(Value::Empty)), Box::new(f2(v)))
-                    })),
-                    (simplified_re, Re::One) => (simplified_re, Box::new(move |v| {
-                        Value::Seq(Box::new(f1(v)), Box::new(f2(Value::Empty)))
-                    })),
-                    (simplified_re1, simplified_re2) => {
-                        (Re::Seq(Box::new(simplified_re1), Box::new(simplified_re2)),
-                         Box::new(move |v| {
-                             match v {
-                                 Value::Seq(v1, v2) =>
-                                     Value::Seq(Box::new(f1(*v1)), Box::new(f2(*v2))),
-                                 _ => unreachable!(),
-                             }
-                         })
-                        )
-                    }
+                    (Re::Zero, _) => (Re::Zero, Box::new(|_: Value| -> Value { unreachable!() })),
+                    (_, Re::Zero) => (Re::Zero, Box::new(|_: Value| -> Value { unreachable!() })),
+                    (Re::One, simplified_re) => (
+                        simplified_re,
+                        Box::new(move |v| Value::Seq(Box::new(f1(Value::Empty)), Box::new(f2(v)))),
+                    ),
+                    (simplified_re, Re::One) => (
+                        simplified_re,
+                        Box::new(move |v| Value::Seq(Box::new(f1(v)), Box::new(f2(Value::Empty)))),
+                    ),
+                    (simplified_re1, simplified_re2) => (
+                        Re::Seq(Box::new(simplified_re1), Box::new(simplified_re2)),
+                        Box::new(move |v| match v {
+                            Value::Seq(v1, v2) => Value::Seq(Box::new(f1(*v1)), Box::new(f2(*v2))),
+                            _ => unreachable!(),
+                        }),
+                    ),
                 }
             }
             _ => (self.clone(), Box::new(move |v| v)),

@@ -1,5 +1,5 @@
+use super::super::re::{value::Value, Re};
 use super::Location;
-use super::super::re::{Re, value::Value};
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct LexError {
@@ -9,10 +9,7 @@ pub struct LexError {
 
 impl LexError {
     pub fn new(message: String, location: Location) -> Self {
-        Self {
-            message,
-            location,
-        }
+        Self { message, location }
     }
 }
 
@@ -23,9 +20,7 @@ pub struct LexResult {
 
 impl LexResult {
     pub fn new(value: Value) -> Self {
-        Self {
-            value,
-        }
+        Self { value }
     }
 
     pub fn environment(&self) -> Vec<(String, String)> {
@@ -51,15 +46,11 @@ impl Re {
     fn try_lex(&self, string: String, column: usize, line: usize) -> Result<LexResult, LexError> {
         if string.is_empty() {
             if self.nullable() {
-                Ok(
-                    LexResult::new(
-                        self.make_empty(),
-                    )
-                )
+                Ok(LexResult::new(self.make_empty()))
             } else {
                 Err(LexError {
                     message: format!("Expected EOF"),
-                    location: Location::new(line, column)
+                    location: Location::new(line, column),
                 })
             }
         } else {
@@ -70,7 +61,7 @@ impl Re {
             if simplified == Re::Zero {
                 Err(LexError {
                     message: format!("Unexpected character '{}'", c),
-                    location: Location::new(line, column)
+                    location: Location::new(line, column),
                 })
             } else {
                 let mut line = line;
@@ -89,11 +80,9 @@ impl Re {
                 let result = simplified.try_lex(remaining.to_owned(), column, line);
 
                 match result {
-                    Ok(value) => Ok(
-                        LexResult::new(
-                            self.injection(c, &mut rectification(value.value)),
-                        )
-                    ),
+                    Ok(value) => Ok(LexResult::new(
+                        self.injection(c, &mut rectification(value.value)),
+                    )),
                     Err(error) => Err(error),
                 }
             }
@@ -105,14 +94,20 @@ impl Re {
             Ok(value) => {
                 let mut line = 1;
                 let mut column = 0;
-                Ok(
-                    value.environment().iter().map(|(record_identifier, lexeme)| {
+                Ok(value
+                    .environment()
+                    .iter()
+                    .map(|(record_identifier, lexeme)| {
                         let (l, c) = (line, column);
                         (line, column) = to_line_column(lexeme, line, column);
-                        (record_identifier.clone(), lexeme.clone(), Location::new(l, c))
-                    }).collect()
-                )
-            },
+                        (
+                            record_identifier.clone(),
+                            lexeme.clone(),
+                            Location::new(l, c),
+                        )
+                    })
+                    .collect())
+            }
             Err(error) => Err(error),
         }
     }

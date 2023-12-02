@@ -1,4 +1,6 @@
-use crate::AST::{ArithmeticOperator, BooleanOperator, UnaryArithmeticOperator, UnaryBooleanOperator};
+use crate::AST::{
+    ArithmeticOperator, BooleanOperator, UnaryArithmeticOperator, UnaryBooleanOperator,
+};
 
 pub fn arithmetic_binding_power(op: &ArithmeticOperator) -> (u8, u8) {
     match op {

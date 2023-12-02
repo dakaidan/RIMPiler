@@ -6,12 +6,14 @@ pub fn load_file(path: &str) -> Result<String, String> {
     match file {
         Ok(mut file) => {
             let mut contents = String::new();
-            let result = file.read_to_string(&mut contents).map_err(|e| e.to_string());
+            let result = file
+                .read_to_string(&mut contents)
+                .map_err(|e| e.to_string());
             match result {
                 Ok(_) => Ok(contents),
-                Err(e) => Err(e.to_string())
+                Err(e) => Err(e.to_string()),
             }
         }
-        Err(e) => Err(e.to_string())
+        Err(e) => Err(e.to_string()),
     }
 }

@@ -1,5 +1,5 @@
-use RIMPiler_frontend::{post_parse::inverter::invert_and_combine, interpreter::InterpreterEngine};
 use crate::ast::create_ast;
+use RIMPiler_frontend::{interpreter::InterpreterEngine, post_parse::inverter::invert_and_combine};
 
 pub struct Interpreter {
     input_file: String,
@@ -7,9 +7,7 @@ pub struct Interpreter {
 
 impl Interpreter {
     pub(crate) fn new(input_file: String) -> Interpreter {
-        Interpreter {
-            input_file,
-        }
+        Interpreter { input_file }
     }
 
     pub(crate) fn interpret(&self) -> Result<(), String> {
@@ -30,6 +28,11 @@ impl Interpreter {
         if result.is_err() {
             return Err(result.unwrap_err().to_string());
         }
+
+        println!(
+            "result: \n{}",
+            interpreter.get_reverse_point_snapshot().as_ref().unwrap()
+        );
 
         Ok(())
     }

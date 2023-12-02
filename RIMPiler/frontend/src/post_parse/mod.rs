@@ -1,4 +1,5 @@
-mod validator;
-pub mod transformer;
 pub mod inverter;
 mod name_generator;
+#[cfg(test)]
+mod tests;
+pub mod transformer;

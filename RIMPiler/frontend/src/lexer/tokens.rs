@@ -21,7 +21,10 @@ impl Keyword {
             "while" => Keyword::While,
             "do" => Keyword::Do,
             "int" => Keyword::Int,
-            _ => unreachable!("Should only be called by the Lexer, invalid keyword, {}", string),
+            _ => unreachable!(
+                "Should only be called by the Lexer, invalid keyword, {}",
+                string
+            ),
         }
     }
 }
@@ -59,7 +62,10 @@ impl Operator {
             "&&" => Operator::And,
             "||" => Operator::Or,
             "!" => Operator::Not,
-            _ => unreachable!("Should only be called by the Lexer, invalid binary operator, {}", string),
+            _ => unreachable!(
+                "Should only be called by the Lexer, invalid binary operator, {}",
+                string
+            ),
         }
     }
 }
@@ -79,7 +85,10 @@ impl Bracket {
             ")" => Bracket::RightParenthesis,
             "{" => Bracket::LeftBrace,
             "}" => Bracket::RightBrace,
-            _ => unreachable!("Should only be called by the Lexer, invalid bracket, {}", string),
+            _ => unreachable!(
+                "Should only be called by the Lexer, invalid bracket, {}",
+                string
+            ),
         }
     }
 }
@@ -89,7 +98,7 @@ pub enum RIMPToken {
     Keyword(Keyword),
     Identifier(String),
     Operator(Operator),
-    Number(i32),    // I believe PISA only supports 32-bit integers, if so, no need to lex larger
+    Number(i32), // I believe PISA only supports 32-bit integers, if so, no need to lex larger
     Bracket(Bracket),
     Semicolon,
     Whitespace,
@@ -123,7 +132,7 @@ impl RIMPToken {
 
 #[derive(Debug)]
 pub struct Tokens {
-    tokens: Vec<TokenMeta<RIMPToken>>
+    tokens: Vec<TokenMeta<RIMPToken>>,
 }
 
 impl Tokens {
@@ -146,7 +155,6 @@ impl Tokens {
                 lexeme: token.lexeme.clone(),
             }),
             None => None,
-
         }
     }
 }
@@ -169,12 +177,15 @@ impl Token for RIMPToken {
                     Ok(number) => Ok(RIMPToken::Number(number)),
                     Err(error) => Err(error),
                 }
-            },
+            }
             "bracket" => Ok(RIMPToken::Bracket(Bracket::new(string))),
             "semicolon" => Ok(RIMPToken::Semicolon),
             "whitespace" => Ok(RIMPToken::Whitespace),
             "comment" => Ok(RIMPToken::Comment),
-            _ => unreachable!("Should only be called by the Lexer, invalid token, {}", string),
+            _ => unreachable!(
+                "Should only be called by the Lexer, invalid token, {}",
+                string
+            ),
         };
 
         match tok {

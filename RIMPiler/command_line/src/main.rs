@@ -2,7 +2,7 @@ mod ast;
 mod compiler;
 mod interpreter;
 
-use utilities::args_parser::{*};
+use utilities::args_parser::*;
 
 fn get_args() -> CommandLineResult {
     let parser = CommandLineArgumentsBuilder::new()
@@ -12,7 +12,7 @@ fn get_args() -> CommandLineResult {
                 .long_name("input")
                 .string()
                 .description("The RIMP file to compile")
-                .required()
+                .required(),
         )
         .add_argument(
             ArgumentBuilder::new("output")
@@ -20,31 +20,31 @@ fn get_args() -> CommandLineResult {
                 .long_name("output")
                 .string()
                 .description("The output file")
-                .optional()
+                .optional(),
         )
         .add_flag(
             FlagBuilder::new("compile")
                 .short_name("c")
                 .long_name("compile")
-                .description("Compile the input file")
+                .description("Compile the input file"),
         )
         .add_flag(
             FlagBuilder::new("interpret")
                 .short_name("r")
                 .long_name("interpret")
-                .description("Interpret the input file")
+                .description("Interpret the input file"),
         )
         .add_flag(
             FlagBuilder::new("llvm")
                 .short_name("l")
                 .long_name("llvm")
-                .description("Compile to LLVM IR")
+                .description("Compile to LLVM IR"),
         )
         .add_flag(
             FlagBuilder::new("pisa")
                 .short_name("p")
                 .long_name("pisa")
-                .description("Compile to PISA")
+                .description("Compile to PISA"),
         )
         .build();
 
@@ -58,8 +58,9 @@ fn get_args() -> CommandLineResult {
         Ok(args) => {
             if (args.flags.contains("compile")
                 || args.flags.contains("llvm")
-                || args.flags.contains("pisa")
-            ) && args.flags.contains("interpret") {
+                || args.flags.contains("pisa"))
+                && args.flags.contains("interpret")
+            {
                 println!("Error: Cannot compile and interpret at the same time");
                 println!("{}", parser);
                 std::process::exit(1);

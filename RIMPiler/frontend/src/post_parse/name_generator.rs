@@ -7,10 +7,7 @@ impl NameGenerator {
     pub fn new(base: String) -> Self {
         let mut name = String::from("generated_name_");
         name.push_str(&base);
-        Self {
-            name,
-            counter: 0,
-        }
+        Self { name, counter: 0 }
     }
 
     pub fn generate(&mut self) -> String {
