@@ -1,17 +1,40 @@
 \chapter*{Requirements}
 
-An overview of functional requirements, perhaps non-functional requirements, and a brief description of use cases.
+This project aims to produce a compiler for the reversible programming language RIMP in a modular way, allowing for the use of different backends, and frontends, and to easily alter various aspects of the compilers pipeline.
 
-Note, From a example submission:
-Ullah Joya
-Loyalty Card App
-2015
+\section*{Functional Requirements}
 
-"Importance of the requirements is shown next to them. A high priority requirement
-must be implemented for the project to be considered complete. Without low
-priority requirements, useful but not critical, the application should offer basic
-23
-functionality. High priority requirements should be implemented first and then
-tackle other lower priority requirements."
+\begin{enumerate}
+    \item The compiler must be able to produce a token stream from a RIMP source file.
+    \item The compiler must be able to produce an abstract syntax tree from a token stream.
+    \item The compiler must be able to perform semantic transformations on the abstract syntax tree to produce a reversible program.
+    \item The compiler must be able to produce the reverse abstract syntax tree from an abstract syntax tree.
+    \item The compiler must be able to produce an SSA form from an abstract syntax tree.
+    \item The compiler must be able to produce an executable file from an input file.
+    \item The compiler should be able to target a reversible SSA form such as RSSA.
+    \item The compiler should provide a backend for a reversible SSA form such as RSSA to produce a reversble machine code such as PISA.
+\end{enumerate}
 
-So we should be able to specify even aspirational requirements, and then prioritise them.
+
+\section*{Non-Functional Requirements}
+
+\begin{enumerate}
+    \item The compiler should be able to compile in a reasonable amount of time.
+    \item The compiler should be able to give feedback to the user when compilation fails.
+\end{enumerate}
+
+%An overview of functional requirements, perhaps non-functional requirements, and a brief description of use cases.
+%
+%Note, From a example submission:
+%Ullah Joya
+%Loyalty Card App
+%2015
+%
+%"Importance of the requirements is shown next to them. A high priority requirement
+%must be implemented for the project to be considered complete. Without low
+%priority requirements, useful but not critical, the application should offer basic
+%23
+%functionality. High priority requirements should be implemented first and then
+%tackle other lower priority requirements."
+%
+%So we should be able to specify even aspirational requirements, and then prioritise them.
