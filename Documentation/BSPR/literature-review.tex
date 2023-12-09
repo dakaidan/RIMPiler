@@ -1,6 +1,24 @@
 \chapter*{Literature Review}
 
-What existing works are similar or tangential to this project?
-What are the relevant theories and concepts?
-What are the relevant technologies and techniques?
-What do we do differently?
+There are several other reversible programming languages, such as Janus, and R-While, and ROOP\@.
+These languages aim at different paradigms, such as ROOP being object-oriented.
+However, many of these existing languages require the programmer to be aware of the underlying reversible model of computation, which can add overhead to the development process.
+RIMP, unlike these languages, aims to mirror the syntax of a standard imperative programming language, allowing the programmer to write programs in a way which is familiar to them, while still being able to take advantage of the benefits of reversible computing through semantic transformations.
+
+Janus maintains reversibility by restricting the use of assignments to only be non-destructive, by this, we can always recover the previous state of the system.
+For example if we have:
+\begin{lstlisting}
+    x += 1
+    x -= 4
+\end{lstlisting}
+We can recover the previous state by performing the inverse operations in reverse order:
+\begin{lstlisting}
+    x += 4
+    x -= 1
+\end{lstlisting}
+This is often how reversible languages deal with assignments, however, in many conventional languages, programmers are use to using destructive assignments, which can make it difficult to write programs in a reversible language.
+RIMP allows for both destructive and non-destructive assignments, and uses semantic transformations to ensure that the program is reversible.
+We achieve this by using a stack to preserve the changes made by destructive assignments, and then using this stack to undo the changes when we need to recover the previous state of the system.
+
+ROOP is an expressive language which allows for rich object-oriented features and typing.
+It is similar to Janus in that it restricts the use of assignments.

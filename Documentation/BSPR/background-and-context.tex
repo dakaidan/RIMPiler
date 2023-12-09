@@ -1,38 +1,51 @@
-\chapter*{Background and Context}
+\section*{Background and Context}
 
-\section{Reversible Computing}\label{sec:reversible-computing}
-Reversible computing is a model of computation in which the original state of the system can be recovered from the final state of the system\cite{bennett_logical_1973}.
-Reversible computing is a wide-reaching, yet relatively under researched area of computer science with the potential to impact many areas of computer science, including low-power computing\cite{landauer_irreversibility_1961}, high-speed computing, quantum computing, and more.
-% Cite some papers here for each of these maybe by Kaylan S. Perumalla, he seems to be around the classical aspects
+\subsection*{Reversible Computing}\label{subsec:rev-comp}
+Reversible computing is a model of computing where all operations are reversible, and therefore, we can always recover the previous state of the system.
+This has a number of applications, such as debugging, quantum computing, and overcoming the Landauer limit.
 
-\subsection{Classical Computing}\label{subsec:classical-computing}
-In classical computing reversible computing has many applications, but one of the most prominent, which cannot be overcome by other means, is to reduce power consumption below the Landauer limit\cite{landauer_irreversibility_1961}.
-The ability to potentially reduce power consumption below the Landauer limit has many applications, including both low-power computing, which in the age of mobile computing is a very important area, and high-speed computing, which has applications in all performance critical areas of computing.
+The Landauer limit is a theoretical limit on the amount of energy required to perform a computation, and is proportional to the number of bits erased during the computation.
+Overcoming this limit would allow for much more energy efficient computers, and while we are still far from achieving this, reversible computing is a necessary step towards it.
 
-% cite this article https://spectrum.ieee.org/landauer-limit-demonstrated
-While we are still a ways from achieving this, as the landauer limit is around 100,000 time less energy per bit erasure than current computers.
-The study of all facets of reversible computing is key to achieving this goal.
+Quantum computing is a model of computing which uses quantum mechanical phenomena such as superposition and entanglement to perform computations, allowing for much more efficient algorithms for certain problems such as Shor's algorithm for factoring large numbers.
 
-\subsection{Quantum Computing}\label{subsec:quantum-computing}
-% Discuss the benefit and importance of quantum computing
-Quantum computing allows us to solve problems which are intractable on classical computers, such as integer factorisation, which is the basis of many modern encryption algorithms.
-The quantum model of computing largely relies on the reversible model of computation in order to prevent decoherence.
+The ability to perform computations in reverse is also useful for debugging, as it allows us to step backwards through the execution of a program, and see how the state of the system changes.
+this allows us to easily navigate the control flow of a program, and see how the state of the system changes with various data changes.
 
-Reversible computing allows the system to be run deterministically in either direction, ensuring there is no loss of information.
-% cite Nielsen M.A., Chuang I.L. Quantum Computation and Quantum Information. Cambridge University Press; Cambridge, UK: 2000. here
-In quantum computing, the conservation of information is vital to maintaining coherence of the system, and thus, reversible computation plays a key role in quantum computing.
+\subsection*{Programming Languages}\label{subsec:pl}
+Programming languages are an abstraction over some model of computation, allowing developers to write programs in a more human-readable, and human-reasonable way.
+A programming language is often comprised of both a specification, formally describing the syntax and semantics of the language, and a compiler or interpreter, which allows us to work with the language without having to perform manual translations to a lower level language.
+Additionally, a programming language may allow for abstractions over the underlying model of computation, or specific architecture, allowing the same program to target different systems which may work in drastically different ways.
 
-\section{Programing Languages}\label{sec:programing-languages}
-Programming languages are a key part of how we build systems, they abstract away much of the complexity or messiness of the underlying system, and provides us with a language which we can quickly build intuition and reason about.
-We can see in languages such as Janus\cite{lutz_janus_1986} the language offers a high level inferable syntax which allows us to reason about a program.
-However, what it does not provide is a complete abstraction from the model of computation, this can be seen through restrictions in things like assignment.
-While this does not restrict the ability of the language, it does add additional barriers to developers, requiring them to adjust to the model of computation being used.
+In the case of reversible computing and RIMP, the semantics of the language allow us to embed reversibility in a syntax which otherwise resembles a standard imperative programming language, allowing the developer to program in a way which is familiar to them, while still being able to take advantage of the benefits of reversible computing.
 
-\section{Compilers}\label{sec:compilers}
-Compilers are vital to working with high-level programming languages, applying translations to the code to allow it to be run on the target system which would be impractical to do manually for any non-trivial program.
-Additionally, compilers can do much more such as optimise the code, and provide feedback to the developer such as warnings and errors.
-This allows the developer to produce better code with less issues than it may have otherwise had.
+\subsection*{Lexers}\label{subsec:lexers}
+Syntax is the set of rules which define the structure of a language, namely, what set of strings are valid strings, without necessarily defining the meaning of those strings.
+A lexer is a program which takes a stream of characters as input, and outputs a stream of tokens based on some syntax.
+This is useful for compilers and interpreters, as it allows us to not only break down the problem into smaller steps, but it can also act as a filter, removing any unwanted parts of the input, such as whitespace and comments, as well as catching any potential errors such as a string sequence which cannot correspond to any valid token.
 
-% Give background information, and context of the motivation for the project.
+We often aim to produce POSIX lexers, as they allow us to disambiguate between tokens in a way that is easy to reason about.
 
-% Background: Information and definitions almost for any relevant domain specific information. Motivation: Why is this important, what is missing, what is new, and why do I want to do this?
+There are many ways to implement a lexer, including finite state machines, and regular expressions.
+In the case of regular expressions, we can further explore methods of implementing them, such as using the standard NFA construction such as through Thompson's construction, using a DFA construction such as the powerset construction, or by using derivatives.
+
+\subsection*{Regular Expressions}\label{subsec:regex}
+Regular expressions are a way of describing a set of strings, and are often used in lexers to describe the syntax of a language.
+One way of implementing regular expressions is through derivatives, where we can take the derivative of a regular expression with respect to a character, and use this to determine whether a string is in the language described by the regular expression.
+This can be extended to allow for POSIX lexing.
+
+\subsection*{Parsers}\label{subsec:parsers}
+Parsers take a stream of tokens as input, and output a parse tree, which represents the structure of the program in an unambiguous way.
+This tree then encodes the semantics of the program, and we can then perform further analysis on the tree, or perform various transformations on it.
+There are many ways to implement a parser, some methods being top down, such as recursive descent, and bottom up, such as LR parsing.
+Here we will use a mix of a custom top-down parser to handle statements and control flow, and Pratt parsing to handle expressions.
+
+Pratt parsing is a method of parsing expressions, where we assign a precedence to each token, and then use this to determine how to parse the expression.
+It is a form of top-down operator precedence parsing, and is often used in conjunction with recursive descent parsing.
+
+\subsection*{Single Static Assignment}\label{subsec:ssa}
+Single static assignment is a form of intermediate representation, where each variable is assigned exactly once, and each assignment is given a unique name.
+This allows for many optimisations, such as constant propagation, and dead code elimination to easily be performed on the program.
+
+It is also useful for portability, as LLVM IR is in SSA form, and so we can easily target LLVM, and therefore many architectures, by compiling to LLVM IR.
+

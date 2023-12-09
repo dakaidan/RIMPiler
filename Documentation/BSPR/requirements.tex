@@ -1,8 +1,7 @@
-\chapter*{Requirements}
+\section*{Requirements}
 
-This project aims to produce a compiler for the reversible programming language RIMP in a modular way, allowing for the use of different backends, and frontends, and to easily alter various aspects of the compilers pipeline.
 
-\section*{Functional Requirements}
+\subsection*{Functional Requirements}
 
 \begin{enumerate}
     \item The compiler must be able to produce a token stream from a RIMP source file.
@@ -13,14 +12,19 @@ This project aims to produce a compiler for the reversible programming language 
     \item The compiler must be able to produce an executable file from an input file.
     \item The compiler should be able to target a reversible SSA form such as RSSA.
     \item The compiler should provide a backend for a reversible SSA form such as RSSA to produce a reversble machine code such as PISA.
+    \item The compiler could extend the language to include arrays
+    \item The compiler could extend the language to include functions
+    \item The compiler could extend the language to include I/O
+    \item The compiler could extend the language to perform optimisations
 \end{enumerate}
 
 
-\section*{Non-Functional Requirements}
+\subsection*{Non-Functional Requirements}
 
 \begin{enumerate}
     \item The compiler should be able to compile in a reasonable amount of time.
     \item The compiler should be able to give feedback to the user when compilation fails.
+    \item The produced code should execute in a reasonable amount of time.
 \end{enumerate}
 
 %An overview of functional requirements, perhaps non-functional requirements, and a brief description of use cases.

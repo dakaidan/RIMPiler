@@ -1,4 +1,97 @@
-\chapter*{Specification}
+\section*{Specification}
 
-Give requirements priorities, and specify them in more detail.
-perhaps also list limitations of the project, and assumptions made here.
+Here we will detail the requirements of the project, and prioritise them.
+In order to have a complete compiler we must implement all high priority requirements.
+We will also list other requirements which we may implement if time allows, and additionally some which we will not be able to implement.
+
+\subsection*{Functional Requirements}
+\subsubsection[1]{1 produce a token stream from a RIMP source file: High Priority}
+Given a plaintext file containing a RIMP program, the compiler should be able to read its contents, and produce a token stream corresponding to the program.
+This token stream should match the concrete syntax of RIMP, and should be sound and complete with respect to the RIMP grammar.
+This means that no string should produce a token if it is not a valid token in RIMP, and every string which corresponds to a valid token in RIMP should produce a token.
+
+\subsubsection[2]{2 produce an abstract syntax tree from a token stream: High Priority}
+Given a token stream, composed only of valid tokens, the compiler should be able to produce an abstract syntax tree corresponding to the program.
+This abstract syntax tree should match the abstract syntax of RIMP, and should be sound and complete with respect to the RIMP grammar.
+This means that no token stream should produce an abstract syntax tree if it is not a valid program in RIMP, and every program in RIMP should produce an abstract syntax tree.
+
+\subsubsection[3]{3 perform semantic transformations: High Priority}
+Given an abstract syntax tree, the compiler should be able to perform semantic transformations on the tree to produce a reversible program.
+These transformations should be applied to if statements and while loops.
+If statements should be transformed such that any variables used in the conditional, which are also reassigned in the body of the if statement, remapped to new variables.
+% Give mathematical form of the above
+We will use a function $Vars_{assign}(B)$ to denote the set of variables assigned to in a block $B$.
+We will use a function $Vars_{used}(E)$ to denote the set of variables used in an expression $E$.
+Given an if statement comprising a conditional $C$, and an if body $B_{if}$, and an else body $B_{else}$.
+
+\begin{center}
+$vars = \{\forall v \in (Vars_{used}(C) \cup Vars_{assign}(B_{if}) \cup Vars_{assign}(B_{else}))\}$
+\end{center}
+
+for all $vars$ we will introduce a new variable $v'$, which before the if statement is assigned to $v$.
+We will then replace all occurrences of $v$ in $C$ with $v'$.
+
+While loops should be transformed such that each loop maintains a counter variable which is incremented at the end of each iteration.
+
+\subsubsection[4]{4 produce the reverse abstract syntax tree: High Priority}
+Given a correct abstract syntax tree, the compiler should be able to produce the reverse abstract syntax tree.
+This reverse abstract syntax tree should be equivalent to performing the $rev$ function to the original program, and then producing the abstract syntax tree of the resulting program.
+
+\subsubsection[5]{5 produce an SSA form: High Priority}
+Given a correct abstract syntax tree, the compiler should be able to produce an SSA form.
+This SSA form should at least be LLVM IR, however, we may also implement a reversible SSA form such as RSSA if time allows.
+The SSA produced should be semantically equivalent to the original program.
+
+\subsubsection[6]{6 produce an executable file: High Priority}
+The compiler must produce a file which at a later time can be executed to run the program.
+This may be an executable file able to run directly on x86_64, PISA, a Java class file, or a file which may run on an abstract machine.
+We will aim to produce several of these, however, we will prioritise producing at least one.
+
+\subsubsection[7]{7 target a reversible SSA form: Medium Priority}
+The compiler should be able to target a reversible SSA form such as RSSA.
+This will allow us to target reversible architectures such as PISA, and therefore allow us to run the program on a reversible machine.
+
+\subsubsection[8]{8 provide a backend for a reversible SSA form: Medium Priority}
+The compiler should provide a backend for a reversible SSA form such as RSSA to produce a reversble machine code such as PISA.
+The PISA produced should be semantically equivalent to the original program.
+
+\subsubsection[9]{9 extend the language to include arrays: Low Priority}
+The compiler could extend the language to include arrays.
+Arrays must also preserve reversibility.
+This feature is out of scope for the project given the time constraints, however, it would be a useful feature to have in the future.
+
+\subsubsection[10]{10 extend the language to include functions: Low Priority}
+The compiler could extend the language to include functions.
+Functions must also preserve reversibility by being able to uncall them.
+This feature is out of scope for the project given the time constraints, however, it would be a useful feature to have in the future.
+
+\subsubsection[11]{11 extend the language to include I/O: Low Priority}
+The compiler could extend the language to include I/O.
+This would allow us to have points in programs where optimisations cannot be applied, which would allow us to implement optimisations without potentially reducing the entire program to a trivial set of instructions.
+This feature is out of scope for the project given the time constraints, however, it would be a useful feature to have in the future.
+
+\subsubsection[12]{12 extend the language to perform optimisations: Low Priority}
+The compiler could extend the language to perform optimisations.
+This would only be possible if we also extend the language to include I/O, as otherwise we would likely optimise much of the program away as there are no blocks which cannot be optimised.
+This feature is out of scope for the project given the time constraints, however, it would be a useful feature to have in the future.
+
+\subsection*{Non-Functional Requirements}
+
+\subsubsection[1]{1 compile in a reasonable amount of time: High Priority}
+The compiler should not take longer than a few seconds to compile a simple RIMP program, comprising less than 50 lines.
+
+\subsubsection[2]{2 give feedback to the user when compilation fails: High Priority}
+The compiler should give feedback to the user when compilation fails, and should give a useful error message.
+This message should ideally indicate the location, and indicate some possible causes of the error.
+
+\subsubsection[3]{3 execute in a reasonable amount of time: medium Priority}
+The produced code should execute in a reasonable amount of time.
+This means we should ensure the resulting compiled program does not have significant amounts of unnecessary overhead.
+
+\subsection*{Limitations}
+One of the largest limitations to this project outside of time constraints is the lack of I/O provided by RIMP\@.
+This means that we cannot implement optimisation without reducing the program significantly.
+If we were to do this, we would essentially be performing much of the computation at compile time, and then only outputting the result at runtime.
+
+Another limitation is the lack of hardware and emulation support for reversible architectures.
+This prevents us from easily targeting reversible architectures such as PISA and running the program on a reversible machine due to lack of availability, and documentation making it difficult to implement the compiler for these architectures.

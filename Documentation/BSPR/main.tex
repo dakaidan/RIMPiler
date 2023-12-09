@@ -12,15 +12,20 @@
 \graphicspath{ {./images/} }
 \usepackage{biblatex}
 \addbibresource{references.bib}
+\usepackage{listings}
+
+\newenvironment{abstract}{}{}
+\usepackage{abstract}
+
 
 % Document
 \begin{document}
 
     \input{title}
-    \input{background-and-context}
+    \input{abstract}
+    \input{introduction}
     \input{literature-review}
-    \input{requirements}
-    \input{specification}
+    \input{requirements-and-specification}
     \input{design}
 
     \printbibliography
