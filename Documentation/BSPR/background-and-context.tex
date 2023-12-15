@@ -2,7 +2,7 @@
 
 \subsection*{Reversible Computing}\label{subsec:rev-comp}
 Reversible computing is a model of computing where all operations are reversible, and therefore, we can always recover the previous state of the system.
-This has a number of applications, such as debugging, quantum computing, and overcoming the Landauer limit.
+This has a number of applications, such as debugging, quantum computing, and overcoming the Landauer limit\cite{LandauerLimit, debug, richardpFeynmanLecturesComputation2018}.
 
 The Landauer limit is a theoretical limit on the amount of energy required to perform a computation, and is proportional to the number of bits erased during the computation.
 Overcoming this limit would allow for much more energy efficient computers, and while we are still far from achieving this, reversible computing is a necessary step towards it.
@@ -24,28 +24,28 @@ Syntax is the set of rules which define the structure of a language, namely, wha
 A lexer is a program which takes a stream of characters as input, and outputs a stream of tokens based on some syntax.
 This is useful for compilers and interpreters, as it allows us to not only break down the problem into smaller steps, but it can also act as a filter, removing any unwanted parts of the input, such as whitespace and comments, as well as catching any potential errors such as a string sequence which cannot correspond to any valid token.
 
-We often aim to produce POSIX lexers, as they allow us to disambiguate between tokens in a way that is easy to reason about.
+Compiler designers often aim to produce POSIX lexers, as they allow us to disambiguate between tokens in a way that is easy to reason about.
 
 There are many ways to implement a lexer, including finite state machines, and regular expressions.
-In the case of regular expressions, we can further explore methods of implementing them, such as using the standard NFA construction such as through Thompson's construction, using a DFA construction such as the powerset construction, or by using derivatives.
+In the case of regular expressions, we can further explore methods of implementing them, such as using the standard NFA construction such as through Thompson's construction\cite{NFAConstruction}, using a DFA construction such as the powerset construction, or by using derivatives\cite{Derivatives}.
 
 \subsection*{Regular Expressions}\label{subsec:regex}
 Regular expressions are a way of describing a set of strings, and are often used in lexers to describe the syntax of a language.
 One way of implementing regular expressions is through derivatives, where we can take the derivative of a regular expression with respect to a character, and use this to determine whether a string is in the language described by the regular expression.
-This can be extended to allow for POSIX lexing.
+This can be extended to allow for POSIX lexing\cite{LexingDerivatives}.
 
 \subsection*{Parsers}\label{subsec:parsers}
 Parsers take a stream of tokens as input, and output a parse tree, which represents the structure of the program in an unambiguous way.
 This tree then encodes the semantics of the program, and we can then perform further analysis on the tree, or perform various transformations on it.
-There are many ways to implement a parser, some methods being top down, such as recursive descent, and bottom up, such as LR parsing.
-Here we will use a mix of a custom top-down parser to handle statements and control flow, and Pratt parsing to handle expressions.
+There are many ways to implement a parser, some methods being top down, such as recursive descent, and bottom up, such as LR parsing\cite{KnuthLRParsing}.
+Here we will use a mix of a custom top-down parser to handle statements and control flow, and Pratt parsing to handle expressions\cite{PrattParsing}.
 
 Pratt parsing is a method of parsing expressions, where we assign a precedence to each token, and then use this to determine how to parse the expression.
 It is a form of top-down operator precedence parsing, and is often used in conjunction with recursive descent parsing.
 
 \subsection*{Single Static Assignment}\label{subsec:ssa}
 Single static assignment is a form of intermediate representation, where each variable is assigned exactly once, and each assignment is given a unique name.
-This allows for many optimisations, such as constant propagation, and dead code elimination to easily be performed on the program.
+This allows for many optimisations, such as constant propagation, and dead code elimination to easily be performed on the program\cite{SSA, RSSA}.
 
 It is also useful for portability, as LLVM IR is in SSA form, and so we can easily target LLVM, and therefore many architectures, by compiling to LLVM IR.
 

@@ -1,4 +1,357 @@
 \chapter*{Design}
 
-Identify use cases, with diagrams, give the system architecture, "as low level as possible".
-Use UML diagrams, data flow diagrams, sequence diagrams, etc.
+Here is an overview of the system architecture, including various components which will be implemented, and some which may not be implemented.
+
+\tikzset{
+    block/.style={rectangle, draw, text width=6em, text centered, rounded corners, minimum height=3em},
+    line/.style={draw, -latex},
+}
+
+\begin{center}
+\begin{figure}[hbt!]
+\begin{tikzpicture}[node distance=2cm and .75cm]
+
+% Shared Frontend
+    \node (frontend) [block] {Lexing and Parsing};
+
+% Semantic Transformations
+    \node (semantic) [block, below=of frontend] {Semantic Transformations};
+
+% Rev
+    \node (rev) [block, below left=of semantic] {Reverse};
+
+% Interpreter
+    \node (interpreter) [block, below left=of rev, xshift=-1.5cm] {Interpreter};
+
+% Compiler to LLVM
+    \node (llvm) [block, below right=of rev, xshift=1.5cm] {Compiler to LLVM};
+
+% Compiler to JVM
+    \node (jvm) [block, below=of rev, xshift=1.5cm] {Compiler to JVM};
+
+% Abstract Machine
+    \node (amachine) [block, below=of rev, xshift=-1.5cm] {Compiler to Abstract Machine};
+
+% Compiler to RSSA
+    \node (rssa) [block, below right=of semantic, xshift=1.5cm, yshift=-3.2cm] {Compiler to RSSA};
+
+% Backend of RSSA
+    \node (backend) [block, below=of rssa] {PISA Backend of RSSA};
+
+% Backend of Abstract Machine
+    \node (abstract_backend) [block, below=of amachine] {Backend of Abstract Machine};
+
+% Groupings
+    \node (frontend_group) [fit=(frontend) (semantic) (rev), draw, inner ysep=0.6cm,inner xsep=5cm, label={Frontend}, rounded corners] {};
+
+    \node (reversible) [fit=(rssa) (backend), draw, inner sep=0.2cm, label={[label distance=-5.7cm]90:Reversible Backend}, rounded corners] {};
+
+    \node (conventional) [fit=(abstract_backend) (interpreter) (llvm) (jvm) (amachine), draw, inner sep=0.2cm, label={[label distance=-6cm]90:Conventional Backend}, rounded corners] {};
+
+% Arrows
+    \draw [line] (frontend) -- (semantic);
+    \draw [line] (semantic) -- (rev);
+    \draw [line] (semantic) -- (rssa);
+    \draw [line] (rev) -- (interpreter);
+    \draw [line] (rev) -- (amachine);
+    \draw [line] (rev) -- (llvm);
+    \draw [line] (rev) -- (jvm);
+    \draw [line] (amachine) -- (abstract_backend);
+    \draw [line] (rssa) -- (backend);
+
+\end{tikzpicture}
+\caption{High level overfiew of the system architecture}
+\label{fig:system_architecture}
+\end{figure}
+\end{center}
+
+Here we have the planned layout of the various components of the compiler.
+I aim for this design to be extensible, and to easily allow for the swapping of various components.
+I do not aim to implement all of these for this project, however, the architecture should allow for these additional components to be added in the future.
+
+\section*{Grammar}
+First we will define the formal grammar of RIMP in Backus-Naur Form (BNF).
+
+\begin{lstlisting}[language=TeX,label={lst:grammar}]
+<Program> ::= <Statements>
+
+<Statement> ::= skip
+    | <type> identifier = <ArithmeticExpression>
+    | identifier = <ArithmeticExpression>
+    | if <BooleanExpression> then <Block> else <Block>
+    | while <BooleanExpression> do <Block>
+
+<Statements> ::= <Statement>;<Statement>
+    | <Statement>;
+
+<Block> ::= {<Statements>;}
+    | {<Statement>;}
+
+<ArithmeticExpression> ::= <ArithmeticTerm> + <ArithmeticExpression>
+    | <ArithmeticTerm> - <ArithmeticExpression>
+    | <ArithmeticTerm>
+    | -<ArithmeticTerm>
+
+<ArithmeticTerm> ::= <ArithmeticFactor> * <ArithmeticTerm>
+    | <ArithmeticFactor> / <ArithmeticTerm>
+    | <ArithmeticFactor> ^ <ArithmeticTerm>
+    | <ArithmeticFactor>
+
+<ArithmeticFactor> ::= (<ArithmeticExpression>)
+    | number
+    | identifier
+
+<BooleanExpression> ::= <ArithmeticExpression>==<ArithmeticExpression>
+    | <ArithmeticExpression><<ArithmeticExpression>
+    | <ArithmeticExpression>><ArithmeticExpression>
+    | <ArithmeticExpression>!=<ArithmeticExpression>
+    | <BooleanTerm>
+
+<BooleanTerm> ::= <BooleanFactor> && <BooleanExpression>
+    | <BooleanFactor>||<BooleanExpression>
+    | ! <BooleanExpression>
+    | <BooleanFactor>
+
+<BooleanFactor> ::= (<BooleanExpression>)
+
+<type> ::= int
+\end{lstlisting}
+
+Where a number is defined as a sequence of digits without leading zeros.
+An identifier is defined as an upper or lower case number, followed by a sequence of upper or lower case letters, and numbers.
+
+\section*{Use Cases}
+
+% Do a control flow for each of the following, except if out of scope, then perhaps just a brief description
+\section*{Frontend}
+
+\subsection*{Lexing}
+% I may have gone too far here
+There are two common approaches to lexing, the first is to use a lexer generator, this is a tool which takes a description of the patterns to match, often as regular expressions, and then produces a lexer.
+The benefits of this is that it is often fast to set up, and well documented.
+However, the downside is that it is not under the control of the language developer, and may not always be well optimised for your use case.
+Given the relatively small size of RIMP, this is why we will use the second approach, which is to implement a lexer manually.
+
+Again, manual lexers are still often implemented using regular expressions, and this is how we will implement our lexer.
+The benefit of regular expressions is that they can be easily read and understood.
+For example, we defined identifiers as "an upper or lower case number, followed by a sequence of upper or lower case letters, and numbers."
+The regular expression for this is \lstinline{[a-zA-Z][a-zA-Z0-9]*}.
+Another benefit of regular expressions is that they are easy to modify, unlike if we were to write an NFA by hand for example, changes can be made locally without having to worry about the rest of the lexer.
+
+We can now either use prebuilt regular expression libraries, which provide infrastructure for lexing, such as the ability to match a regular expression, and then return the matched string, or we can implement our own.
+Similar to the lexer generators, the benefit of using a prebuilt library is that it is often fast to implement, and well documented.
+However, popular regular expression engines also often have a downside, where they suffer from catastrophic backtracking, which can lead to exponential time complexity.
+Additionally, many implementations are not always sound and complete with respect to the language of the regular expression.
+As we aim for a sound and complete lexer, as well as relatively fast compilation times, we will then implement our own regular expression engine.
+
+For this implementation, we will utilise the method presented by Sulzmann et al.\cite{Sulzmann}, which uses derivatives and an injection function to map the matched string to the corresponding regex which matched it, this method is both efficient, POSIX compliant, and has a proof of correctness\cite{LexingDerivatives}.
+
+More details about derivatives can be found in Brzozowski's paper on derivative based regular expressions\cite{Derivatives}.
+
+We define a language as a set of strings, where a string $s$ is a finite or infinite sequence of characters from some alphabet $\Sigma$.
+We will also define the operation of string concatenation denoted by $@$, where $s_1 @ s_2$ is the concatenation of strings $s_1$ and $s_2$.
+Similarly, we can extend this to the concatenation of languages, where $L_1 @ L_2 = \{s_1 @ s_2 | s_1 \in L_1, s_2 \in L_2\}$.
+Finally, we define the power of a language $L^n$ as the concatenation of $n$ copies of $L$, where $L^0 = \{\epsilon\}$, and $\forall n \geq 0 \ L^n = L^{n-1} @ L$.
+
+We then define a regular expression $r$ over some alphabet $\Sigma$ which accepts a language $L(r)$.
+
+Regular expressions are then defined recursively as follows:
+\begin{enumerate}
+    \item[-] $0$, where $L(0) = \emptyset$
+    \item[-] $1$, where $L(1) = \{\epsilon\}$
+    \item[-] $a$, where $a \in \Sigma$ and $L(a) = \{a\}$
+    \item[-] $[c|c-c]$ where we can define a set of characters and character ranges, where $L([c|c-c]) = \{c | c \in \Sigma \land c \in [c|c-c]\}$
+    \item[-] $r_1 + r_2$, where $L(r_1 + r_2) = L(r_1) \cup L(r_2)$
+    \item[-] $r_1 \cdot r_2$, where $L(r_1 \cdot r_2) = L(r_1) @ L(r_2)$
+    \item[-] $r^*$, where $L(r^*) = \bigcup_{i=0}^{\infty} L(r)^i$
+    \item[-] $r^+$, where $L(r^+) = \bigcup_{i=1}^{\infty} L(r)^i$
+    \item[-] $r?$, where $L(r?) = L(r) \cup \{\epsilon\}$
+    \item[-] $s:r$ which allows us to name a regular expression $r$ as $s$
+\end{enumerate}
+
+We will define a function $nullable$ which takes a regular expression $r$ and returns true if $\epsilon \in L(r)$, and false otherwise.
+We then have the following:
+\begin{enumerate}
+    \item[-] $nullable(0) = false$
+    \item[-] $nullable(1) = true$
+    \item[-] $nullable(a) = false$
+    \item[-] $nullable([c|c-c]) = false$
+    \item[-] $nullable(r_1 + r_2) = nullable(r_1) \lor nullable(r_2)$
+    \item[-] $nullable(r_1 \cdot r_2) = nullable(r_1) \land nullable(r_2)$
+    \item[-] $nullable(r^*) = true$
+    \item[-] $nullable(r^+) = nullable(r)$
+    \item[-] $nullable(r?) = true$
+    \item[-] $nullable(s:r) = nullable(r)$
+\end{enumerate}
+
+Parallel to this, we will also have the concept of Values, which indicate how a regular expression matched a string.
+Each value will then correspond to a regular expression which has matched some string.
+We will define the set of values $V$ as follows:
+\begin{enumerate}
+    \item[-] $1$, which corresponds to the regular expression $1$
+    \item[-] $a$, where $a \in \Sigma$ and corresponds to the regular expression $a$ as well as $[a|a-a]$
+    \item[-] $Left(v)$ where $v$ is another value, this corresponds to matching the left hand side of an alternative in a regular expression, such as $r_1 + r_2$ and $v$ corresponds to $r_1$
+    \item[-] $Right(v)$ where $v$ is another value, this corresponds to matching the right hand side of an alternative in a regular expression, such as $r_1 + r_2$ and $v$ corresponds to $r_2$
+    \item[-] $v_1 \cdot v_2$ where $v_1$ and $v_2$ are other values, this corresponds to matching the concatenation of two regular expressions, such as $r_1 \cdot r_2$ and $v_1$ corresponds to $r_1$ and $v_2$ corresponds to $r_2$
+    \item[-] $Stars[vs]$ where $vs$ is a list of values, this corresponds to matching the Kleene star of a regular expression, such as $r^*$ and each $v \in vs$ corresponds to each instance of $r$ matched.
+    Similarly, this also corresponds to $r^+$ and $r?$.
+    \item[-] $s:v$ where $s$ is a string and $v$ is another value, this corresponds to matching a named regular expression, such as $s:r$ and $v$ corresponds to $r$
+\end{enumerate}
+
+We will now define the derivative of a language $L$ with respect to a character $c$ as $D_c(L) = \{s | cs \in L\}$.
+Using this we can define the derivative of a regular expression $r$ with respect to a character $c$ as follows:
+\begin{enumerate}
+    \item[-] $D_c(0) = 0$
+    \item[-] $D_c(1) = 0$
+    \item[-] $D_c(a) = \begin{cases}
+        1 & \text{if } a = c \\
+        0 & \text{otherwise}
+    \end{cases}$
+    \item[-] $D_c([c'|c'-c'']) = \begin{cases}
+        1 & \text{if } c' \leq c \leq c'' \\
+        0 & \text{otherwise}
+    \end{cases}$
+    \item[-] $D_c(r_1 + r_2) = D_c(r_1) + D_c(r_2)$
+    \item[-] $D_c(r_1 \cdot r_2) = \begin{cases}
+        (D_c(r_1) \cdot r_2) + D_c(r_2) & \text{if } nullable(r_1) = true \\
+        D_c(r_1) \cdot r_2 & \text{otherwise}
+    \end{cases}$
+    \item[-] $D_c(r^*) = D_c(r) \cdot r^*$
+    \item[-] $D_c(r^+) = D_c(r) \cdot r^*$
+    \item[-] $D_c(r?) = D_c(r)$
+    \item[-] $D_c(s:r) = D_c(r)$
+\end{enumerate}
+
+With this we can already match strings by applying the derivative until we reach the end of the string, and then checking if the resulting regular expression is nullable, if it is, then the string matched, otherwise it did not.
+But this does not allow us to see what part of the regular expression matched the string.
+For this we also need to define two further functions, $mkeps$ and $injection$.
+
+We define $mkeps$ as a function which takes a regular expression $r$ where $nullable(r) = true$, and returns a value $v$ which corresponds to $r$.
+We define $mkeps$ as follows:
+\begin{enumerate}
+    \item[-] $mkeps(1) = 1$
+    \item[-] $mkeps(r_1 + r_2) = \begin{cases}
+        Left(mkeps(r_1)) & \text{if } nullable(r_1) = true \\
+        Right(mkeps(r_2)) & \text{otherwise}
+    \end{cases}$
+    \item[-] $mkeps(r_1 \cdot r_2) = mkeps(r_1) \cdot mkeps(r_2)$
+    \item[-] $mkeps(r^*) = Stars[]$
+    \item[-] $mkeps(r^+) = Stars[mkeps(r)]$
+    \item[-] $mkeps(r?) = Stars[]$
+    \item[-] $mkeps(s:r) = s:mkeps(r)$
+\end{enumerate}
+This implicitly encodes a POSIX matching strategy where we prefer the leftmost match, and the longest match.
+
+finally, we define $injection$ as a function which takes a regular expression $r$, a value $v$, and a character $c$ and returns a value $v'$ which corresponds to how the character $c$ matched the regular expression $r$.
+We define $injection$ as follows:
+\begin{enumerate}
+    \item[-] $injection(r^*, v1 \cdot Stars([vs]), c) = Stars([injection(r, v1, c)]::vs)$
+    \item[-] $injection(r1 \cdot r2, Left(v1 \cdot v2), c) = injection(r1, v1, c) \cdot v2$
+    \item[-] $injection(r1 \cdot r2, v1 \cdot v2, c) = injection(r1, v1, c) \cdot v2$
+    \item[-] $injection(r1 \cdot r2, Right(v), c) = mkeps(r1) \cdot injection(r2, v, c)$
+    \item[-] $injection(r1 + r2, Left(v), c) = Left(injection(r1, v, c))$
+    \item[-] $injection(r1 + r2, Right(v), c) = Right(injection(r2, v, c))$
+    \item[-] $injection(c, 1, c) = c$
+    \item[-] $injection([c|c-c], 1, c) = c$
+    \item[-] $injection(r^+, v1 \cdot Stars([vs]), c) = Stars([injection(r, v1, c)]::vs)$
+    \item[-] $injection(r^?, v, c) = \begin{cases}
+        Stars([]) & \text{if } v == 1 \\
+        Stars([v]) & \text{otherwise}
+    \end{cases}$
+    \item[-] $injection(s:r, v, c) = s:injection(r, v, c)$
+\end{enumerate}
+
+We then have the following overall structure:
+\begin{center}
+\begin{figure}[hbt!]
+\begin{tikzpicture}[node distance=2cm and 2cm]
+    % Input string and regex
+    \node (r1) [block] {r1};
+    \node (r2) [block, right=of r1] {r2};
+    \node (r3) [block, right=of r2] {r3};
+    \node (r4) [block, right=of r3] {r4};
+    \node (v4) [block, below=of r4] {v4};
+    \node (v3) [block, left=of v4] {v3};
+    \node (v2) [block, left=of v3] {v2};
+    \node (v1) [block, left=of v2] {v1};
+
+    \draw [thick, ->] (r1) -- (r2) node[midway,above] {der a};
+    \draw [dotted, ->] (r1) -- (v1) node[midway,above] {};
+    \draw [thick, ->] (r2) -- (r3) node[midway,above] {der b};
+    \draw [dotted, ->] (r2) -- (v2) node[midway,above] {};
+    \draw [thick, ->] (r3) -- (r4) node[midway,above] {der c};
+    \draw [dotted, ->] (r3) -- (v3) node[midway,above] {};
+    \draw [thick, ->] (r4) -- (v4) node[midway,right] {mkeps};
+    \draw [thick, ->] (v4) -- (v3) node[midway,below] {injection c};
+    \draw [thick, ->] (v3) -- (v2) node[midway,below] {injection b};
+    \draw [thick, ->] (v2) -- (v1) node[midway,below] {injection a};
+\end{tikzpicture}
+\caption{Lexing with derivatives}
+\label{fig:lexing}
+\end{figure}
+\end{center}
+
+We take the derivative of the regular expression using the string we are matching until we reach a nullable regular expression, we then travel backwards building values in order to find what part of the regular expression matched the string.
+Like this we are able to create a regular expression for each token, such as identifiers, and check exactly which identifier matched the string.
+
+\subsection*{Parsing}
+There are many approaches to parsing.
+Here we will use a mix of Pratt parsing, and a custom top down parsing.
+The reason for this choice is for the ease of use and speed of these methods.
+Pratt parsing allows for easy changes to be made to the parsing of expressions, such as changes in precedence, but it cannot handle statements and conditionals.
+For this, we introduce an additional custom top-down algorithm where, we can check the next token, and infer what the rest we should expect is.
+This choice allows for us to quickly develop a parser which is still very efficient.
+
+\subsection*{Semantic Transformations}
+Semantic transformations will be used to take the abstract syntax tree generated from parsing, and it will traverse the tree to perform the transformations.
+Separating it out allows for us to isolate it from the rest of the system, making it agnostic to how we parsed, or how we will continue.
+It also allows for a much simpler method than if we were to perform these transformations on the fly while generating the abstract syntax tree.
+
+We will traverse the tree, and when we find an incidence of an if or while statement, we will replace it with the transformed version
+
+\subsection*{Reverse Function}
+The reverse function allows us to take a program and compute its semantic inverse.
+We will implement this as a function which takes an abstract syntax tree, and returns a new abstract syntax tree which is the inverse of the input.
+The reverse function we are modelling has been defined as to ensure that $rev(rev(x)) = x$, while this could be done here, it should not be needed, and so we will not necessarily implement all needed for this.
+
+\section*{Conventional Backend}
+
+\subsection*{Interpreter}
+In order to implement the interpreter, we will need to first generate an AST, perform the semantic transformations, and then append the reverse of the AST to the end of the original AST.
+We can then preform a walk of the tree recursively applying big-step semantics to each node.
+
+Additionally, we will insert operations to output the state once the forward execution has finished, allowing the result of the computation to be seen.
+Similarly, we will also do this at the end for debugging purposes, however, this should always result in all variables being set to their initial values (0).
+
+\subsection*{Abstract Machine Compiler}
+In order to generate the abstract machine code, we can do a post-order traversal of the AST, and generate the corresponding abstract machine code for each node.
+This will follow the structure of the abstract machine defined for RIMP\cite{RIMP}, which uses a stack, allowing us to compile with almost a one to one mapping between the AST and the abstract machine code.
+
+For this we will not need to generate the reverse of the program using the reverse function, as this will be handled by the abstract machine, allowing us to reverse at any point in the execution.
+
+\subsection*{Abstract Machine Backend}
+In order to execute generate abstract machine code, we will need to implement an abstract machine.
+This will consist of:
+\begin{itemize}
+    \item[-] A control stack, where we will load the program generated into.
+    \item[-] A results stack, where we store intermediate results.
+    \item[-] A store, which will map variables to their runtime values.
+    \item[-] A backstack in order to reverse the program.
+\end{itemize}
+In addition to this the abstract machine will need to be able to evaluate the arithmetic and boolean operations.
+
+\subsection*{JVM Compiler}
+In order to generate JVM code, we can do a post-order traversal of the AST, and generate the corresponding JVM code for each node.
+One consideration is the implementation of the stack for each variable, we have two options here, we can either use an array, which would require us to know the maximum number of changes made to a variable ahead of time, or we can use a list structure, which would allow us to dynamically grow and shrink the stack.
+In order to ensure the language is usable, we will use a list structure, however, this will come at the cost of compiler complexity, as we will have to interact with Java classes to utilise the list structure.
+
+\begin{comment}
+\subsection*{LLVM Compiler}
+
+\section*{Reversible Backend}
+
+\subsection*{RSSA Compiler}
+\subsection*{PISA Backend}
+
+\section*{Further Possible Extensions}
+\end{comment}

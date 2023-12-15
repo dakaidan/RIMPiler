@@ -10,19 +10,32 @@
 \usepackage[utf8]{inputenc}
 \usepackage{graphicx}
 \graphicspath{ {./images/} }
-\usepackage{biblatex}
+\usepackage[
+    backend=biber,
+    style=numeric-comp,
+]{biblatex}
 \addbibresource{references.bib}
 \usepackage{listings}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows,positioning,fit}
 
 \newenvironment{abstract}{}{}
 \usepackage{abstract}
+\usepackage{verbatim}
+
+\lstset{
+    basicstyle=\ttfamily,
+    columns=fullflexible,
+    breaklines=true,
+    postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space},
+}
 
 
 % Document
 \begin{document}
 
     \input{title}
-    \input{abstract}
+    \input{abstract-page}
     \input{introduction}
     \input{literature-review}
     \input{requirements-and-specification}

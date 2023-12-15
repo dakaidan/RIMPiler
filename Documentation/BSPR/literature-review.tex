@@ -1,9 +1,49 @@
 \chapter*{Literature Review}
 
-There are several other reversible programming languages, such as Janus, and R-While, and ROOP\@.
+\section*{Compilers}
+Compilers are an area of very active research, and therefore, there are many different approaches to implementing a compiler.
+However, typically there are shared components, such as lexing, parsing, and code generation\cite{Compiler}.
+
+\subsection*{Lexing}
+Lexing is often the first step in a compiler\cite{M4}, and is the process of taking a stream of characters as input, and outputting a stream of tokens.
+There are various methods of implementing a lexer, one of the most common being regular expressions.
+Much research has been done on implementing systems to lex using regular expressions, such as often through the use of NFAs and Thompson's construction, or through derivatives.
+One of the challenges of lexing using regular expressions is implementing a disambiguation strategy, such as POSIX lexing, which allows us to disambiguate between tokens in a way that is easy to reason about.
+In the case of NFAs, this can be done using the Disambiguation strategy proposed by Okui et al.\cite{Okui} through emulating the subset construction.
+In the case of derivatives, this can be done using the Methods proposed by Sulzmann et al.\cite{Sulzmann}, which uses an injection function to map the matched string to the corresponding regex which matched it, this implicitly also encodes a bias to match the longest leftmost string.
+
+\subsection*{Parsing}
+Parsing allows us to construct an unambiguous parse tree from a stream of tokens or characters\cite{Compiler}.
+We often want to parse based on a context-free grammar such as Backus-Naur Form (BNF), this allows us to avoid problems of ambiguity and left-recursion.
+
+There are two main classes of parsers, top-down parsers, and bottom-up parsers.
+LR parsers are a class of bottom-up parsers\cite{KnuthLRParsing}.
+Recursive descent parsers are a class of top-down parsers\cite{topdownparse, parsercombinators}.
+
+Recursive descent parsers are often used in conjunction with Pratt parsing\cite{PrattParsing}, which is a method of parsing expressions, where we assign a precedence to each token, and then use this to determine how to parse the expression.
+This method allows us to easily handle both operator precedence and associativity, however, one of the limitations of pratt parsing is its lack of support for parsing statements and control flow.
+This is why we will use a mix of a custom top-down parser to handle statements and control flow, and Pratt parsing to handle expressions.
+
+\subsection*{Code Generation}
+Code generation is the process of taking an intermediate representation of a program such as an abstract syntax tree, and producing a program in a target language.
+In modern compilers this is often done in several stages, where we will first target an intermediate representation in SSA form such as LLVM IR.
+This allows us to apply various optimisations to the program, such as constant propagation, and dead code elimination\cite{OptimiseReversiblePrograms, combiningOptimisation, constantProp}.
+Additionally, this allows us to reuse the infrastructure of a common backend, allowing us to target many different architectures by targeting a single common intermediate representation.
+
+There are several ways to go from an abstract syntax tree to an SSA form, such as through the use of a control flow graph, or using CPS conversion\cite{SSAConstruction, SSAConstructionBraun}.
+
+\section*{Reversible Languages}
+There are several other general purpose reversible programming languages, such as Janus\cite{JanusFormalised, JanusLetter}, R-While\cite{ReversibleMetalanguages}, ROOP\cite{ROOPImplementation, ROOP}, and RFun\cite{RFun, RFunInterpreter}.
+Additionally, there are some Domain Specific Languages such as Hermes\cite{Hermes}.
+There are also some intermediate representations and machine code formats such as RSSA\cite{RSSA} and PISA\cite{PISA}.
+
 These languages aim at different paradigms, such as ROOP being object-oriented.
 However, many of these existing languages require the programmer to be aware of the underlying reversible model of computation, which can add overhead to the development process.
-RIMP, unlike these languages, aims to mirror the syntax of a standard imperative programming language, allowing the programmer to write programs in a way which is familiar to them, while still being able to take advantage of the benefits of reversible computing through semantic transformations.
+RIMP\cite{RIMP}, unlike these languages, aims to mirror the syntax of a standard imperative programming language, allowing the programmer to write programs in a way which is familiar to them, while still being able to take advantage of the benefits of reversible computing through semantic transformations.
+RIMP allows for both destructive and non-destructive assignments, and uses semantic transformations to ensure that the program is reversible.
+We achieve this by using a stack to preserve the changes made by destructive assignments, and then using this stack to undo the changes when we need to recover the previous state of the system.
+
+\subsection*{Janus}
 
 Janus maintains reversibility by restricting the use of assignments to only be non-destructive, by this, we can always recover the previous state of the system.
 For example if we have:
@@ -17,8 +57,32 @@ We can recover the previous state by performing the inverse operations in revers
     x -= 1
 \end{lstlisting}
 This is often how reversible languages deal with assignments, however, in many conventional languages, programmers are use to using destructive assignments, which can make it difficult to write programs in a reversible language.
-RIMP allows for both destructive and non-destructive assignments, and uses semantic transformations to ensure that the program is reversible.
-We achieve this by using a stack to preserve the changes made by destructive assignments, and then using this stack to undo the changes when we need to recover the previous state of the system.
 
+\begin{comment}
+\subsection*{R-While}
+
+\subsection*{ROOP}
 ROOP is an expressive language which allows for rich object-oriented features and typing.
 It is similar to Janus in that it restricts the use of assignments.
+
+\subsection*{RFun}
+RFun is a reversible functional programming language, it maintains reversibility by ensuring all functions encode enough information in their outputs to allow for the recovery of the inputs.
+\end{comment}
+
+\subsection*{Hermes}
+Hermes is a reversible language intended for cryptography, allowing for the implementation of an encryption algorithm to simply be reversed in order to implement the decryption algorithm.
+
+\begin{comment}
+\subsection*{RSSA}
+RSSA is a reversible SSA form, it is similar to both other SSA forms, but uses many of the concepts from reversible machine codes such as PISA to maintain reversibility.
+One example of this is through the use of memory exchange to ensure no data is erased.
+\end{comment}
+
+\subsection*{PISA}
+PISA is a reversible machine code designed to be reversible at any point.
+While hardware is not readily available for PISA, there are emulators available such as PendVM\cite{PISAVM, ReversibleMachineCode}.
+
+\section*{Reversible Computing}
+Optimisations are a major part of compilers, and there are many different optimisations which can be performed.
+This is often done on an SSA form of the program, as this allows us to easily perform many optimisations such as constant propagation, and dead code elimination\cite{combiningOptimisation, constantProp}.
+However, some care must be taken to ensure that these optimisations do not break the reversibility of the program\cite{OptimiseReversiblePrograms}.

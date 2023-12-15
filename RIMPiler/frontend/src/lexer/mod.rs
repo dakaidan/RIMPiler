@@ -20,7 +20,7 @@ We need a lexer for the following grammar:
     <Block> ::= '"{"'<Statements>'"}"' |  {<Statement>;}
 
     <ArithmeticExpression> ::= <ArithmeticTerm> '+' <ArithmeticExpression>
-    | <ArithmeticTerm> '-' <ArithmeticExpression> | <ArithmeticTerm>
+    | <ArithmeticTerm> '-' <ArithmeticExpression> | <ArithmeticTerm> | -<ArithmeticTerm>
 
     <ArithmeticTerm> ::= <ArithmeticFactor> '*' <ArithmeticTerm>
     | <ArithmeticFactor> '/' <ArithmeticTerm> | <ArithmeticFactor> '^' <ArithmeticTerm>
