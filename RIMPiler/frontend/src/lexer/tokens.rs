@@ -1,3 +1,4 @@
+use std::fmt::Display;
 use regex::lexer::{Token, TokenMeta};
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
@@ -67,6 +68,28 @@ impl Operator {
                 string
             ),
         }
+    }
+}
+
+impl Display for Operator {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let string = match self {
+            Operator::Add => "+",
+            Operator::Minus => "-",
+            Operator::Multiply => "*",
+            Operator::Divide => "/",
+            Operator::Exponent => "^",
+            Operator::Equal => "==",
+            Operator::Assign => "=",
+            Operator::LessThan => "<",
+            Operator::GreaterThan => ">",
+            Operator::NotEqual => "!=",
+            Operator::And => "&&",
+            Operator::Or => "||",
+            Operator::Not => "!",
+        };
+
+        write!(f, "{}", string)
     }
 }
 

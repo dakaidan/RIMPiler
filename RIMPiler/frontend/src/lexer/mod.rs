@@ -5,6 +5,7 @@ pub mod tokens;
 
 use regex::lexer::{Lexer, TokenMeta};
 use regex::re::{Range, Re};
+use utilities::debug::Error;
 
 /*
 We need a lexer for the following grammar:
@@ -195,7 +196,7 @@ impl Tokeniser<InitialisationRequired> {
 }
 
 impl Tokeniser<Initialised> {
-    pub fn tokenise(&mut self, input: String) -> Result<Vec<TokenMeta<tokens::RIMPToken>>, String> {
+    pub fn tokenise(&mut self, input: String) -> Result<Vec<TokenMeta<tokens::RIMPToken>>, Error> {
         let lexer = Lexer::new(self.rimp.to_owned());
 
         let result = lexer.tokenise::<tokens::RIMPToken>(&input);
@@ -209,27 +210,33 @@ impl Tokeniser<Initialised> {
                     _ => true,
                 })
                 .collect()),
-            Err(error) => Err(format!(
-                "{} Error while lexing:\n{}",
-                error.location, error.message
-            )),
+            Err(error) => Err(
+                Error::from_error(
+                    error,
+                    String::from("Failed to tokenise to RIMP tokens"),
+                    String::from("Tokeniser"),
+                )
+            )
         }
     }
 
     pub fn tokenise_without_filtering(
         &mut self,
         input: String,
-    ) -> Result<Vec<TokenMeta<tokens::RIMPToken>>, String> {
+    ) -> Result<Vec<TokenMeta<tokens::RIMPToken>>, Error> {
         let lexer = Lexer::new(self.rimp.to_owned());
 
         let result = lexer.tokenise::<tokens::RIMPToken>(&input);
 
         match result {
             Ok(tokens) => Ok(tokens),
-            Err(error) => Err(format!(
-                "{} Error while lexing:\n{}",
-                error.location, error.message
-            )),
+            Err(error) => Err(
+                Error::from_error(
+                    error,
+                    String::from("Failed to tokenise to RIMP tokens"),
+                    String::from("Tokeniser"),
+                )
+            )
         }
     }
 }

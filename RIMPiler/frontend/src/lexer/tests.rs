@@ -15,7 +15,7 @@ fn simple_lex() {
         Ok(vec![TokenMeta {
             token: RIMPToken::Keyword(Keyword::Skip),
             lexeme: "skip".to_string(),
-            location: Location { line: 1, column: 0 }
+            location: Location::new(1, 0)
         }])
     );
 
@@ -29,67 +29,67 @@ fn simple_lex() {
             TokenMeta {
                 token: RIMPToken::Keyword(Keyword::If),
                 lexeme: "if".to_string(),
-                location: Location { line: 1, column: 0 }
+                location: Location::new(1, 0)
             },
             TokenMeta {
                 token: RIMPToken::Whitespace,
                 lexeme: " ".to_string(),
-                location: Location { line: 1, column: 2 }
+                location: Location::new(1, 2)
             },
             TokenMeta {
                 token: RIMPToken::Identifier("n".to_string()),
                 lexeme: "n".to_string(),
-                location: Location { line: 1, column: 3 }
+                location: Location::new(1, 3)
             },
             TokenMeta {
                 token: RIMPToken::Whitespace,
                 lexeme: "\n".to_string(),
-                location: Location { line: 1, column: 4 }
+                location: Location::new(1, 4)
             },
             TokenMeta {
                 token: RIMPToken::Keyword(Keyword::Then),
                 lexeme: "then".to_string(),
-                location: Location { line: 2, column: 0 }
+                location: Location::new(2, 0)
             },
             TokenMeta {
                 token: RIMPToken::Whitespace,
                 lexeme: "\n".to_string(),
-                location: Location { line: 2, column: 4 }
+                location: Location::new(2, 4)
             },
             TokenMeta {
                 token: RIMPToken::Whitespace,
                 lexeme: "\t".to_string(),
-                location: Location { line: 3, column: 0 }
+                location: Location::new(3, 0)
             },
             TokenMeta {
                 token: RIMPToken::Keyword(Keyword::Skip),
                 lexeme: "skip".to_string(),
-                location: Location { line: 3, column: 1 }
+                location: Location::new(3, 1)
             },
             TokenMeta {
                 token: RIMPToken::Whitespace,
                 lexeme: "\n".to_string(),
-                location: Location { line: 3, column: 5 }
+                location: Location::new(3, 5)
             },
             TokenMeta {
                 token: RIMPToken::Keyword(Keyword::Else),
                 lexeme: "else".to_string(),
-                location: Location { line: 4, column: 0 }
+                location: Location::new(4, 0)
             },
             TokenMeta {
                 token: RIMPToken::Whitespace,
                 lexeme: "\n".to_string(),
-                location: Location { line: 4, column: 4 }
+                location: Location::new(4, 4)
             },
             TokenMeta {
                 token: RIMPToken::Whitespace,
                 lexeme: "\t".to_string(),
-                location: Location { line: 5, column: 0 }
+                location: Location::new(5, 0)
             },
             TokenMeta {
                 token: RIMPToken::Keyword(Keyword::Skip),
                 lexeme: "skip".to_string(),
-                location: Location { line: 5, column: 1 }
+                location: Location::new(5, 1)
             },
         ])
     );
@@ -107,32 +107,32 @@ fn filtered_lex() {
             TokenMeta {
                 token: RIMPToken::Keyword(Keyword::If),
                 lexeme: "if".to_string(),
-                location: Location { line: 1, column: 0 }
+                location: Location::new(1, 0)
             },
             TokenMeta {
                 token: RIMPToken::Identifier("n".to_string()),
                 lexeme: "n".to_string(),
-                location: Location { line: 1, column: 3 }
+                location: Location::new(1, 3)
             },
             TokenMeta {
                 token: RIMPToken::Keyword(Keyword::Then),
                 lexeme: "then".to_string(),
-                location: Location { line: 2, column: 0 }
+                location: Location::new(2, 0)
             },
             TokenMeta {
                 token: RIMPToken::Keyword(Keyword::Skip),
                 lexeme: "skip".to_string(),
-                location: Location { line: 3, column: 1 }
+                location: Location::new(3, 1)
             },
             TokenMeta {
                 token: RIMPToken::Keyword(Keyword::Else),
                 lexeme: "else".to_string(),
-                location: Location { line: 4, column: 0 }
+                location: Location::new(4, 0)
             },
             TokenMeta {
                 token: RIMPToken::Keyword(Keyword::Skip),
                 lexeme: "skip".to_string(),
-                location: Location { line: 5, column: 1 }
+                location: Location::new(5, 1)
             },
         ])
     );

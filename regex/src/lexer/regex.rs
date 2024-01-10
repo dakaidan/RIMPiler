@@ -1,18 +1,6 @@
 use super::super::re::{value::Value, Re};
 
-use utilities::debug::Location;
-
-#[derive(Debug, Eq, PartialEq, Clone)]
-pub struct LexError {
-    pub message: String,
-    pub location: Location,
-}
-
-impl LexError {
-    pub fn new(message: String, location: Location) -> Self {
-        Self { message, location }
-    }
-}
+use utilities::debug::{Error, Location};
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct LexResult {
@@ -44,15 +32,12 @@ pub(crate) fn to_line_column(string: &str, line: usize, column: usize) -> (usize
 }
 
 impl Re {
-    fn try_lex(&self, string: String, column: usize, line: usize) -> Result<LexResult, LexError> {
+    fn try_lex(&self, string: String, column: usize, line: usize) -> Result<LexResult, Error> {
         if string.is_empty() {
             if self.nullable() {
                 Ok(LexResult::new(self.make_empty()))
             } else {
-                Err(LexError {
-                    message: format!("Expected EOF"),
-                    location: Location::new(line, column),
-                })
+                Err(Error::new(Location::new(line, column), "Unexpected EOF".to_string(), "Lexer Subsystem".to_string()))
             }
         } else {
             let (c, mut remaining) = string.split_at(1);
@@ -60,10 +45,7 @@ impl Re {
             let derivative = self.derivative(c);
             let (simplified, rectification) = derivative.simplify_with_rectification();
             if simplified == Re::Zero {
-                Err(LexError {
-                    message: format!("Unexpected character '{}'", c),
-                    location: Location::new(line, column),
-                })
+                Err(Error::new(Location::new(line, column), format!("Unexpected character: {}", c), "Lexer Subsystem".to_string()))
             } else {
                 let mut line = line;
                 let mut column = column;
@@ -90,7 +72,7 @@ impl Re {
         }
     }
 
-    pub(crate) fn lex(&self, string: String) -> Result<Vec<(String, String, Location)>, LexError> {
+    pub(crate) fn lex(&self, string: String) -> Result<Vec<(String, String, Location)>, Error> {
         match self.try_lex(string, 0, 1) {
             Ok(value) => {
                 let mut line = 1;

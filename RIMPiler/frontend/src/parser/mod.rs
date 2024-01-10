@@ -7,7 +7,7 @@ use super::AST::{
     UnaryBooleanOperator,
 };
 use regex::lexer::TokenMeta;
-use utilities::debug::Location;
+use utilities::debug::{Location, Error};
 
 use std::fmt::Display;
 
@@ -21,37 +21,7 @@ pub enum ErrorType {
     UnexpectedEndOfFile,
 }
 
-#[derive(Debug, Eq, PartialEq, Clone)]
-pub struct Error {
-    pub message: String,
-    pub location: Option<Location>,
-    pub error_type: ErrorType,
-}
-
-impl Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match &self.location {
-            Some(location) => write!(
-                f,
-                "Error at line {}, column {}: {}",
-                location.line, location.column, self.message
-            ),
-            None => write!(f, "Error: {}", self.message),
-        }
-    }
-}
-
-impl Error {
-    fn new(message: String, error_type: ErrorType, location: Option<Location>) -> Self {
-        Error {
-            message,
-            location,
-            error_type,
-        }
-    }
-}
-
-pub type ParseResult<T> = Result<T, Error>;
+pub type ParseResult<T> = std::result::Result<T, Error>;
 
 fn expect_operator(operator: Operator, tokens: &mut Tokens) -> Result<(), TokenMeta<RIMPToken>> {
     let next_token = tokens.next();
@@ -162,9 +132,9 @@ pub fn parse_program(tokens: &mut Tokens) -> ParseResult<Program> {
 
         if result.is_err() {
             return Err(Error::new(
+                result.unwrap_err().location,
                 "Expected semicolon".to_string(),
-                UnexpectedToken,
-                Some(result.unwrap_err().location),
+                "Parser".to_string(),
             ));
         }
 
@@ -187,9 +157,9 @@ fn parse_statement(tokens: &mut Tokens) -> ParseResult<Statement> {
 
                 if result.is_err() {
                     return Err(Error::new(
+                        result.unwrap_err().location,
                         "Expected assignment operator".to_string(),
-                        UnexpectedToken,
-                        Some(result.unwrap_err().location),
+                        "Parser".to_string(),
                     ));
                 }
 
@@ -216,9 +186,9 @@ fn parse_statement(tokens: &mut Tokens) -> ParseResult<Statement> {
 
                     if result.is_err() {
                         return Err(Error::new(
-                            "Expected do keyword".to_string(),
-                            UnexpectedToken,
-                            Some(result.unwrap_err().location),
+                            result.unwrap_err().location,
+                            "Expected keyword do".to_string(),
+                            "Parser".to_string(),
                         ));
                     }
 
@@ -244,9 +214,9 @@ fn parse_statement(tokens: &mut Tokens) -> ParseResult<Statement> {
 
                     if result.is_err() {
                         return Err(Error::new(
-                            "Expected then keyword".to_string(),
-                            UnexpectedToken,
-                            Some(result.unwrap_err().location),
+                            result.unwrap_err().location,
+                            "Expected keyword then".to_string(),
+                            "Parser".to_string(),
                         ));
                     }
 
@@ -260,9 +230,9 @@ fn parse_statement(tokens: &mut Tokens) -> ParseResult<Statement> {
 
                     if result.is_err() {
                         return Err(Error::new(
-                            "Expected else keyword".to_string(),
-                            UnexpectedToken,
-                            Some(result.unwrap_err().location),
+                            result.unwrap_err().location,
+                            "Expected keyword else".to_string(),
+                            "Parser".to_string(),
                         ));
                     }
 
@@ -284,9 +254,9 @@ fn parse_statement(tokens: &mut Tokens) -> ParseResult<Statement> {
 
                     if identifier.is_err() {
                         return Err(Error::new(
+                            identifier.unwrap_err().location,
                             "Expected identifier".to_string(),
-                            UnexpectedToken,
-                            Some(identifier.unwrap_err().location),
+                            "Parser".to_string(),
                         ));
                     }
 
@@ -294,9 +264,9 @@ fn parse_statement(tokens: &mut Tokens) -> ParseResult<Statement> {
 
                     if result.is_err() {
                         return Err(Error::new(
+                            result.unwrap_err().location,
                             "Expected assignment operator".to_string(),
-                            UnexpectedToken,
-                            Some(result.unwrap_err().location),
+                            "Parser".to_string(),
                         ));
                     }
 
@@ -313,25 +283,25 @@ fn parse_statement(tokens: &mut Tokens) -> ParseResult<Statement> {
                 }
                 _ => {
                     return Err(Error::new(
+                        token.location,
                         "Expected statement".to_string(),
-                        UnexpectedToken,
-                        Some(token.location),
+                        "Parser".to_string(),
                     ))
                 }
             },
             _ => {
                 return Err(Error::new(
+                    token.location,
                     "Expected statement".to_string(),
-                    UnexpectedToken,
-                    Some(token.location),
+                    "Parser".to_string(),
                 ))
             }
         },
         None => {
             return Err(Error::new(
-                "Expected statement".to_string(),
-                UnexpectedEndOfFile,
-                None,
+                Location::default(),
+                "Expected statement found EOF".to_string(),
+                "Parser".to_string(),
             ))
         }
     }
@@ -344,9 +314,9 @@ fn parse_block(tokens: &mut Tokens) -> ParseResult<Block> {
 
     if result.is_err() {
         return Err(Error::new(
+            result.unwrap_err().location,
             "Expected opening brace".to_string(),
-            UnexpectedToken,
-            Some(result.unwrap_err().location),
+            "Parser".to_string(),
         ));
     }
 
@@ -361,10 +331,10 @@ fn parse_block(tokens: &mut Tokens) -> ParseResult<Block> {
             }
             None => {
                 return Err(Error::new(
+                    result.unwrap_err().location,
                     "Expected closing brace".to_string(),
-                    UnexpectedEndOfFile,
-                    None,
-                ))
+                    "Parser".to_string(),
+                ));
             }
         }
 
@@ -378,9 +348,9 @@ fn parse_block(tokens: &mut Tokens) -> ParseResult<Block> {
 
         if result.is_err() {
             return Err(Error::new(
+                result.unwrap_err().location,
                 "Expected semicolon".to_string(),
-                UnexpectedToken,
-                Some(result.unwrap_err().location),
+                "Parser".to_string(),
             ));
         }
 
@@ -406,18 +376,18 @@ fn parse_arithmetic_expression(
                     Some(token) => {
                         if token.token != RIMPToken::Bracket(Bracket::RightParenthesis) {
                             return Err(Error::new(
+                                token.location,
                                 "Expected closing parenthesis".to_string(),
-                                UnexpectedToken,
-                                Some(token.location),
+                                "Parser".to_string(),
                             ));
                         }
                     }
                     None => {
                         return Err(Error::new(
-                            "Expected closing parenthesis".to_string(),
-                            UnexpectedEndOfFile,
-                            None,
-                        ))
+                            token.location,
+                            "Expected closing parenthesis found EOF".to_string(),
+                            "Parser".to_string(),
+                        ));
                     }
                 }
                 expression.unwrap()
@@ -436,25 +406,25 @@ fn parse_arithmetic_expression(
                 }
                 _ => {
                     return Err(Error::new(
+                        token.location,
                         "Expected number or identifier".to_string(),
-                        UnexpectedToken,
-                        Some(token.location),
+                        "Parser".to_string(),
                     ))
                 }
             },
             _ => {
                 return Err(Error::new(
-                    "Expected number or identifier".to_string(),
-                    UnexpectedToken,
-                    Some(token.location),
+                    token.location,
+                    "Expected number or identifier found EOF".to_string(),
+                    "Parser".to_string(),
                 ))
             }
         },
         None => {
             return Err(Error::new(
-                "Expected number or identifier".to_string(),
-                UnexpectedEndOfFile,
-                None,
+                Location::default(),
+                "Expected number or identifier found EOF".to_string(),
+                "Parser".to_string(),
             ))
         }
     };
@@ -548,17 +518,17 @@ fn parse_boolean_expression(
                     Some(token) => {
                         if token.token != RIMPToken::Bracket(Bracket::RightParenthesis) {
                             return Err(Error::new(
+                                token.location,
                                 "Expected closing parenthesis".to_string(),
-                                UnexpectedToken,
-                                Some(token.location),
+                                "Parser".to_string(),
                             ));
                         }
                     }
                     None => {
                         return Err(Error::new(
-                            "Expected closing parenthesis".to_string(),
-                            UnexpectedEndOfFile,
-                            None,
+                            token.location,
+                            "Expected closing parenthesis found EOF".to_string(),
+                            "Parser".to_string(),
                         ))
                     }
                 }
@@ -586,9 +556,9 @@ fn parse_boolean_expression(
         },
         None => {
             return Err(Error::new(
-                "Expected boolean expression".to_string(),
-                UnexpectedEndOfFile,
-                None,
+                Location::default(),
+                "Expected boolean expression found EOF".to_string(),
+                "Parser".to_string(),
             ))
         }
     };
@@ -654,25 +624,25 @@ fn parse_relations(tokens: &mut Tokens) -> ParseResult<BooleanExpression> {
                 Operator::LessThan => RelationOperator::LessThan,
                 _ => {
                     return Err(Error::new(
+                        token.location,
                         "Expected relation operator".to_string(),
-                        UnexpectedToken,
-                        Some(token.location),
+                        "Parser".to_string(),
                     ))
                 }
             },
             _ => {
                 return Err(Error::new(
+                    token.location,
                     "Expected relation operator".to_string(),
-                    UnexpectedToken,
-                    Some(token.location),
+                    "Parser".to_string(),
                 ))
             }
         },
         None => {
             return Err(Error::new(
-                "Expected relation operator".to_string(),
-                UnexpectedEndOfFile,
-                None,
+                Location::default(),
+                "Expected relation operator found EOF".to_string(),
+                "Parser".to_string(),
             ))
         }
     };

@@ -3,8 +3,7 @@ mod regex;
 mod tests;
 
 use super::re::*;
-use super::lexer::regex::LexError;
-use utilities::debug::Location;
+use utilities::debug::{Error, Location};
 
 
 pub trait Token: Clone + Eq {
@@ -51,7 +50,7 @@ impl Lexer {
         Self { regex }
     }
 
-    pub fn tokenise<T>(&self, input: &str) -> Result<Vec<TokenMeta<T>>, LexError>
+    pub fn tokenise<T>(&self, input: &str) -> Result<Vec<TokenMeta<T>>, Error>
     where
         T: Token,
     {
@@ -65,7 +64,7 @@ impl Lexer {
                         TokenMeta::new(lexeme.clone(), *location, record_identifier.clone());
                     match result {
                         Ok(token_meta) => Ok(token_meta),
-                        Err(error) => Err(LexError::new(error, *location)),
+                        Err(error) => Err(Error::new(*location, error, "Lexer".to_string())),
                     }
                 })
                 .collect(),
