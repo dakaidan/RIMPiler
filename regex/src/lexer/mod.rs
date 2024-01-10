@@ -3,37 +3,38 @@ mod regex;
 mod tests;
 
 use super::re::*;
-use utilities::debug::{Error, Location};
+use utilities::debug::{Error, Location, Meta, Result};
 
 
 pub trait Token: Clone + Eq {
-    fn new(string: String, record_identifier: String) -> Result<Box<Self>, String>;
+    fn new(string: String, record_identifier: String) -> std::result::Result<Box<Self>, String>;
 }
 
-#[derive(Debug, Eq, PartialEq, Clone)]
-pub struct TokenMeta<T>
+pub trait TokenMetaTrait<T>
 where
     T: Token,
+    Self: Sized,
 {
-    pub token: T,
-    pub lexeme: String,
-    pub location: Location,
-}
-
-impl<T> TokenMeta<T>
-where
-    T: Token,
-{
-    pub fn new(
+    fn create_token(
         lexeme: String,
         location: Location,
         record_identifier: String,
-    ) -> Result<Self, String> {
+    ) -> std::result::Result<Self, String>;
+}
+
+impl<T> TokenMetaTrait<T> for Meta<T>
+where
+    T: Token,
+{
+    fn create_token(
+        lexeme: String,
+        location: Location,
+        record_identifier: String,
+    ) -> std::result::Result<Self, String> {
         let token = T::new(lexeme.clone(), record_identifier);
         match token {
             Ok(token) => Ok(Self {
-                token: *token,
-                lexeme,
+                value: *token,
                 location,
             }),
             Err(error) => Err(error),
@@ -50,7 +51,7 @@ impl Lexer {
         Self { regex }
     }
 
-    pub fn tokenise<T>(&self, input: &str) -> Result<Vec<TokenMeta<T>>, Error>
+    pub fn tokenise<T>(&self, input: &str) -> Result<Vec<Meta<T>>>
     where
         T: Token,
     {
@@ -61,7 +62,7 @@ impl Lexer {
                 .iter()
                 .map(|(record_identifier, lexeme, location)| {
                     let result =
-                        TokenMeta::new(lexeme.clone(), *location, record_identifier.clone());
+                        Meta::create_token(lexeme.clone(), *location, record_identifier.clone());
                     match result {
                         Ok(token_meta) => Ok(token_meta),
                         Err(error) => Err(Error::new(*location, error, "Lexer".to_string())),

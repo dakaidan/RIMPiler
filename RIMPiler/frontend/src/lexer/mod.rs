@@ -3,9 +3,9 @@
 mod tests;
 pub mod tokens;
 
-use regex::lexer::{Lexer, TokenMeta};
+use regex::lexer::Lexer;
 use regex::re::{Range, Re};
-use utilities::debug::Error;
+use utilities::debug::{Error, Meta, Result};
 
 /*
 We need a lexer for the following grammar:
@@ -196,7 +196,7 @@ impl Tokeniser<InitialisationRequired> {
 }
 
 impl Tokeniser<Initialised> {
-    pub fn tokenise(&mut self, input: String) -> Result<Vec<TokenMeta<tokens::RIMPToken>>, Error> {
+    pub fn tokenise(&mut self, input: String) -> Result<Vec<Meta<tokens::RIMPToken>>> {
         let lexer = Lexer::new(self.rimp.to_owned());
 
         let result = lexer.tokenise::<tokens::RIMPToken>(&input);
@@ -204,7 +204,7 @@ impl Tokeniser<Initialised> {
         match result {
             Ok(tokens) => Ok(tokens
                 .into_iter()
-                .filter(|token| match token.token {
+                .filter(|token| match token.value {
                     tokens::RIMPToken::Whitespace => false,
                     tokens::RIMPToken::Comment => false,
                     _ => true,
@@ -223,7 +223,7 @@ impl Tokeniser<Initialised> {
     pub fn tokenise_without_filtering(
         &mut self,
         input: String,
-    ) -> Result<Vec<TokenMeta<tokens::RIMPToken>>, Error> {
+    ) -> Result<Vec<Meta<tokens::RIMPToken>>> {
         let lexer = Lexer::new(self.rimp.to_owned());
 
         let result = lexer.tokenise::<tokens::RIMPToken>(&input);

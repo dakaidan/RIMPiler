@@ -1,8 +1,7 @@
 use super::Tokeniser;
 use super::super::lexer::tokens::{Bracket, Keyword, Operator, RIMPToken};
-use regex::lexer::TokenMeta;
 
-use utilities::debug::Location;
+use utilities::debug::{Location, Meta};
 
 #[test]
 fn simple_lex() {
@@ -12,9 +11,8 @@ fn simple_lex() {
 
     assert_eq!(
         result,
-        Ok(vec![TokenMeta {
-            token: RIMPToken::Keyword(Keyword::Skip),
-            lexeme: "skip".to_string(),
+        Ok(vec![Meta {
+            value: RIMPToken::Keyword(Keyword::Skip),
             location: Location::new(1, 0)
         }])
     );
@@ -26,69 +24,56 @@ fn simple_lex() {
     assert_eq!(
         result,
         Ok(vec![
-            TokenMeta {
-                token: RIMPToken::Keyword(Keyword::If),
-                lexeme: "if".to_string(),
+            Meta {
+                value: RIMPToken::Keyword(Keyword::If),
                 location: Location::new(1, 0)
             },
-            TokenMeta {
-                token: RIMPToken::Whitespace,
-                lexeme: " ".to_string(),
+            Meta {
+                value: RIMPToken::Whitespace,
                 location: Location::new(1, 2)
             },
-            TokenMeta {
-                token: RIMPToken::Identifier("n".to_string()),
-                lexeme: "n".to_string(),
+            Meta {
+                value: RIMPToken::Identifier("n".to_string()),
                 location: Location::new(1, 3)
             },
-            TokenMeta {
-                token: RIMPToken::Whitespace,
-                lexeme: "\n".to_string(),
+            Meta {
+                value: RIMPToken::Whitespace,
                 location: Location::new(1, 4)
             },
-            TokenMeta {
-                token: RIMPToken::Keyword(Keyword::Then),
-                lexeme: "then".to_string(),
+            Meta {
+                value: RIMPToken::Keyword(Keyword::Then),
                 location: Location::new(2, 0)
             },
-            TokenMeta {
-                token: RIMPToken::Whitespace,
-                lexeme: "\n".to_string(),
+            Meta {
+                value: RIMPToken::Whitespace,
                 location: Location::new(2, 4)
             },
-            TokenMeta {
-                token: RIMPToken::Whitespace,
-                lexeme: "\t".to_string(),
+            Meta {
+                value: RIMPToken::Whitespace,
                 location: Location::new(3, 0)
             },
-            TokenMeta {
-                token: RIMPToken::Keyword(Keyword::Skip),
-                lexeme: "skip".to_string(),
+            Meta {
+                value: RIMPToken::Keyword(Keyword::Skip),
                 location: Location::new(3, 1)
             },
-            TokenMeta {
-                token: RIMPToken::Whitespace,
-                lexeme: "\n".to_string(),
+            Meta {
+                value: RIMPToken::Whitespace,
                 location: Location::new(3, 5)
             },
-            TokenMeta {
-                token: RIMPToken::Keyword(Keyword::Else),
-                lexeme: "else".to_string(),
+            Meta {
+                value: RIMPToken::Keyword(Keyword::Else),
                 location: Location::new(4, 0)
             },
-            TokenMeta {
-                token: RIMPToken::Whitespace,
-                lexeme: "\n".to_string(),
+            Meta {
+                value: RIMPToken::Whitespace,
                 location: Location::new(4, 4)
             },
-            TokenMeta {
-                token: RIMPToken::Whitespace,
-                lexeme: "\t".to_string(),
+            Meta {
+                value: RIMPToken::Whitespace,
                 location: Location::new(5, 0)
             },
-            TokenMeta {
-                token: RIMPToken::Keyword(Keyword::Skip),
-                lexeme: "skip".to_string(),
+            Meta {
+                value: RIMPToken::Keyword(Keyword::Skip),
                 location: Location::new(5, 1)
             },
         ])
@@ -104,34 +89,28 @@ fn filtered_lex() {
     assert_eq!(
         result,
         Ok(vec![
-            TokenMeta {
-                token: RIMPToken::Keyword(Keyword::If),
-                lexeme: "if".to_string(),
+            Meta {
+                value: RIMPToken::Keyword(Keyword::If),
                 location: Location::new(1, 0)
             },
-            TokenMeta {
-                token: RIMPToken::Identifier("n".to_string()),
-                lexeme: "n".to_string(),
+            Meta {
+                value: RIMPToken::Identifier("n".to_string()),
                 location: Location::new(1, 3)
             },
-            TokenMeta {
-                token: RIMPToken::Keyword(Keyword::Then),
-                lexeme: "then".to_string(),
+            Meta {
+                value: RIMPToken::Keyword(Keyword::Then),
                 location: Location::new(2, 0)
             },
-            TokenMeta {
-                token: RIMPToken::Keyword(Keyword::Skip),
-                lexeme: "skip".to_string(),
+            Meta {
+                value: RIMPToken::Keyword(Keyword::Skip),
                 location: Location::new(3, 1)
             },
-            TokenMeta {
-                token: RIMPToken::Keyword(Keyword::Else),
-                lexeme: "else".to_string(),
+            Meta {
+                value: RIMPToken::Keyword(Keyword::Else),
                 location: Location::new(4, 0)
             },
-            TokenMeta {
-                token: RIMPToken::Keyword(Keyword::Skip),
-                lexeme: "skip".to_string(),
+            Meta {
+                value: RIMPToken::Keyword(Keyword::Skip),
                 location: Location::new(5, 1)
             },
         ])
@@ -176,7 +155,7 @@ fn collatz_lex() {
     let result = result
         .unwrap()
         .iter()
-        .map(|x| x.token.clone())
+        .map(|x| x.value.clone())
         .collect::<Vec<_>>();
 
     assert_eq!(

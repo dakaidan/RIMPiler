@@ -1,6 +1,6 @@
 use super::super::re::{value::Value, Re};
 
-use utilities::debug::{Error, Location};
+use utilities::debug::{Error, Location, Result};
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct LexResult {
@@ -32,7 +32,7 @@ pub(crate) fn to_line_column(string: &str, line: usize, column: usize) -> (usize
 }
 
 impl Re {
-    fn try_lex(&self, string: String, column: usize, line: usize) -> Result<LexResult, Error> {
+    fn try_lex(&self, string: String, column: usize, line: usize) -> Result<LexResult> {
         if string.is_empty() {
             if self.nullable() {
                 Ok(LexResult::new(self.make_empty()))
@@ -72,7 +72,7 @@ impl Re {
         }
     }
 
-    pub(crate) fn lex(&self, string: String) -> Result<Vec<(String, String, Location)>, Error> {
+    pub(crate) fn lex(&self, string: String) -> Result<Vec<(String, String, Location)>> {
         match self.try_lex(string, 0, 1) {
             Ok(value) => {
                 let mut line = 1;

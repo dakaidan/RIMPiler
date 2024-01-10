@@ -20,7 +20,7 @@ impl Display for Location {
 
 impl Default for Location {
     fn default() -> Self {
-        Self { line: 1, column: 0, unknown: true }
+        Self { line: 0, column: 0, unknown: true }
     }
 }
 
@@ -74,3 +74,27 @@ impl Error {
         }
     }
 }
+
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct Meta<T> {
+    pub value: T,
+    pub location: Location
+}
+
+impl<T> Meta<T> {
+    pub fn new(value: T, location: Location) -> Self {
+        Self { value, location }
+    }
+
+    pub fn to_error(self, message: String, system: String) -> Error {
+        Error::new(self.location, message, system)
+    }
+}
+
+impl<T> Display for Meta<T> where T: Display {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.value)
+    }
+}
+
+pub type Result<T> = std::result::Result<T, Error>;

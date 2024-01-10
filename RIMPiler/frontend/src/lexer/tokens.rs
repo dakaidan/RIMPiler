@@ -1,5 +1,7 @@
 use std::fmt::Display;
-use regex::lexer::{Token, TokenMeta};
+use regex::lexer::Token;
+
+use utilities::debug::Meta;
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
 pub enum Keyword {
@@ -155,35 +157,34 @@ impl RIMPToken {
 
 #[derive(Debug)]
 pub struct Tokens {
-    tokens: Vec<TokenMeta<RIMPToken>>,
+    tokens: Vec<Meta<RIMPToken>>,
 }
 
 impl Tokens {
-    pub fn new(tokens: Vec<TokenMeta<RIMPToken>>) -> Tokens {
+    pub fn new(tokens: Vec<Meta<RIMPToken>>) -> Tokens {
         let mut toks = tokens.clone();
         toks.reverse();
         Tokens { tokens: toks }
     }
 
-    pub fn next(&mut self) -> Option<TokenMeta<RIMPToken>> {
+    pub fn next(&mut self) -> Option<Meta<RIMPToken>> {
         self.tokens.pop()
     }
 
     // Since we need strings, this is the best case cloning we can do
-    pub fn peek(&self) -> Option<TokenMeta<RIMPToken>> {
+    pub fn peek(&self) -> Option<Meta<RIMPToken>> {
         match self.tokens.last() {
-            Some(token) => Some(TokenMeta {
-                token: token.token.copy_clone(),
+            Some(token) => Some(Meta {
+                value: token.value.copy_clone(),
                 location: token.location,
-                lexeme: token.lexeme.clone(),
             }),
             None => None,
         }
     }
 }
 
-impl From<Vec<TokenMeta<RIMPToken>>> for Tokens {
-    fn from(tokens: Vec<TokenMeta<RIMPToken>>) -> Self {
+impl From<Vec<Meta<RIMPToken>>> for Tokens {
+    fn from(tokens: Vec<Meta<RIMPToken>>) -> Self {
         Tokens::new(tokens)
     }
 }

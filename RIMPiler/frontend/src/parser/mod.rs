@@ -1,109 +1,87 @@
 use super::lexer::tokens::{Bracket, Keyword, Operator, RIMPToken, Tokens};
-use super::parser::ErrorType::{UnexpectedEndOfFile, UnexpectedToken};
 use super::post_parse::transformer::transform;
 use super::AST::{
     ArithmeticExpression, ArithmeticOperator, Assignment, Block, BooleanExpression,
     BooleanOperator, Program, RelationOperator, Statement, UnaryArithmeticOperator,
     UnaryBooleanOperator,
 };
-use regex::lexer::TokenMeta;
-use utilities::debug::{Location, Error};
-
-use std::fmt::Display;
-
+use utilities::debug::{Location, Error, Result};
 
 mod precedence;
 mod tests;
 
-#[derive(Debug, Eq, PartialEq, Clone)]
-pub enum ErrorType {
-    UnexpectedToken,
-    UnexpectedEndOfFile,
-}
-
-pub type ParseResult<T> = std::result::Result<T, Error>;
-
-fn expect_operator(operator: Operator, tokens: &mut Tokens) -> Result<(), TokenMeta<RIMPToken>> {
+fn expect_operator(operator: Operator, tokens: &mut Tokens) -> std::result::Result<(), Location> {
     let next_token = tokens.next();
     match next_token {
         Some(token) => {
-            if token.token != RIMPToken::Operator(operator) {
-                Err(token)
+            if token.value != RIMPToken::Operator(operator) {
+                Err(token.location)
             } else {
                 Ok(())
             }
         }
-        None => Err(
-            TokenMeta::new("".to_string(), Location::default(), "operator".to_string()).unwrap(),
-        ),
+        None => Err(Location::default()),
     }
 }
 
-fn expect_identifier(tokens: &mut Tokens) -> Result<String, TokenMeta<RIMPToken>> {
+fn expect_identifier(tokens: &mut Tokens) -> std::result::Result<String, Location> {
     let next_token = tokens.next();
     match next_token {
-        Some(token) => match token.token {
+        Some(token) => match token.value {
             RIMPToken::Identifier(identifier) => Ok(identifier),
-            _ => Err(token),
+            _ => Err(token.location),
         },
-        None => Err(TokenMeta::new(
-            "".to_string(),
-            Location::default(),
-            "identifier".to_string(),
-        )
-        .unwrap()),
+        None => Err(Location::default()),
     }
 }
 
-fn expect_keyword(keyword: Keyword, tokens: &mut Tokens) -> Result<(), TokenMeta<RIMPToken>> {
+fn expect_keyword(keyword: Keyword, tokens: &mut Tokens) -> std::result::Result<(), Location> {
     let next_token = tokens.next();
     match next_token {
         Some(token) => {
-            if token.token != RIMPToken::Keyword(keyword) {
-                Err(token)
+            if token.value != RIMPToken::Keyword(keyword) {
+                Err(token.location)
             } else {
                 Ok(())
             }
         }
         None => {
-            Err(TokenMeta::new("".to_string(), Location::default(), "keyword".to_string()).unwrap())
+            Err(Location::default())
         }
     }
 }
 
-fn expect_bracket(bracket: Bracket, tokens: &mut Tokens) -> Result<(), TokenMeta<RIMPToken>> {
+fn expect_bracket(bracket: Bracket, tokens: &mut Tokens) -> std::result::Result<(), Location> {
     let next_token = tokens.next();
     match next_token {
         Some(token) => {
-            if token.token != RIMPToken::Bracket(bracket) {
-                Err(token)
+            if token.value != RIMPToken::Bracket(bracket) {
+                Err(token.location)
             } else {
                 Ok(())
             }
         }
         None => {
-            Err(TokenMeta::new("".to_string(), Location::default(), "bracket".to_string()).unwrap())
+            Err(Location::default())
         }
     }
 }
 
-fn expect_semicolon(tokens: &mut Tokens) -> Result<(), TokenMeta<RIMPToken>> {
+fn expect_semicolon(tokens: &mut Tokens) -> std::result::Result<(), Location> {
     let next_token = tokens.next();
     match next_token {
         Some(token) => {
-            if token.token != RIMPToken::Semicolon {
-                Err(token)
+            if token.value != RIMPToken::Semicolon {
+                Err(token.location)
             } else {
                 Ok(())
             }
         }
-        None => Err(
-            TokenMeta::new("".to_string(), Location::default(), "semicolon".to_string()).unwrap(),
-        ),
+        None => Err(Location::default()),
     }
 }
 
-pub fn parse(tokens: &mut Tokens) -> ParseResult<Program> {
+pub fn parse(tokens: &mut Tokens) -> Result<Program> {
     let result = parse_program(tokens);
     if result.is_err() {
         return Err(result.unwrap_err());
@@ -112,7 +90,7 @@ pub fn parse(tokens: &mut Tokens) -> ParseResult<Program> {
     Ok(transform(&result.unwrap()))
 }
 
-pub fn parse_program(tokens: &mut Tokens) -> ParseResult<Program> {
+pub fn parse_program(tokens: &mut Tokens) -> Result<Program> {
     let mut statements = Vec::new();
 
     loop {
@@ -132,7 +110,7 @@ pub fn parse_program(tokens: &mut Tokens) -> ParseResult<Program> {
 
         if result.is_err() {
             return Err(Error::new(
-                result.unwrap_err().location,
+                result.unwrap_err(),
                 "Expected semicolon".to_string(),
                 "Parser".to_string(),
             ));
@@ -142,7 +120,7 @@ pub fn parse_program(tokens: &mut Tokens) -> ParseResult<Program> {
     }
 }
 
-fn parse_statement(tokens: &mut Tokens) -> ParseResult<Statement> {
+fn parse_statement(tokens: &mut Tokens) -> Result<Statement> {
     /*
        A statement is either:
            - an assignment : If the next token is an identifier, then we have an assignment
@@ -151,13 +129,13 @@ fn parse_statement(tokens: &mut Tokens) -> ParseResult<Statement> {
            - a skip statement : If the next token is a skip, then we have a skip statement
     */
     match tokens.next() {
-        Some(token) => match token.token {
+        Some(token) => match token.value {
             RIMPToken::Identifier(identifier) => {
                 let result = expect_operator(Operator::Assign, tokens);
 
                 if result.is_err() {
                     return Err(Error::new(
-                        result.unwrap_err().location,
+                        result.unwrap_err(),
                         "Expected assignment operator".to_string(),
                         "Parser".to_string(),
                     ));
@@ -186,7 +164,7 @@ fn parse_statement(tokens: &mut Tokens) -> ParseResult<Statement> {
 
                     if result.is_err() {
                         return Err(Error::new(
-                            result.unwrap_err().location,
+                            result.unwrap_err(),
                             "Expected keyword do".to_string(),
                             "Parser".to_string(),
                         ));
@@ -214,7 +192,7 @@ fn parse_statement(tokens: &mut Tokens) -> ParseResult<Statement> {
 
                     if result.is_err() {
                         return Err(Error::new(
-                            result.unwrap_err().location,
+                            result.unwrap_err(),
                             "Expected keyword then".to_string(),
                             "Parser".to_string(),
                         ));
@@ -230,7 +208,7 @@ fn parse_statement(tokens: &mut Tokens) -> ParseResult<Statement> {
 
                     if result.is_err() {
                         return Err(Error::new(
-                            result.unwrap_err().location,
+                            result.unwrap_err(),
                             "Expected keyword else".to_string(),
                             "Parser".to_string(),
                         ));
@@ -254,7 +232,7 @@ fn parse_statement(tokens: &mut Tokens) -> ParseResult<Statement> {
 
                     if identifier.is_err() {
                         return Err(Error::new(
-                            identifier.unwrap_err().location,
+                            identifier.unwrap_err(),
                             "Expected identifier".to_string(),
                             "Parser".to_string(),
                         ));
@@ -264,7 +242,7 @@ fn parse_statement(tokens: &mut Tokens) -> ParseResult<Statement> {
 
                     if result.is_err() {
                         return Err(Error::new(
-                            result.unwrap_err().location,
+                            result.unwrap_err(),
                             "Expected assignment operator".to_string(),
                             "Parser".to_string(),
                         ));
@@ -307,14 +285,14 @@ fn parse_statement(tokens: &mut Tokens) -> ParseResult<Statement> {
     }
 }
 
-fn parse_block(tokens: &mut Tokens) -> ParseResult<Block> {
+fn parse_block(tokens: &mut Tokens) -> Result<Block> {
     let mut statements = Vec::new();
 
     let result = expect_bracket(Bracket::LeftBrace, tokens);
 
     if result.is_err() {
         return Err(Error::new(
-            result.unwrap_err().location,
+            result.unwrap_err(),
             "Expected opening brace".to_string(),
             "Parser".to_string(),
         ));
@@ -324,14 +302,14 @@ fn parse_block(tokens: &mut Tokens) -> ParseResult<Block> {
         let next_token = tokens.peek();
         match next_token {
             Some(token) => {
-                if token.token == RIMPToken::Bracket(Bracket::RightBrace) {
+                if token.value == RIMPToken::Bracket(Bracket::RightBrace) {
                     tokens.next();
                     return Ok(statements);
                 }
             }
             None => {
                 return Err(Error::new(
-                    result.unwrap_err().location,
+                    result.unwrap_err(),
                     "Expected closing brace".to_string(),
                     "Parser".to_string(),
                 ));
@@ -348,7 +326,7 @@ fn parse_block(tokens: &mut Tokens) -> ParseResult<Block> {
 
         if result.is_err() {
             return Err(Error::new(
-                result.unwrap_err().location,
+                result.unwrap_err(),
                 "Expected semicolon".to_string(),
                 "Parser".to_string(),
             ));
@@ -361,9 +339,9 @@ fn parse_block(tokens: &mut Tokens) -> ParseResult<Block> {
 fn parse_arithmetic_expression(
     tokens: &mut Tokens,
     min_binding_power: u8,
-) -> ParseResult<ArithmeticExpression> {
+) -> Result<ArithmeticExpression> {
     let mut left_hand_side = match tokens.next() {
-        Some(token) => match token.token {
+        Some(token) => match token.value {
             RIMPToken::Number(number) => ArithmeticExpression::Integer(number),
             RIMPToken::Identifier(identifier) => ArithmeticExpression::Variable(identifier),
             RIMPToken::Bracket(b) if b == Bracket::LeftParenthesis => {
@@ -374,7 +352,7 @@ fn parse_arithmetic_expression(
                 let next_token = tokens.next();
                 match next_token {
                     Some(token) => {
-                        if token.token != RIMPToken::Bracket(Bracket::RightParenthesis) {
+                        if token.value != RIMPToken::Bracket(Bracket::RightParenthesis) {
                             return Err(Error::new(
                                 token.location,
                                 "Expected closing parenthesis".to_string(),
@@ -431,7 +409,7 @@ fn parse_arithmetic_expression(
 
     loop {
         let operator = match tokens.peek() {
-            Some(token) => match token.token {
+            Some(token) => match token.value {
                 RIMPToken::Operator(operator) => match operator {
                     Operator::Add => ArithmeticOperator::Addition,
                     Operator::Minus => ArithmeticOperator::Subtraction,
@@ -483,7 +461,7 @@ fn parse_arithmetic_expression(
 fn parse_boolean_expression(
     tokens: &mut Tokens,
     min_binding_power: u8,
-) -> ParseResult<BooleanExpression> {
+) -> Result<BooleanExpression> {
     /*
         NOTE:
         A boolean expression is either:
@@ -506,7 +484,7 @@ fn parse_boolean_expression(
     */
 
     let left_hand_side = match tokens.peek() {
-        Some(token) => match token.token {
+        Some(token) => match token.value {
             RIMPToken::Bracket(b) if b == Bracket::LeftParenthesis => {
                 tokens.next();
                 let expression = parse_boolean_expression(tokens, 0);
@@ -516,7 +494,7 @@ fn parse_boolean_expression(
                 let next_token = tokens.next();
                 match next_token {
                     Some(token) => {
-                        if token.token != RIMPToken::Bracket(Bracket::RightParenthesis) {
+                        if token.value != RIMPToken::Bracket(Bracket::RightParenthesis) {
                             return Err(Error::new(
                                 token.location,
                                 "Expected closing parenthesis".to_string(),
@@ -571,7 +549,7 @@ fn parse_boolean_expression(
 
     loop {
         let operator = match tokens.peek() {
-            Some(token) => match token.token {
+            Some(token) => match token.value {
                 RIMPToken::Operator(operator) => match operator {
                     Operator::And => BooleanOperator::And,
                     Operator::Or => BooleanOperator::Or,
@@ -606,7 +584,7 @@ fn parse_boolean_expression(
     Ok(left_hand_side)
 }
 
-fn parse_relations(tokens: &mut Tokens) -> ParseResult<BooleanExpression> {
+fn parse_relations(tokens: &mut Tokens) -> Result<BooleanExpression> {
     let left_hand_side = parse_arithmetic_expression(tokens, 0);
 
     if left_hand_side.is_err() {
@@ -616,7 +594,7 @@ fn parse_relations(tokens: &mut Tokens) -> ParseResult<BooleanExpression> {
     let left_hand_side = left_hand_side.unwrap();
 
     let operator = match tokens.next() {
-        Some(token) => match token.token {
+        Some(token) => match token.value {
             RIMPToken::Operator(operator) => match operator {
                 Operator::Equal => RelationOperator::Equal,
                 Operator::NotEqual => RelationOperator::NotEqual,

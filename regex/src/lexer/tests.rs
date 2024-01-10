@@ -47,7 +47,7 @@ fn tokenise() {
     }
 
     impl Token for TestToken {
-        fn new(_: String, record_identifier: String) -> Result<Box<Self>, String> {
+        fn new(_: String, record_identifier: String) -> std::result::Result<Box<Self>, String> {
             match record_identifier.as_str() {
                 "0" => Ok(Box::new(TestToken::A)),
                 "1" => Ok(Box::new(TestToken::B)),
@@ -66,8 +66,8 @@ fn tokenise() {
     assert_eq!(
         result,
         Ok(vec![
-            TokenMeta::new("a".to_owned(), Location::new(1, 0), "0".to_owned()).unwrap(),
-            TokenMeta::new("b".to_owned(), Location::new(1, 1), "1".to_owned()).unwrap(),
+            Meta::create_token("a".to_owned(), Location::new(1, 0), "0".to_owned()).unwrap(),
+            Meta::create_token("b".to_owned(), Location::new(1, 1), "1".to_owned()).unwrap(),
         ])
     );
 }
