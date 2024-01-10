@@ -1,7 +1,7 @@
-use crate::interpreter::InterpreterEngine;
-use crate::lexer::Tokeniser;
-use crate::parser::parse;
-use crate::post_parse::inverter::invert_and_combine;
+use super::super::interpreter::InterpreterEngine;
+use super::super::lexer::Tokeniser;
+use super::super::parser::parse;
+use super::super::post_parse::inverter::invert_and_combine;
 
 #[test]
 fn basic_interpreted() {

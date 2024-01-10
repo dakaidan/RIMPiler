@@ -1,4 +1,4 @@
-use crate::ast::create_ast;
+use super::ast::create_ast;
 use RIMPiler_frontend::{interpreter::InterpreterEngine, post_parse::inverter::invert_and_combine};
 
 pub struct Interpreter {

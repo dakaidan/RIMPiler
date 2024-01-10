@@ -1,13 +1,16 @@
-use crate::lexer::tokens::{Bracket, Keyword, Operator, RIMPToken, Tokens};
-use crate::parser::ErrorType::{UnexpectedEndOfFile, UnexpectedToken};
-use crate::post_parse::transformer::transform;
-use crate::AST::{
+use super::lexer::tokens::{Bracket, Keyword, Operator, RIMPToken, Tokens};
+use super::parser::ErrorType::{UnexpectedEndOfFile, UnexpectedToken};
+use super::post_parse::transformer::transform;
+use super::AST::{
     ArithmeticExpression, ArithmeticOperator, Assignment, Block, BooleanExpression,
     BooleanOperator, Program, RelationOperator, Statement, UnaryArithmeticOperator,
     UnaryBooleanOperator,
 };
-use regex::lexer::{Location, TokenMeta};
+use regex::lexer::TokenMeta;
+use utilities::debug::Location;
+
 use std::fmt::Display;
+
 
 mod precedence;
 mod tests;

@@ -1,5 +1,6 @@
 use super::super::re::{value::Value, Re};
-use super::Location;
+
+use utilities::debug::Location;
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct LexError {

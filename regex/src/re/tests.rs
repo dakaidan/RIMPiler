@@ -1,6 +1,6 @@
 use super::super::*;
-use crate::re::value::Value;
-use crate::re::*;
+use super::super::re::value::Value;
+use super::super::re::*;
 use std::time::Instant;
 
 #[test]

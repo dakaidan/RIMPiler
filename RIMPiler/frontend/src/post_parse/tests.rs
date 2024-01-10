@@ -1,7 +1,7 @@
-use crate::lexer::Tokeniser;
-use crate::parser::parse;
-use crate::post_parse::inverter::invert;
-use crate::AST::{
+use super::super::lexer::Tokeniser;
+use super::super::parser::parse;
+use super::super::post_parse::inverter::invert;
+use super::super::AST::{
     ArithmeticExpression, ArithmeticOperator, Assignment, BooleanExpression, Program,
     RelationOperator, Statement,
 };

@@ -1,5 +1,5 @@
-use crate::post_parse::name_generator::NameGenerator;
-use crate::AST::{
+use super::super::post_parse::name_generator::NameGenerator;
+use super::super::AST::{
     ArithmeticExpression, ArithmeticOperator, Assignment, Block, BooleanExpression, Program,
     Statement,
 };

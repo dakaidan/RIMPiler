@@ -22,6 +22,9 @@ dependencies = [
 [[package]]
 name = "regex"
 version = "0.1.0"
+dependencies = [
+ "utilities",
+]
 
 [[package]]
 name = "utilities"

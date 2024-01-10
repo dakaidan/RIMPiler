@@ -1,5 +1,5 @@
-use crate::parser::{parse_arithmetic_expression, parse_boolean_expression, parse_relations};
-use crate::AST::{
+use super::super::parser::{parse_arithmetic_expression, parse_boolean_expression, parse_relations};
+use super::super::AST::{
     ArithmeticExpression, ArithmeticOperator, Assignment, BooleanExpression, BooleanOperator,
     Program, RelationOperator, Statement, UnaryArithmeticOperator, UnaryBooleanOperator,
 };

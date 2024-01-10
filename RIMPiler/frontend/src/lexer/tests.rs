@@ -1,6 +1,8 @@
 use super::Tokeniser;
-use crate::lexer::tokens::{Bracket, Keyword, Operator, RIMPToken};
-use regex::lexer::{Location, TokenMeta};
+use super::super::lexer::tokens::{Bracket, Keyword, Operator, RIMPToken};
+use regex::lexer::TokenMeta;
+
+use utilities::debug::Location;
 
 #[test]
 fn simple_lex() {

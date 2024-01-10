@@ -1,5 +1,3 @@
-// display functions for AST
-
 use crate::AST::{
     ArithmeticExpression, ArithmeticOperator, Assignment, BooleanExpression, BooleanOperator,
     Program, RelationOperator, Statement, UnaryArithmeticOperator, UnaryBooleanOperator,

@@ -1,4 +1,4 @@
-use crate::ast::create_ast;
+use super::ast::create_ast;
 
 pub struct Compiler {
     input_file: String,
