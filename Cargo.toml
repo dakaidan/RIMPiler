@@ -7,5 +7,5 @@ members = [
     "RIMPiler/backend",
     "regex",
     "utilities",
-    "external_dependencies/krakatau"
+    "external_dependencies/Krakatau"
 ]
