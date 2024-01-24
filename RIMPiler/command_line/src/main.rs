@@ -1,8 +1,10 @@
 mod ast;
 mod compiler;
 mod interpreter;
+mod types;
 
 use utilities::args_parser::*;
+use crate::types::Target;
 
 fn get_args() -> CommandLineResult {
     let parser = CommandLineArgumentsBuilder::new()
@@ -19,7 +21,7 @@ fn get_args() -> CommandLineResult {
                 .short_name("o")
                 .long_name("output")
                 .string()
-                .description("The output file")
+                .description("The output file/folder")
                 .optional(),
         )
         .add_flag(
@@ -41,6 +43,12 @@ fn get_args() -> CommandLineResult {
                 .description("Compile to LLVM IR"),
         )
         .add_flag(
+            FlagBuilder::new("jvm")
+                .short_name("j")
+                .long_name("jvm")
+                .description("Compile to JVM"),
+        )
+        .add_flag(
             FlagBuilder::new("pisa")
                 .short_name("p")
                 .long_name("pisa")
@@ -58,7 +66,8 @@ fn get_args() -> CommandLineResult {
         Ok(args) => {
             if (args.flags.contains("compile")
                 || args.flags.contains("llvm")
-                || args.flags.contains("pisa"))
+                || args.flags.contains("pisa")
+                || args.flags.contains("jvm"))
                 && args.flags.contains("interpret")
             {
                 println!("Error: Cannot compile and interpret at the same time");
@@ -68,6 +77,18 @@ fn get_args() -> CommandLineResult {
 
             if args.flags.contains("llvm") && args.flags.contains("pisa") {
                 println!("Error: Cannot compile to both LLVM IR and PISA");
+                println!("{}", parser);
+                std::process::exit(1);
+            }
+
+            if args.flags.contains("llvm") && args.flags.contains("jvm") {
+                println!("Error: Cannot compile to both LLVM IR and JVM");
+                println!("{}", parser);
+                std::process::exit(1);
+            }
+
+            if args.flags.contains("jvm") && args.flags.contains("pisa") {
+                println!("Error: Cannot compile to both JVM and PISA");
                 println!("{}", parser);
                 std::process::exit(1);
             }
@@ -82,7 +103,7 @@ fn get_args() -> CommandLineResult {
     }
 }
 
-static DEFAULT_OUTPUT_FILE: &str = "a.out";
+static DEFAULT_OUTPUT_FILE: &str = "Main";
 
 fn main() {
     let args = get_args();
@@ -98,7 +119,14 @@ fn main() {
         if output_file_opt.is_some() {
             output_file = output_file_opt.unwrap().to_string();
         }
-        let compiler = compiler::Compiler::new(input_file.to_string(), output_file.to_string());
+        let target = if args.flags.contains("llvm") {
+            Target::LLVM
+        } else if args.flags.contains("jvm") {
+            Target::JVM
+        } else {
+            Target::JVM
+        };
+        let compiler = compiler::Compiler::new(input_file.to_string(), output_file.to_string(), target);
         compiler.compile().unwrap();
     }
 }

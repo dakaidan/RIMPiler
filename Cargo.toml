@@ -4,6 +4,8 @@ resolver="2"
 members = [
     "RIMPiler/command_line",
     "RIMPiler/frontend",
+    "RIMPiler/backend",
     "regex",
     "utilities",
+    "external_dependencies/krakatau"
 ]

@@ -1,7 +1,14 @@
 #![allow(non_snake_case)]
+
+use crate::AST::Program;
+
 pub mod AST;
 pub mod interpreter;
 pub mod lexer;
 pub mod parser;
 pub mod post_parse;
-mod JVM;
+pub mod JVM;
+
+pub trait Backend {
+    fn compile(program: &Program) -> String;
+}

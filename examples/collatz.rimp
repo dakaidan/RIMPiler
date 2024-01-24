@@ -11,7 +11,7 @@
     If collatz = 1, then n is a Collatz number.
 */
 
-int n = 1977931; // number to be checked
+int n = 8; // number to be checked
 int collatz = 0;
 
 while n > 1 do {

@@ -6,4 +6,5 @@ edition = "2021"
 [dependencies]
 regex = { path = "../../regex" }
 RIMPiler_frontend = { path = "../frontend" }
+RIMPiler_backend = { path = "../backend" }
 utilities = { path = "../../utilities" }
