@@ -4,16 +4,15 @@ A compiler for the rimp programming language.
 
 ## Core Aims
 
-- [ ] Implement a compiler for rimp to RSSA
-- [ ] Implement code generation for RSSA to PISA
-- [ ] Implement optimisations in RSSA
-- [ ] Implement array support in rimp
+- [x] Implement an evaluator for rimp
+- [x] Implement a compiler to the JVM
+- [ ] Implement a compiler to a custom abstract machine
+- [ ] Implement a compiler to LLVM
 
-## Stretch Goals
+## Additional Aims
 
-- [ ] Implement procedure calls
-- [ ] Implement pointers
-- [ ] Implement structs
+- [ ] Implement a compiler to RSSA
+- [ ] Implement a compiler to PISA
 
 ## Documents
 
