@@ -39,7 +39,7 @@ We need a lexer for the following grammar:
 
     <BooleanFactor> ::= '('<BooleanExpression>')'
 
-    <type> ::= 'int'
+    <type> ::= 'int' | 'float'
 */
 
 pub struct InitialisationRequired;
@@ -56,7 +56,12 @@ pub struct Tokeniser<T> {
     Numbers can be:
         0 | [1-9][0-9]*
      */
-    number: Re,
+    integer: Re,
+    /*
+    Floats can be:
+        0 | [1-9][0-9]* | ([0-9]*\.[0-9]+)
+     */
+    float: Re,
     /*
     Keywords can be:
         skip | if | then | else | while | do | int
@@ -114,16 +119,22 @@ impl Tokeniser<InitialisationRequired> {
                     ])))
                     & Re::Char('*')
                     & Re::Char('/')),
-            number: Re::Char('0')
+            integer: Re::Char('0')
                 | (Re::Range(vec![Range::Range('1'..='9')])
                     & Re::Star(Box::new(Re::Range(vec![Range::Range('0'..='9')])))),
+            float: (Re::Char('0')
+                | (Re::Range(vec![Range::Range('1'..='9')])
+                    & Re::Star(Box::new(Re::Range(vec![Range::Range('0'..='9')])))))
+                | ((Re::Plus(Box::new(Re::Range(vec![Range::Range('0'..='9')]))) & Re::Char('.'))
+                    & Re::Plus(Box::new(Re::Range(vec![Range::Range('0'..='9')])))),
             keyword: Re::seq_from("skip".to_string())
                 | Re::seq_from("if".to_string())
                 | Re::seq_from("then".to_string())
                 | Re::seq_from("else".to_string())
                 | Re::seq_from("while".to_string())
                 | Re::seq_from("do".to_string())
-                | Re::seq_from("int".to_string()),
+                | Re::seq_from("int".to_string())
+                | Re::seq_from("float".to_string()),
             identifier: (Re::Range(vec![Range::Range('a'..='z'), Range::Range('A'..='Z')])
                 & Re::Star(Box::new(Re::Range(vec![
                     Range::Range('a'..='z'),
@@ -172,7 +183,8 @@ impl Tokeniser<InitialisationRequired> {
                     String::from("whitespace"),
                     Box::new(self.whitespace.clone()),
                 )
-                | Re::Record(String::from("number"), Box::new(self.number.clone()))
+                | Re::Record(String::from("integer"), Box::new(self.integer.clone()))
+                | Re::Record(String::from("float"), Box::new(self.float.clone()))
                 | Re::Record(String::from("comment"), Box::new(self.comment.clone()))
                 | Re::Record(
                     String::from("identifier"),
@@ -182,7 +194,8 @@ impl Tokeniser<InitialisationRequired> {
 
         Tokeniser {
             comment: self.comment.clone(),
-            number: self.number.clone(),
+            integer: self.integer.clone(),
+            float: self.float.clone(),
             keyword: self.keyword.clone(),
             identifier: self.identifier.clone(),
             operator: self.operator.clone(),

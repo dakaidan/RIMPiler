@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 regex = { path = "../../regex" }
 utilities = { path = "../../utilities" }
+ordered-float = "4.2.0"

@@ -1,0 +1,8 @@
+int a = 2;
+float b = 1.5;
+float c = 0.5;
+
+int d = a ^ a;
+float e = b ^ a;
+float f = a ^ c;
+float g = b ^ c;

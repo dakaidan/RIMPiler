@@ -1,0 +1,9 @@
+float x = 7;
+float y = 3.5;
+float z = 5.5;
+int a = 2;
+
+while x > 0 do {
+    x = x - y;
+    z = a + (z - x) * 2;
+};

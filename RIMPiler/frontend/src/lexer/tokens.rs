@@ -1,4 +1,5 @@
 use std::fmt::Display;
+use ordered_float::NotNan;
 use regex::lexer::Token;
 
 use utilities::debug::Meta;
@@ -12,6 +13,7 @@ pub enum Keyword {
     While,
     Do,
     Int,
+    Float,
 }
 
 impl Keyword {
@@ -24,6 +26,7 @@ impl Keyword {
             "while" => Keyword::While,
             "do" => Keyword::Do,
             "int" => Keyword::Int,
+            "float" => Keyword::Float,
             _ => unreachable!(
                 "Should only be called by the Lexer, invalid keyword, {}",
                 string
@@ -123,7 +126,8 @@ pub enum RIMPToken {
     Keyword(Keyword),
     Identifier(String),
     Operator(Operator),
-    Number(i32), // I believe PISA only supports 32-bit integers, if so, no need to lex larger
+    Integer(i32), // I believe PISA only supports 32-bit integers, if so, no need to lex larger
+    Float(NotNan<f32>),
     Bracket(Bracket),
     Semicolon,
     Whitespace,
@@ -131,11 +135,19 @@ pub enum RIMPToken {
 }
 
 impl RIMPToken {
-    fn parse_number(string: String) -> Result<i32, String> {
+    fn parse_integer(string: String) -> Result<i32, String> {
         let parsed = string.parse::<i32>();
         match parsed {
             Ok(number) => Ok(number),
             Err(_) => return Err(format!("Invalid 32 bit number, {}", string)),
+        }
+    }
+
+    fn parse_float(string: String) -> Result<NotNan<f32>, String> {
+        let parsed = string.parse::<f32>();
+        match parsed {
+            Ok(number) => Ok(NotNan::new(number).unwrap()),
+            Err(_) => return Err(format!("Invalid 32 bit float, {}", string)),
         }
     }
 
@@ -146,7 +158,8 @@ impl RIMPToken {
             RIMPToken::Keyword(keyword) => RIMPToken::Keyword(*keyword),
             RIMPToken::Identifier(identifier) => RIMPToken::Identifier(identifier.clone()),
             RIMPToken::Operator(binary_operator) => RIMPToken::Operator(*binary_operator),
-            RIMPToken::Number(number) => RIMPToken::Number(*number),
+            RIMPToken::Integer(number) => RIMPToken::Integer(*number),
+            RIMPToken::Float(number) => RIMPToken::Float(*number),
             RIMPToken::Bracket(bracket) => RIMPToken::Bracket(*bracket),
             RIMPToken::Semicolon => RIMPToken::Semicolon,
             RIMPToken::Whitespace => RIMPToken::Whitespace,
@@ -195,10 +208,17 @@ impl Token for RIMPToken {
             "keyword" => Ok(RIMPToken::Keyword(Keyword::new(string))),
             "identifier" => Ok(RIMPToken::Identifier(string)),
             "operator" => Ok(RIMPToken::Operator(Operator::new(string))),
-            "number" => {
-                let number = RIMPToken::parse_number(string);
+            "integer" => {
+                let number = RIMPToken::parse_integer(string);
                 match number {
-                    Ok(number) => Ok(RIMPToken::Number(number)),
+                    Ok(number) => Ok(RIMPToken::Integer(number)),
+                    Err(error) => Err(error),
+                }
+            }
+            "float" => {
+                let number = RIMPToken::parse_float(string);
+                match number {
+                    Ok(number) => Ok(RIMPToken::Float(number)),
                     Err(error) => Err(error),
                 }
             }

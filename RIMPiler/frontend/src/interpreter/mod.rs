@@ -2,12 +2,8 @@ mod memory_store;
 #[cfg(test)]
 mod tests;
 
-use crate::interpreter::memory_store::Integer;
-use crate::AST::{
-    ArithmeticExpression, ArithmeticOperator, Assignment, Block, BooleanExpression,
-    BooleanOperator, Program, RelationOperator, Statement, UnaryArithmeticOperator,
-    UnaryBooleanOperator,
-};
+use crate::interpreter::memory_store::{Integer, MemoryStoreElement, Value};
+use crate::AST::{ArithmeticExpression, ArithmeticOperator, Block, BooleanExpression, BooleanOperator, Program, RelationOperator, Statement, UnaryArithmeticOperator, UnaryBooleanOperator, Variable};
 use memory_store::MemoryStore;
 
 pub struct InterpreterEngine {
@@ -33,7 +29,7 @@ impl InterpreterEngine {
         &self.reverse_point_snapshot
     }
 
-    pub fn get_result(&self, variable: &String) -> Option<Integer> {
+    pub fn get_result(&self, variable: &String) -> Option<MemoryStoreElement> {
         match &self.reverse_point_snapshot {
             None => None,
             Some(memory_store) => {
@@ -69,15 +65,15 @@ impl InterpreterEngine {
     fn interpret_statement(&mut self, statement: &Statement) -> Result<(), String> {
         match statement {
             Statement::Skip => {}
-            Statement::Assignment(assignment) => {
-                let result = self.interpret_assignment(assignment);
+            Statement::Assignment(variable, expression) => {
+                let result = self.interpret_assignment(variable, expression);
 
                 if result.is_err() {
                     return Err(result.unwrap_err());
                 }
             }
-            Statement::ReverseAssignment(assignment) => {
-                let result = self.interpret_reverse_assignment(assignment);
+            Statement::ReverseAssignment(variable, expression) => {
+                let result = self.interpret_reverse_assignment(variable, expression);
 
                 if result.is_err() {
                     return Err(result.unwrap_err());
@@ -105,9 +101,20 @@ impl InterpreterEngine {
         Ok(())
     }
 
-    fn interpret_assignment(&mut self, assignment: &Assignment) -> Result<(), String> {
-        match assignment {
-            Assignment::Integer(variable, expression) => {
+    fn interpret_assignment(&mut self, variable: &Variable, expression: &ArithmeticExpression) -> Result<(), String> {
+        match variable {
+            Variable::Integer(variable) => {
+                let result = self.interpret_arithmetic_expression(expression);
+
+                if result.is_err() {
+                    return Err(result.unwrap_err());
+                }
+
+                let value = result.unwrap();
+
+                self.memory_store.assign(variable, value);
+            }
+            Variable::Float(variable) => {
                 let result = self.interpret_arithmetic_expression(expression);
 
                 if result.is_err() {
@@ -123,9 +130,20 @@ impl InterpreterEngine {
         Ok(())
     }
 
-    fn interpret_reverse_assignment(&mut self, assignment: &Assignment) -> Result<(), String> {
-        match assignment {
-            Assignment::Integer(variable, expression) => {
+    fn interpret_reverse_assignment(&mut self, variable: &Variable, expression: &ArithmeticExpression) -> Result<(), String> {
+        match variable {
+            Variable::Integer(variable) => {
+                let result = self.interpret_arithmetic_expression(expression);
+
+                if result.is_err() {
+                    return Err(result.unwrap_err());
+                }
+
+                let value = result.unwrap();
+
+                self.memory_store.un_assign(variable, value);
+            }
+            Variable::Float(variable) => {
                 let result = self.interpret_arithmetic_expression(expression);
 
                 if result.is_err() {
@@ -284,10 +302,13 @@ impl InterpreterEngine {
     fn interpret_arithmetic_expression(
         &mut self,
         arithmetic_expression: &ArithmeticExpression,
-    ) -> Result<i32, String> {
+    ) -> Result<Value, String> {
         match arithmetic_expression {
             ArithmeticExpression::Variable(variable) => {
-                let value = self.memory_store.get(variable);
+                let value = match variable {
+                    Variable::Integer(variable) => self.memory_store.get(variable),
+                    Variable::Float(variable) => self.memory_store.get(variable),
+                };
 
                 if value.is_none() {
                     return Err(format!("Variable {} is not defined", variable));
@@ -295,7 +316,8 @@ impl InterpreterEngine {
 
                 Ok(value.unwrap().get())
             }
-            ArithmeticExpression::Integer(i) => Ok(i.clone()),
+            ArithmeticExpression::Integer(i) => Ok(Value::Integer(*i)),
+            ArithmeticExpression::Float(f) => Ok(Value::Float(f.into_inner() as f32)),
             ArithmeticExpression::Unary(operator, operand) => {
                 let operand = self.interpret_arithmetic_expression(operand);
 
@@ -334,8 +356,29 @@ impl InterpreterEngine {
                         Ok(left_hand_side.unwrap() / right_hand_side.unwrap())
                     }
                     ArithmeticOperator::Exponentiation => {
-                        if right_hand_side.clone().unwrap() > 0 {
-                            Ok(left_hand_side.unwrap().pow(right_hand_side.unwrap() as u32))
+                        if right_hand_side.clone().unwrap() > Value::Integer(0) {
+                            match left_hand_side.unwrap() {
+                                Value::Integer(lhs) => {
+                                    match right_hand_side.unwrap() {
+                                        Value::Integer(rhs) => {
+                                            Ok(Value::Integer(lhs.pow(rhs as u32)))
+                                        }
+                                        Value::Float(rhs) => {
+                                            Ok(Value::Float((lhs as f32).powf(rhs)))
+                                        }
+                                    }
+                                }
+                                Value::Float(lhs) => {
+                                    match right_hand_side.unwrap() {
+                                        Value::Integer(rhs) => {
+                                            Ok(Value::Float(lhs.powf(rhs as f32)))
+                                        }
+                                        Value::Float(rhs) => {
+                                            Ok(Value::Float(lhs.powf(rhs)))
+                                        }
+                                    }
+                                }
+                            }
                         } else {
                             Err(format!(
                                 "Cannot raise {} to the power of {}",

@@ -1,3 +1,4 @@
+use crate::interpreter::memory_store::Value;
 use super::super::interpreter::InterpreterEngine;
 use super::super::lexer::Tokeniser;
 use super::super::parser::parse;
@@ -26,7 +27,7 @@ fn basic_interpreted() {
             .get_result(&String::from("generated_name_semantic_transformer0"))
             .unwrap()
             .get(),
-        0
+        Value::Integer(0)
     );
 }
 
@@ -59,7 +60,7 @@ fn result() {
             .get_result(&String::from("minus2"))
             .unwrap()
             .get(),
-        5
+        Value::Integer(5)
     );
 
     let program = r#"
@@ -89,6 +90,6 @@ fn result() {
             .get_result(&String::from("minus2"))
             .unwrap()
             .get(),
-        55
+        Value::Integer(55)
     );
 }

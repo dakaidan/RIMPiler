@@ -1,6 +1,8 @@
+use ordered_float::NotNan;
+
 mod display;
 
-// TODO: If types are ever extende add a type checker.
+// TODO: If types are ever extended add a type checker.
 //       Since there are no functions or anything,
 //       we can just walk the tree with a big hashmap to easily check types.
 
@@ -12,16 +14,24 @@ pub enum Program {
 }
 
 #[derive(Debug, Eq, PartialEq, Clone, Hash)]
-pub enum Assignment {
-    Integer(String, Box<ArithmeticExpression>),
+pub enum Type {
+    Integer,
+    Float,
 }
+
+#[derive(Debug, Eq, PartialEq, Clone, Hash)]
+pub enum Variable {
+    Integer(String),
+    Float(String),
+}
+
 #[derive(Debug, Eq, PartialEq, Clone, Hash)]
 pub enum Statement {
     Skip,
     If(Box<BooleanExpression>, Box<Block>, Box<Block>),
     While(Box<BooleanExpression>, Box<Block>),
-    Assignment(Assignment),
-    ReverseAssignment(Assignment),
+    Assignment(Variable, ArithmeticExpression),
+    ReverseAssignment(Variable, ArithmeticExpression),
     ReversePoint,
 }
 
@@ -41,8 +51,9 @@ pub enum UnaryArithmeticOperator {
 
 #[derive(Debug, Eq, PartialEq, Clone, Hash)]
 pub enum ArithmeticExpression {
-    Variable(String),
+    Variable(Variable),
     Integer(i32),
+    Float(NotNan<f32>),
     Unary(UnaryArithmeticOperator, Box<ArithmeticExpression>),
     Operation(
         ArithmeticOperator,

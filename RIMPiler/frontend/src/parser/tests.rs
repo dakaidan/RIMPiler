@@ -1,7 +1,8 @@
-use super::super::parser::{parse_arithmetic_expression, parse_boolean_expression, parse_relations};
+use super::super::parser::{Parser};
 use super::super::AST::{
-    ArithmeticExpression, ArithmeticOperator, Assignment, BooleanExpression, BooleanOperator,
+    ArithmeticExpression, ArithmeticOperator, BooleanExpression, BooleanOperator,
     Program, RelationOperator, Statement, UnaryArithmeticOperator, UnaryBooleanOperator,
+    Variable
 };
 
 #[test]
@@ -9,11 +10,11 @@ fn basic_parse() {
     let mut tokeniser = crate::lexer::Tokeniser::new().initialise();
 
     let tokens = tokeniser.tokenise("9".to_string()).unwrap();
-    let result = parse_arithmetic_expression(&mut tokens.into(), 0);
+    let result = Parser::new().parse_arithmetic_expression(&mut tokens.into(), 0);
     assert_eq!(result.unwrap(), ArithmeticExpression::Integer(9));
 
     let tokens = tokeniser.tokenise("1 + 2".to_string()).unwrap();
-    let result = parse_arithmetic_expression(&mut tokens.into(), 0);
+    let result = Parser::new().parse_arithmetic_expression(&mut tokens.into(), 0);
     assert_eq!(
         result.unwrap(),
         ArithmeticExpression::Operation(
@@ -24,7 +25,7 @@ fn basic_parse() {
     );
 
     let tokens = tokeniser.tokenise("1 + 2 * 3".to_string()).unwrap();
-    let result = parse_arithmetic_expression(&mut tokens.into(), 0);
+    let result = Parser::new().parse_arithmetic_expression(&mut tokens.into(), 0);
     assert_eq!(
         result.unwrap(),
         ArithmeticExpression::Operation(
@@ -39,7 +40,7 @@ fn basic_parse() {
     );
 
     let tokens = tokeniser.tokenise("1 + 2 ^ 5 + 8 * 3".to_string()).unwrap();
-    let result = parse_arithmetic_expression(&mut tokens.into(), 0);
+    let result = Parser::new().parse_arithmetic_expression(&mut tokens.into(), 0);
     assert_eq!(
         result.unwrap(),
         ArithmeticExpression::Operation(
@@ -62,7 +63,7 @@ fn basic_parse() {
     );
 
     let tokens = tokeniser.tokenise("-1".to_string()).unwrap();
-    let result = parse_arithmetic_expression(&mut tokens.into(), 0);
+    let result = Parser::new().parse_arithmetic_expression(&mut tokens.into(), 0);
     assert_eq!(
         result.unwrap(),
         ArithmeticExpression::Unary(
@@ -72,7 +73,7 @@ fn basic_parse() {
     );
 
     let tokens = tokeniser.tokenise("6 * -7^9".to_string()).unwrap();
-    let result = parse_arithmetic_expression(&mut tokens.into(), 0);
+    let result = Parser::new().parse_arithmetic_expression(&mut tokens.into(), 0);
     assert_eq!(
         result.unwrap(),
         ArithmeticExpression::Operation(
@@ -90,7 +91,7 @@ fn basic_parse() {
     );
 
     let tokens = tokeniser.tokenise("(6 * -7) + 9".to_string()).unwrap();
-    let result = parse_arithmetic_expression(&mut tokens.into(), 0);
+    let result = Parser::new().parse_arithmetic_expression(&mut tokens.into(), 0);
     assert_eq!(
         result.unwrap(),
         ArithmeticExpression::Operation(
@@ -108,7 +109,7 @@ fn basic_parse() {
     );
 
     let tokens = tokeniser.tokenise("5 == 5".to_string()).unwrap();
-    let result = parse_relations(&mut tokens.into());
+    let result = Parser::new().parse_relations(&mut tokens.into());
     assert_eq!(
         result.unwrap(),
         BooleanExpression::Relational(
@@ -119,7 +120,7 @@ fn basic_parse() {
     );
 
     let tokens = tokeniser.tokenise("5 == 5 && 5 != 8".to_string()).unwrap();
-    let result = parse_boolean_expression(&mut tokens.into(), 0);
+    let result = Parser::new().parse_boolean_expression(&mut tokens.into(), 0);
     assert_eq!(
         result.unwrap(),
         BooleanExpression::Logical(
@@ -138,7 +139,7 @@ fn basic_parse() {
     );
 
     let tokens = tokeniser.tokenise("5 == 5 || 5 != 8".to_string()).unwrap();
-    let result = parse_boolean_expression(&mut tokens.into(), 0);
+    let result = Parser::new().parse_boolean_expression(&mut tokens.into(), 0);
     assert_eq!(
         result.unwrap(),
         BooleanExpression::Logical(
@@ -157,7 +158,7 @@ fn basic_parse() {
     );
 
     let tokens = tokeniser.tokenise("!4 == 5".to_string()).unwrap();
-    let result = parse_boolean_expression(&mut tokens.into(), 0);
+    let result = Parser::new().parse_boolean_expression(&mut tokens.into(), 0);
     assert_eq!(
         result.unwrap(),
         BooleanExpression::Unary(
@@ -173,7 +174,7 @@ fn basic_parse() {
     let tokens = tokeniser
         .tokenise("!(4 == 5) && (5 == 5 || 4 != 5)".to_string())
         .unwrap();
-    let result = parse_boolean_expression(&mut tokens.into(), 0);
+    let result = Parser::new().parse_boolean_expression(&mut tokens.into(), 0);
     assert_eq!(
         result.unwrap(),
         BooleanExpression::Logical(
@@ -221,30 +222,28 @@ fn parse_programs() {
     let mut tokeniser = crate::lexer::Tokeniser::new().initialise();
     let tokens = tokeniser.tokenise(while_program.to_string()).unwrap();
 
-    let result = crate::parser::parse_program(&mut tokens.into());
+    let result = crate::parser::Parser::new().parse_program(&mut tokens.into());
 
     assert_eq!(
         result.unwrap(),
         Program::Statements(vec![
-            Statement::Assignment(Assignment::Integer(
-                "x".to_string(),
-                Box::new(ArithmeticExpression::Integer(5))
-            )),
+            Statement::Assignment(Variable::Integer("x".to_string()),
+                ArithmeticExpression::Integer(5)
+            ),
             Statement::While(
                 Box::new(BooleanExpression::Relational(
                     RelationOperator::GreaterThan,
-                    Box::new(ArithmeticExpression::Variable("x".to_string())),
+                    Box::new(ArithmeticExpression::Variable(Variable::Integer("x".to_string()))),
                     Box::new(ArithmeticExpression::Integer(0))
                 )),
                 Box::new(vec![
-                    Statement::Assignment(Assignment::Integer(
-                        "y".to_string(),
-                        Box::new(ArithmeticExpression::Integer(5))
-                    )),
+                    Statement::Assignment(Variable::Integer("y".to_string()),
+                                          ArithmeticExpression::Integer(5)
+                    ),
                     Statement::While(
                         Box::new(BooleanExpression::Relational(
                             RelationOperator::GreaterThan,
-                            Box::new(ArithmeticExpression::Variable("y".to_string())),
+                            Box::new(ArithmeticExpression::Variable(Variable::Integer("y".to_string()))),
                             Box::new(ArithmeticExpression::Integer(0))
                         )),
                         Box::new(vec![Statement::If(
@@ -253,32 +252,29 @@ fn parse_programs() {
                                 Box::new(ArithmeticExpression::Integer(4)),
                                 Box::new(ArithmeticExpression::Integer(5))
                             )),
-                            Box::new(vec![Statement::Assignment(Assignment::Integer(
-                                "y".to_string(),
-                                Box::new(ArithmeticExpression::Operation(
+                            Box::new(vec![Statement::Assignment(Variable::Integer("y".to_string()),
+                                ArithmeticExpression::Operation(
                                     ArithmeticOperator::Subtraction,
-                                    Box::new(ArithmeticExpression::Variable("y".to_string())),
+                                    Box::new(ArithmeticExpression::Variable(Variable::Integer("y".to_string()))),
                                     Box::new(ArithmeticExpression::Integer(1))
-                                ))
-                            ))]),
-                            Box::new(vec![Statement::Assignment(Assignment::Integer(
-                                "y".to_string(),
-                                Box::new(ArithmeticExpression::Operation(
+                                )
+                            )]),
+                            Box::new(vec![Statement::Assignment(Variable::Integer("y".to_string()),
+                                ArithmeticExpression::Operation(
                                     ArithmeticOperator::Subtraction,
-                                    Box::new(ArithmeticExpression::Variable("y".to_string())),
+                                    Box::new(ArithmeticExpression::Variable(Variable::Integer("y".to_string()))),
                                     Box::new(ArithmeticExpression::Integer(1))
-                                ))
-                            ))])
+                                )
+                            )])
                         )])
                     ),
-                    Statement::Assignment(Assignment::Integer(
-                        "x".to_string(),
-                        Box::new(ArithmeticExpression::Operation(
+                    Statement::Assignment(Variable::Integer("x".to_string()),
+                        ArithmeticExpression::Operation(
                             ArithmeticOperator::Subtraction,
-                            Box::new(ArithmeticExpression::Variable("x".to_string())),
+                            Box::new(ArithmeticExpression::Variable(Variable::Integer("x".to_string()))),
                             Box::new(ArithmeticExpression::Integer(1))
-                        ))
-                    ))
+                        )
+                    )
                 ])
             )
         ])

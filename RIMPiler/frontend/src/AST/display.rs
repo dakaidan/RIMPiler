@@ -1,7 +1,4 @@
-use crate::AST::{
-    ArithmeticExpression, ArithmeticOperator, Assignment, BooleanExpression, BooleanOperator,
-    Program, RelationOperator, Statement, UnaryArithmeticOperator, UnaryBooleanOperator,
-};
+use crate::AST::{ArithmeticExpression, ArithmeticOperator, BooleanExpression, BooleanOperator, Program, RelationOperator, Statement, UnaryArithmeticOperator, UnaryBooleanOperator, Variable};
 use std::fmt::{Display, Formatter};
 
 impl Display for ArithmeticOperator {
@@ -24,10 +21,20 @@ impl Display for UnaryArithmeticOperator {
     }
 }
 
+impl Display for Variable {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        match self {
+            Variable::Integer(integer) => write!(f, "{}", integer),
+            Variable::Float(float) => write!(f, "{}f", float),
+        }
+    }
+}
+
 impl Display for ArithmeticExpression {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
             ArithmeticExpression::Integer(integer) => write!(f, "{}", integer),
+            ArithmeticExpression::Float(float) => write!(f, "{}f", float),
             ArithmeticExpression::Variable(variable) => write!(f, "{}", variable),
             ArithmeticExpression::Operation(operation, left_hand_side, right_hand_side) => {
                 write!(f, "({} {} {})", operation, left_hand_side, right_hand_side)
@@ -83,16 +90,6 @@ impl Display for BooleanExpression {
     }
 }
 
-impl Display for Assignment {
-    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        match self {
-            Assignment::Integer(variable, expression) => {
-                write!(f, "{} := {}", variable, expression)
-            }
-        }
-    }
-}
-
 impl Display for Statement {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
@@ -120,8 +117,8 @@ impl Display for Statement {
                     block.iter().map(|s| format!("\t{}", s)).collect::<String>(),
                 )
             }
-            Statement::Assignment(assignment) => write!(f, "{}\n", assignment),
-            Statement::ReverseAssignment(assignment) => write!(f, "({})'\n", assignment),
+            Statement::Assignment(variable, exp) => write!(f, "{} = {}\n", variable, exp),
+            Statement::ReverseAssignment(variable, exp) => write!(f, "({} = {})'\n", variable, exp),
             Statement::ReversePoint => write!(f, "---------------rp---------------'\n"),
         }
     }

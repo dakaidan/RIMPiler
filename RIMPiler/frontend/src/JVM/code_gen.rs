@@ -1,29 +1,55 @@
 use std::collections::HashMap;
 use std::io::Read;
-use crate::AST::{ArithmeticExpression, ArithmeticOperator, Assignment, Block, BooleanExpression, BooleanOperator, Program, RelationOperator, Statement, UnaryArithmeticOperator, UnaryBooleanOperator};
+use crate::AST::{ArithmeticExpression, ArithmeticOperator, Block, BooleanExpression, BooleanOperator, Program, RelationOperator, Statement, UnaryArithmeticOperator, UnaryBooleanOperator, Variable};
 use crate::Backend;
 
 #[derive(Debug, Eq, PartialEq, Clone, Hash)]
 enum Type {
     Integer,
+    Float,
 }
 
-fn compile_relational_operator(operator: &RelationOperator) -> String {
-    match operator {
-        RelationOperator::Equal => "if_icmpne".to_string(),
-        RelationOperator::NotEqual => "if_icmpeq".to_string(),
-        RelationOperator::LessThan => "if_icmpge".to_string(),
-        RelationOperator::GreaterThan => "if_icmple".to_string(),
+fn conversion(source: &Type, target: &Type) -> String {
+    match (source, target) {
+        (Type::Integer, Type::Float) => String::from("i2f\n"),
+        (Type::Float, Type::Integer) => String::from("f2i\n"),
+        _ => unreachable!(),
     }
 }
 
-fn compile_arithmetic_operation(operator: &ArithmeticOperator) -> String {
-    match operator {
-        ArithmeticOperator::Addition => String::from("iadd"),
-        ArithmeticOperator::Subtraction => String::from("isub"),
-        ArithmeticOperator::Multiplication => String::from("imul"),
-        ArithmeticOperator::Division => String::from("idiv"),
-        ArithmeticOperator::Exponentiation => unreachable!("Exponentiation is not supported by jvm"),
+fn compile_relational_operator(operator: &RelationOperator, target_type: &Type) -> String {
+    match target_type {
+        Type::Integer => match operator {
+            RelationOperator::Equal => "if_icmpne".to_string(),
+            RelationOperator::NotEqual => "if_icmpeq".to_string(),
+            RelationOperator::LessThan => "if_icmpge".to_string(),
+            RelationOperator::GreaterThan => "if_icmple".to_string(),
+        },
+        Type::Float => match operator {
+            RelationOperator::Equal => "fcmpg\nifne".to_string(),
+            RelationOperator::NotEqual => "fcmpg\neq".to_string(),
+            RelationOperator::LessThan => "fcmpg\nifge".to_string(),
+            RelationOperator::GreaterThan => "fcmpl\nifle".to_string(),
+        },
+    }
+}
+
+fn compile_arithmetic_operation(operator: &ArithmeticOperator, target_type: &Type) -> String {
+    match target_type {
+        Type::Integer => match operator {
+            ArithmeticOperator::Addition => String::from("iadd"),
+            ArithmeticOperator::Subtraction => String::from("isub"),
+            ArithmeticOperator::Multiplication => String::from("imul"),
+            ArithmeticOperator::Division => String::from("idiv"),
+            ArithmeticOperator::Exponentiation => unreachable!("Exponentiation is not supported by jvm"),
+        }
+        Type::Float => match operator {
+            ArithmeticOperator::Addition => String::from("fadd"),
+            ArithmeticOperator::Subtraction => String::from("fsub"),
+            ArithmeticOperator::Multiplication => String::from("fmul"),
+            ArithmeticOperator::Division => String::from("fdiv"),
+            ArithmeticOperator::Exponentiation => unreachable!("Exponentiation is not supported by jvm"),
+        }
     }
 }
 
@@ -71,7 +97,7 @@ impl JVMCompiler {
         label
     }
 
-    fn load_variable(&mut self, variable: &String) -> String {
+    fn load_variable(&mut self, variable: &String, variable_type: &Type) -> String {
         self.increment_stack();
         self.increment_stack();
         self.decrement_stack();
@@ -84,7 +110,10 @@ impl JVMCompiler {
 
         let (index, _) = index.unwrap();
 
-        format!("aload {}\ninvokevirtual Method RIMPInt get ()I\n", index)
+        match variable_type {
+            Type::Integer => format!("aload {}\ninvokevirtual Method RIMPInt get ()I\n", index),
+            Type::Float => format!("aload {}\ninvokevirtual Method RIMPFloat get ()F\n", index),
+        }
     }
 
     pub fn _compile(&mut self, program: &Program) -> String {
@@ -111,8 +140,15 @@ impl JVMCompiler {
         variables.sort_by(|(_, (index1, _)), (_, (index2, _))| index1.cmp(index2));
 
         let mut code = String::new();
-        for (variable, (index, _)) in variables {
-            code.push_str(&format!("new RIMPInt\ndup\nldc \"{}\"\ninvokespecial Method RIMPInt <init> (Ljava/lang/String;)V\nastore {}\n", variable, index));
+        for (variable, (index, variable_type)) in variables {
+            match variable_type {
+                Type::Integer => {
+                    code.push_str(&format!("new RIMPInt\ndup\nldc \"{}\"\ninvokespecial Method RIMPInt <init> (Ljava/lang/String;)V\nastore {}\n", variable, index));
+                }
+                Type::Float => {
+                    code.push_str(&format!("new RIMPFloat\ndup\nldc \"{}\"\ninvokespecial Method RIMPFloat <init> (Ljava/lang/String;)V\nastore {}\n", variable, index));
+                }
+            }
         }
         code
     }
@@ -136,11 +172,11 @@ impl JVMCompiler {
             Statement::While(condition, block) => {
                 self.compile_while(condition, block)
             }
-            Statement::Assignment(assignment) => {
-                self.compile_assignment(assignment)
+            Statement::Assignment(variable, expression) => {
+                self.compile_assignment(variable, expression)
             }
-            Statement::ReverseAssignment(assignment) => {
-                self.compile_reverse_assignment(assignment)
+            Statement::ReverseAssignment(variable, expression) => {
+                self.compile_reverse_assignment(variable, expression)
             }
             Statement::ReversePoint => {
                 self.insert_reverse_point()
@@ -154,8 +190,15 @@ impl JVMCompiler {
         self.increment_stack();
         self.decrement_stack();
         self.decrement_stack();
-        for (_, (index, _)) in self.variables.iter() {
-            code.push_str(&format!("aload {}\ninvokevirtual Method RIMPInt print ()V\n", index));
+        for (_, (index, variable_type)) in self.variables.iter() {
+            match variable_type {
+                Type::Integer => {
+                    code.push_str(&format!("aload {}\ninvokevirtual Method RIMPInt print ()V\n", index));
+                }
+                Type::Float => {
+                    code.push_str(&format!("aload {}\ninvokevirtual Method RIMPFloat print ()V\n", index));
+                }
+            }
         }
         code
     }
@@ -181,71 +224,164 @@ impl JVMCompiler {
         format!("{}:\n{}{}goto {}\n{}:\n", start_label, condition_code, block_code, start_label, end_label)
     }
 
-    fn compile_assignment(&mut self, assignment: &Assignment) -> String {
-        // CURRENTLY ASSUMING ONLY TYPE IS INTEGERS
-        let Assignment::Integer(variable, expression) = assignment;
-        self.increment_stack();
-        self.decrement_stack();
+    fn compile_assignment(&mut self, variable: &Variable, expression: &ArithmeticExpression) -> String {
+        match variable {
+            Variable::Integer(variable) => {
+                self.increment_stack();
+                self.decrement_stack();
 
-        let expr_code = self.compile_arithmetic_expression(expression);
+                let (expr_code, expr_type) = self.compile_arithmetic_expression(expression);
 
-        let var = self.variables.get(variable);
+                let var = self.variables.get(variable);
 
-        if var.is_none() {
-            self.last_variable_index += 1;
-            self.variables.insert(variable.clone(), (self.last_variable_index, Type::Integer));
-            format!("aload {}\n{}invokevirtual Method RIMPInt assign (I)V\n", self.last_variable_index, expr_code)
-        } else {
-            let (index, _) = var.unwrap();
-            format!("aload {}\n{}invokevirtual Method RIMPInt assign (I)V\n", index, expr_code)
+                if var.is_none() {
+                    self.last_variable_index += 1;
+                    self.variables.insert(variable.clone(), (self.last_variable_index, Type::Integer));
+                    if expr_type == Type::Float {
+                        let conversion = conversion(&expr_type, &Type::Integer);
+                        format!("aload {}\n{}{}invokevirtual Method RIMPInt assign (I)V\n", self.last_variable_index, expr_code, conversion)
+                    } else {
+                        format!("aload {}\n{}invokevirtual Method RIMPInt assign (I)V\n", self.last_variable_index, expr_code)
+                    }
+                } else {
+                    let (index, _) = var.unwrap();
+                    if expr_type == Type::Float {
+                        let conversion = conversion(&expr_type, &Type::Integer);
+                        format!("aload {}\n{}{}invokevirtual Method RIMPInt assign (I)V\n", index, expr_code, conversion)
+                    } else {
+                        format!("aload {}\n{}invokevirtual Method RIMPInt assign (I)V\n", index, expr_code)
+                    }
+                }
+            },
+            Variable::Float(variable) => {
+                self.increment_stack();
+                self.decrement_stack();
+
+                let (expr_code, expr_type) = self.compile_arithmetic_expression(expression);
+
+                let var = self.variables.get(variable);
+
+                if var.is_none() {
+                    self.last_variable_index += 1;
+                    self.variables.insert(variable.clone(), (self.last_variable_index, Type::Float));
+                    if expr_type == Type::Integer {
+                        let conversion = conversion(&expr_type, &Type::Float);
+                        format!("aload {}\n{}{}invokevirtual Method RIMPFloat assign (F)V\n", self.last_variable_index, expr_code, conversion)
+                    } else {
+                        format!("aload {}\n{}invokevirtual Method RIMPFloat assign (F)V\n", self.last_variable_index, expr_code)
+                    }
+                } else {
+                    let (index, _) = var.unwrap();
+                    if expr_type == Type::Integer {
+                        let conversion = conversion(&expr_type, &Type::Float);
+                        format!("aload {}\n{}{}invokevirtual Method RIMPFloat assign (F)V\n", index, expr_code, conversion)
+                    } else {
+                        format!("aload {}\n{}invokevirtual Method RIMPFloat assign (F)V\n", index, expr_code)
+                    }
+                }
+            }
         }
     }
 
-    fn compile_reverse_assignment(&self, assignment: &Assignment) -> String {
-        let Assignment::Integer(variable, _) = assignment;
+    fn compile_reverse_assignment(&self, variable: &Variable, expression: &ArithmeticExpression) -> String {
+        match variable {
+            Variable::Integer(variable) => {
+                let var = self.variables.get(variable);
 
-        let var = self.variables.get(variable);
+                if var.is_none() {
+                    panic!("Variable {} being unassigned before assignment", variable);
+                }
 
-        if var.is_none() {
-            panic!("Variable {} being unassigned before assignment", variable);
+                let (index, _) = var.unwrap();
+
+                format!("aload {}\ninvokevirtual Method RIMPInt unAssign ()V\n", index)
+            },
+            Variable::Float(variable) => {
+                let var = self.variables.get(variable);
+
+                if var.is_none() {
+                    panic!("Variable {} being unassigned before assignment", variable);
+                }
+
+                let (index, _) = var.unwrap();
+
+                format!("aload {}\ninvokevirtual Method RIMPFloat unAssign ()V\n", index)
+            }
         }
-
-        let (index, _) = var.unwrap();
-
-        format!("aload {}\ninvokevirtual Method RIMPInt unAssign ()V\n", index)
     }
 
-    fn compile_arithmetic_expression(&mut self, arithmetic_expression: &ArithmeticExpression) -> String {
-        // CURRENTLY ASSUMING ONLY TYPE IS INTEGERS
+    fn compile_arithmetic_expression(&mut self, arithmetic_expression: &ArithmeticExpression) -> (String, Type) {
+        // TODO: Check target type and add conversion if necessary
         match arithmetic_expression {
             ArithmeticExpression::Variable(variable) => {
-                self.load_variable(variable)
+                match variable {
+                    Variable::Integer(variable) => {
+                        (self.load_variable(variable, &Type::Integer), Type::Integer)
+                    },
+                    Variable::Float(variable) => {
+                        (self.load_variable(variable, &Type::Float), Type::Float)
+                    }
+                }
             }
             ArithmeticExpression::Integer(value) => {
                 self.increment_stack();
-                format!("ldc {}\n", value)
+                (format!("ldc {}\n", value), Type::Integer)
+            }
+            ArithmeticExpression::Float(value) => {
+                self.increment_stack();
+
+                // if number has no decimal point, add .0 to make it a float
+                let value = if value.to_string().contains(".") {
+                    format!("{}f", value.to_string())
+                } else {
+                    format!("{}.0f", value.to_string())
+                };
+
+                (format!("ldc {}\n", value), Type::Float)
             }
             ArithmeticExpression::Unary(operator, expression) => {
                 match operator {
                     UnaryArithmeticOperator::Negation => {
-                        let expr_code = self.compile_arithmetic_expression(expression);
+                        let (expr_code, type_) = self.compile_arithmetic_expression(expression);
                         self.increment_stack();
                         self.decrement_stack();
-                        format!("{}ineg\n", expr_code)
+                        match type_ {
+                            Type::Integer => (format!("{}ineg\n", expr_code), Type::Integer),
+                            Type::Float => (format!("{}fneg\n", expr_code), Type::Float),
+                        }
                     }
                 }
             }
             ArithmeticExpression::Operation(operator, left, right) => {
-                let lhs = self.compile_arithmetic_expression(left);
-                let rhs = self.compile_arithmetic_expression(right);
+                let (lhs, lhs_type) = self.compile_arithmetic_expression(left);
+                let (rhs, rhs_type) = self.compile_arithmetic_expression(right);
                 match operator {
                     ArithmeticOperator::Exponentiation => {
+                        // TODO: Implement exponentiation
                         self.decrement_stack();
-                        format!("{}{}invokestatic java/lang/Math/pow(DD)D\n", lhs, rhs)
+
+                        let new_lhs = match lhs_type {
+                            Type::Integer => format!("{}i2d\n", lhs),
+                            Type::Float => format!("{}f2d\n", lhs),
+                        };
+
+                        let new_rhs = match rhs_type {
+                            Type::Integer => format!("{}i2d\n", rhs),
+                            Type::Float => format!("{}f2d\n", rhs),
+                        };
+
+                        (format!("{}{}invokestatic java/lang/Math/pow(DD)D\nd2f\n", new_lhs, new_rhs), Type::Float)
                     }
                     _ => {
-                        let operator = compile_arithmetic_operation(operator);
-                        format!("{}{}{}\n", lhs, rhs, operator)
+                        // Check if types are the same, if not, we convert the right hand side to the left hand side type
+                        if lhs_type != rhs_type {
+                            let conversion = conversion(&rhs_type, &lhs_type);
+                            let operator = compile_arithmetic_operation(operator, &lhs_type);
+                            (format!("{}{}{}{}\n", lhs, rhs, conversion, operator), lhs_type)
+                        } else {
+                            let operator = compile_arithmetic_operation(operator, &lhs_type);
+                            (format!("{}{}{}\n", lhs, rhs, operator), lhs_type)
+                        }
                     }
                 }
             }
@@ -274,14 +410,24 @@ impl JVMCompiler {
                 }
             }
             BooleanExpression::Relational(operator, left, right) => {
-                let lhs = self.compile_arithmetic_expression(left);
-                let rhs = self.compile_arithmetic_expression(right);
+                let (lhs, lhs_type) = self.compile_arithmetic_expression(left);
+                let (rhs, rhs_type) = self.compile_arithmetic_expression(right);
 
-                let operator = compile_relational_operator(operator);
-                self.decrement_stack();
-                self.decrement_stack();
+                // Check if types are the same, if not, we convert the right hand side to the left hand side type
+                if lhs_type != rhs_type {
+                    let conversion = conversion(&rhs_type, &lhs_type);
+                    let operator = compile_relational_operator(operator, &lhs_type);
+                    self.decrement_stack();
+                    self.decrement_stack();
 
-                format!("{}\n{}\n{} {}\n", lhs, rhs, operator, jump_if_false)
+                    format!("{}\n{}\n{}\n{} {}\n", lhs, rhs, conversion, operator, jump_if_false)
+                } else {
+                    let operator = compile_relational_operator(operator, &lhs_type);
+                    self.decrement_stack();
+                    self.decrement_stack();
+
+                    format!("{}\n{}\n{} {}\n", lhs, rhs, operator, jump_if_false)
+                }
             }
         }
     }

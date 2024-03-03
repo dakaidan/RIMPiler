@@ -1,9 +1,10 @@
 use super::super::post_parse::name_generator::NameGenerator;
 use super::super::AST::{
-    ArithmeticExpression, ArithmeticOperator, Assignment, Block, BooleanExpression, Program,
+    ArithmeticExpression, ArithmeticOperator, Block, BooleanExpression, Program,
     Statement,
 };
 use std::collections::{HashMap, HashSet};
+use crate::AST::Variable;
 
 pub fn transform(program: &Program) -> Program {
     let mut name_generator = NameGenerator::new(String::from("semantic_transformer"));
@@ -99,21 +100,19 @@ fn transform_while_statement(
     // then we need to add an increment at the end of the whiles block
 
     let counter_variable_name = name_generator.generate();
-    let counter = Statement::Assignment(Assignment::Integer(
-        counter_variable_name.clone(),
-        Box::new(ArithmeticExpression::Integer(0)),
-    ));
+    let counter = Statement::Assignment(Variable::Integer(counter_variable_name.clone()),
+        ArithmeticExpression::Integer(0),
+    );
 
-    let increment = Statement::Assignment(Assignment::Integer(
-        counter_variable_name.clone(),
-        Box::new(ArithmeticExpression::Operation(
+    let increment = Statement::Assignment(Variable::Integer(counter_variable_name.clone()),
+        ArithmeticExpression::Operation(
             ArithmeticOperator::Addition,
             Box::new(ArithmeticExpression::Variable(
-                counter_variable_name.clone(),
+                Variable::Integer(counter_variable_name.clone())
             )),
             Box::new(ArithmeticExpression::Integer(1)),
-        )),
-    ));
+        ),
+    );
 
     let mut new_block = Vec::new();
     new_block.push(counter);
@@ -131,7 +130,7 @@ fn transform_while_statement(
 
 // helper functions
 
-fn get_variables_in_block(block: &Block) -> HashSet<String> {
+fn get_variables_in_block(block: &Block) -> HashSet<(String, String)> {
     let mut variables = HashSet::new();
     for statement in block {
         variables.extend(get_variables_in_statement(statement));
@@ -139,7 +138,7 @@ fn get_variables_in_block(block: &Block) -> HashSet<String> {
     variables
 }
 
-fn get_variables_in_statement(statement: &Statement) -> HashSet<String> {
+fn get_variables_in_statement(statement: &Statement) -> HashSet<(String, String)> {
     match statement {
         Statement::Skip => HashSet::new(),
         Statement::If(_, if_block, else_block) => {
@@ -153,14 +152,19 @@ fn get_variables_in_statement(statement: &Statement) -> HashSet<String> {
             variables.extend(get_variables_in_block(block));
             variables
         }
-        Statement::Assignment(assignment) => match assignment {
-            Assignment::Integer(varriable, _) => {
+        Statement::Assignment(variable, _) => match variable {
+            Variable::Integer(varriable) => {
                 let mut variables = HashSet::new();
-                variables.insert(varriable.clone());
+                variables.insert((varriable.clone(), "int".to_string()));
+                variables
+            }
+            Variable::Float(varriable) => {
+                let mut variables = HashSet::new();
+                variables.insert((varriable.clone(), "float".to_string()));
                 variables
             }
         },
-        Statement::ReverseAssignment(_) | Statement::ReversePoint => {
+        Statement::ReverseAssignment(_, _) | Statement::ReversePoint => {
             unreachable!(
                 "You should never call this function after the reversal function has been called!"
             )
@@ -168,7 +172,7 @@ fn get_variables_in_statement(statement: &Statement) -> HashSet<String> {
     }
 }
 
-fn get_variables_in_boolean_expression(boolean_expression: &BooleanExpression) -> HashSet<String> {
+fn get_variables_in_boolean_expression(boolean_expression: &BooleanExpression) -> HashSet<(String, String)> {
     let mut variables = HashSet::new();
     match boolean_expression {
         BooleanExpression::Relational(_, arithmetic_expression1, arithmetic_expression2) => {
@@ -192,13 +196,21 @@ fn get_variables_in_boolean_expression(boolean_expression: &BooleanExpression) -
 
 fn get_variables_in_arithmetic_expression(
     arithmetic_expression: &ArithmeticExpression,
-) -> HashSet<String> {
+) -> HashSet<(String, String)> {
     let mut variables = HashSet::new();
     match arithmetic_expression {
         ArithmeticExpression::Variable(variable) => {
-            variables.insert(variable.clone());
+            match variable {
+                Variable::Integer(varriable) => {
+                    variables.insert((varriable.clone(), "int".to_string()));
+                }
+                Variable::Float(varriable) => {
+                    variables.insert((varriable.clone(), "float".to_string()));
+                }
+            }
         }
         ArithmeticExpression::Integer(_) => {}
+        ArithmeticExpression::Float(_) => {}
         ArithmeticExpression::Unary(_, arithmetic_expression) => {
             variables.extend(get_variables_in_arithmetic_expression(
                 arithmetic_expression,
@@ -218,7 +230,7 @@ fn get_variables_in_arithmetic_expression(
 
 fn remap_variables_in_boolean_expression(
     boolean_expression: &BooleanExpression,
-    variables: &HashMap<String, String>,
+    variables: &HashMap<(String, String), String>,
 ) -> BooleanExpression {
     match boolean_expression {
         BooleanExpression::Relational(op, arithmetic_expression1, arithmetic_expression2) => {
@@ -259,17 +271,27 @@ fn remap_variables_in_boolean_expression(
 
 fn remap_variables_in_arithmetic_expression(
     arithmetic_expression: &ArithmeticExpression,
-    variables: &HashMap<String, String>,
+    variables: &HashMap<(String, String), String>,
 ) -> ArithmeticExpression {
     match arithmetic_expression {
         ArithmeticExpression::Variable(variable) => {
-            if let Some(new_variable) = variables.get(variable) {
-                ArithmeticExpression::Variable(new_variable.clone())
+            let (type_of_variable, name) = match variable {
+                Variable::Integer(name) => ("int".to_string(), name.clone()),
+                Variable::Float(name) => ("float".to_string(), name.clone()),
+            };
+
+            if let Some(new_variable) = variables.get(&(name, type_of_variable.clone())) {
+                match type_of_variable.as_str() {
+                    "int" => ArithmeticExpression::Variable(Variable::Integer(new_variable.clone())),
+                    "float" => ArithmeticExpression::Variable(Variable::Float(new_variable.clone())),
+                    _ => unreachable!(),
+                }
             } else {
                 ArithmeticExpression::Variable(variable.clone())
             }
         }
         ArithmeticExpression::Integer(i) => ArithmeticExpression::Integer(i.clone()),
+        ArithmeticExpression::Float(f) => ArithmeticExpression::Float(f.clone()),
         ArithmeticExpression::Unary(op, arithmetic_expression) => ArithmeticExpression::Unary(
             op.clone(),
             Box::new(remap_variables_in_arithmetic_expression(
@@ -295,10 +317,16 @@ fn remap_variables_in_arithmetic_expression(
 
 fn create_assignment_statement(
     new_variable_name: String,
-    right_hand_variable_name: String,
+    right_hand_variable_name: (String, String),
 ) -> Statement {
-    Statement::Assignment(Assignment::Integer(
-        new_variable_name,
-        Box::new(ArithmeticExpression::Variable(right_hand_variable_name)),
-    ))
+    match right_hand_variable_name.1.as_str() {
+        "int" => Statement::Assignment(Variable::Integer(new_variable_name),
+                ArithmeticExpression::Variable(Variable::Integer(right_hand_variable_name.0)),
+        ),
+        "float" => Statement::Assignment(
+            Variable::Float(new_variable_name),
+            ArithmeticExpression::Variable(Variable::Float(right_hand_variable_name.0)),
+        ),
+        _ => unreachable!(),
+    }
 }

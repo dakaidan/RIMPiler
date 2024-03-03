@@ -1,8 +1,9 @@
+use crate::AST::Variable;
 use super::super::lexer::Tokeniser;
 use super::super::parser::parse;
 use super::super::post_parse::inverter::invert;
 use super::super::AST::{
-    ArithmeticExpression, ArithmeticOperator, Assignment, BooleanExpression, Program,
+    ArithmeticExpression, ArithmeticOperator, BooleanExpression, Program,
     RelationOperator, Statement,
 };
 
@@ -33,10 +34,9 @@ fn transformer() {
     assert_eq!(
         ast,
         Program::Statements(vec![
-            Statement::Assignment(Assignment::Integer(
-                String::from("generated_name_semantic_transformer0"),
-                Box::new(ArithmeticExpression::Integer(0))
-            )),
+            Statement::Assignment(Variable::Integer(String::from("generated_name_semantic_transformer0")),
+                ArithmeticExpression::Integer(0)
+            ),
             Statement::While(
                 Box::new(BooleanExpression::Relational(
                     RelationOperator::LessThan,
@@ -45,16 +45,15 @@ fn transformer() {
                 )),
                 Box::new(vec![
                     Statement::Skip,
-                    Statement::Assignment(Assignment::Integer(
-                        String::from("generated_name_semantic_transformer0"),
-                        Box::new(ArithmeticExpression::Operation(
+                    Statement::Assignment(Variable::Integer(String::from("generated_name_semantic_transformer0")),
+                        ArithmeticExpression::Operation(
                             ArithmeticOperator::Addition,
-                            Box::new(ArithmeticExpression::Variable(String::from(
+                            Box::new(ArithmeticExpression::Variable(Variable::Integer(String::from(
                                 "generated_name_semantic_transformer0"
-                            ))),
+                            )))),
                             Box::new(ArithmeticExpression::Integer(1))
-                        ))
-                    ))
+                        )
+                    )
                 ])
             )
         ])
@@ -86,23 +85,25 @@ fn inverter() {
             Statement::While(
                 Box::new(BooleanExpression::Relational(
                     RelationOperator::GreaterThan,
-                    Box::new(ArithmeticExpression::Variable(String::from(
-                        "generated_name_semantic_transformer0"
-                    ))),
+                    Box::new(ArithmeticExpression::Variable(Variable::Integer(
+                        String::from(
+                            "generated_name_semantic_transformer0"
+                        ))
+                    )),
                     Box::new(ArithmeticExpression::Integer(0))
                 )),
                 Box::new(vec![
-                    Statement::ReverseAssignment(Assignment::Integer(
-                        String::from("generated_name_semantic_transformer0"),
-                        Box::new(ArithmeticExpression::Operation(
+                    Statement::ReverseAssignment(Variable::Integer(String::from("generated_name_semantic_transformer0")),
+                        ArithmeticExpression::Operation(
                             ArithmeticOperator::Addition,
-                            Box::new(ArithmeticExpression::Variable(String::from(
-                                "generated_name_semantic_transformer0"
+                            Box::new(ArithmeticExpression::Variable(Variable::Integer(
+                                String::from(
+                                    "generated_name_semantic_transformer0"
+                                )
                             ))),
                             Box::new(ArithmeticExpression::Integer(1))
-                        ))
-                    )),
-                    Statement::Skip,
+                        )
+                    ),
                     Statement::If(
                         Box::new(BooleanExpression::Relational(
                             RelationOperator::LessThan,
@@ -114,11 +115,9 @@ fn inverter() {
                     )
                 ])
             ),
-            Statement::Skip,
-            Statement::ReverseAssignment(Assignment::Integer(
-                String::from("generated_name_semantic_transformer0"),
-                Box::new(ArithmeticExpression::Integer(0))
-            ))
+            Statement::ReverseAssignment(Variable::Integer(String::from("generated_name_semantic_transformer0")),
+                ArithmeticExpression::Integer(0)
+            )
         ])
     )
 }

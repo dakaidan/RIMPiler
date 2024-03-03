@@ -29,4 +29,8 @@ pub fn assemble_byte_code(byte_code: String, output_folder: String) {
     let mut output_file = output_folder.to_path_buf();
     output_file.push("RIMPInt.class");
     std::fs::copy("data/RIMPInt.class", output_file).expect("Unable to copy file");
+
+    let mut output_file = output_folder.to_path_buf();
+    output_file.push("RIMPFloat.class");
+    std::fs::copy("data/RIMPFloat.class", output_file).expect("Unable to copy file");
 }
