@@ -283,7 +283,7 @@ impl JVMCompiler {
         }
     }
 
-    fn compile_reverse_assignment(&self, variable: &Variable, expression: &ArithmeticExpression) -> String {
+    fn compile_reverse_assignment(&self, variable: &Variable, _: &ArithmeticExpression) -> String {
         match variable {
             Variable::Integer(variable) => {
                 let var = self.variables.get(variable);
@@ -311,7 +311,6 @@ impl JVMCompiler {
     }
 
     fn compile_arithmetic_expression(&mut self, arithmetic_expression: &ArithmeticExpression) -> (String, Type) {
-        // TODO: Check target type and add conversion if necessary
         match arithmetic_expression {
             ArithmeticExpression::Variable(variable) => {
                 match variable {
@@ -357,7 +356,6 @@ impl JVMCompiler {
                 let (rhs, rhs_type) = self.compile_arithmetic_expression(right);
                 match operator {
                     ArithmeticOperator::Exponentiation => {
-                        // TODO: Implement exponentiation
                         self.decrement_stack();
 
                         let new_lhs = match lhs_type {
