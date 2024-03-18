@@ -1,10 +1,29 @@
 \chapter{Requirements}
 % The central part of the report usually consists of three or four chapters detailing the technical work undertaken during the project. {\bf{\textcolor{red}{The structure of these chapters is highly project dependent}}}. They can reflect the chronological development of the project, e.g. design, implementation, experimentation, optimisation, evaluation, etc (although this is not always the best approach). However you choose to structure this part of the report, you should make it clear how you arrived at your chosen approach in preference to other alternatives. In terms of the software that you produce, you should describe and justify the design of your programs at some high level, e.g. using OMT, Z, VDL, etc., and you should document any interesting problems with, or features of, your implementation. Integration and testing are also important to discuss in some cases. You may include fragments of your source code in the main body of the report to illustrate points; the full source code is included in an appendix to your written report.
 
+The following lists the metrics and functionalities which this project aims to fulfil, and by which this project will be evaluated.
+Within the specification, \rimp will be used to refer to the software produced in this project.
+\todo{Discuss the point of the project here to motivate why these are the requirements set}
+
+
 \section{Functional Requirements}
 
-What
+\begin{enumerate}
+    \item \rimp must produce a token stream from a valid \rimplang source file.
+    \item \rimp must produce a valid abstract syntax tree from a token stream produced by \rimp.
+    \item \rimp must be able to perform transformations on the abstract syntax tree to ensure the reversibility of the language.
+    \item \rimp must be able to produce an abstract syntax tree corresponding to the reverse of another abstract syntax tree.
+    \item \rimp must be able to evaluate an abstract syntax tree, providing information about the value of variables until the reversal point.
+    \item \rimp must be able to be run through an abstract machine.
+    \item The \rimp abstract machine must allow to step forwards and ba
+    \item \rimp must be able to compile to the JVM providing information about the value of variables until the reversal point.
+\end{enumerate}
 
 \section{Non-Functional Requirements}
 
-How
+\begin{enumerate}
+    \item \rimp should compile short programs within 10 seconds on a modern desktop computer.
+    \item \rimp should give some level of feedback when things go wrong to help guide the user to the issue.
+    \todo{Maybe it would be helpful to have more here}
+    \todo{quantify}
+\end{enumerate}

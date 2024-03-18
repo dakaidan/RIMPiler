@@ -1,6 +1,70 @@
 \chapter{Design \& Implementation}
 
 \section{Architecture}
+
+\tikzset{
+    block/.style={rectangle, draw, text width=6em, text centered, rounded corners, minimum height=3em},
+    line/.style={draw, -latex},
+}
+
+\begin{center}
+\begin{figure}[hbt!]
+\begin{tikzpicture}[node distance=2cm and .75cm]
+
+% Shared Frontend
+    \node (frontend) [block] {Lexing and Parsing};
+
+% Semantic Transformations
+    \node (semantic) [block, below=of frontend] {Semantic Transformations};
+
+% Rev
+    \node (rev) [block, below left=of semantic] {Reverse};
+
+% Interpreter
+    \node (interpreter) [block, below left=of rev, xshift=-1.5cm] {Interpreter};
+
+% Compiler to LLVM
+    \node (llvm) [block, below right=of rev, xshift=1.5cm] {Compiler to LLVM};
+
+% Compiler to JVM
+    \node (jvm) [block, below=of rev, xshift=1.5cm] {Compiler to JVM};
+
+% Abstract Machine
+    \node (amachine) [block, below=of rev, xshift=-1.5cm] {Compiler to Abstract Machine};
+
+% Compiler to RSSA
+    \node (rssa) [block, below right=of semantic, xshift=1.5cm, yshift=-3.2cm] {Compiler to RSSA};
+
+% Backend of RSSA
+    \node (backend) [block, below=of rssa] {PISA Backend of RSSA};
+
+% Backend of Abstract Machine
+    \node (abstract_backend) [block, below=of amachine] {Backend of Abstract Machine};
+
+% Groupings
+    \node (frontend_group) [fit=(frontend) (semantic) (rev), draw, inner ysep=0.6cm,inner xsep=5cm, label={Frontend}, rounded corners] {};
+
+    \node (reversible) [fit=(rssa) (backend), draw, inner sep=0.2cm, label={[label distance=-5.7cm]90:Reversible Backend}, rounded corners] {};
+
+    \node (conventional) [fit=(abstract_backend) (interpreter) (llvm) (jvm) (amachine), draw, inner sep=0.2cm, label={[label distance=-6cm]90:Conventional Backend}, rounded corners] {};
+
+% Arrows
+    \draw [line] (frontend) -- (semantic);
+    \draw [line] (semantic) -- (rev);
+    \draw [line] (semantic) -- (rssa);
+    \draw [line] (rev) -- (interpreter);
+    \draw [line] (rev) -- (amachine);
+    \draw [line] (rev) -- (llvm);
+    \draw [line] (rev) -- (jvm);
+    \draw [line] (amachine) -- (abstract_backend);
+    \draw [line] (rssa) -- (backend);
+
+\end{tikzpicture}
+\caption{High level overfiew of the system architecture}
+\label{fig:system_architecture}
+\end{figure}
+\end{center}
+
 What are the components?
 How are they connected?
 Why is it done like this?
