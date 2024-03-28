@@ -1,0 +1,29 @@
+int seed = 2147483647;
+int multiplier = 1103515245;
+int increment = 12345;
+int modulus = 2^16;
+
+int numberOfSamples = 1000;
+
+int inside = 0;
+int outside = 0;
+
+while inside + outside < numberOfSamples do {
+    seed = (multiplier * seed + increment);
+    int div = seed / modulus;
+    int mod = seed - div * modulus;
+    seed = mod;
+    int x = seed / modulus;
+    seed = (multiplier * seed + increment);
+    div = seed / modulus;
+    mod = seed - div * modulus;
+    seed = mod;
+    int y = seed / modulus;
+    if x^2 + y^2 < 1 then {
+        inside = inside + 1;
+    } else {
+        outside = outside + 1;
+    };
+};
+
+float pi = 4 * inside / (inside + outside);

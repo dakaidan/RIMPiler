@@ -2,6 +2,7 @@ mod ast;
 mod compiler;
 mod interpreter;
 mod types;
+mod abstract_machine;
 
 use utilities::args_parser::*;
 use crate::types::Target;
@@ -54,6 +55,12 @@ fn get_args() -> CommandLineResult {
                 .long_name("pisa")
                 .description("Compile to PISA"),
         )
+        .add_flag(
+            FlagBuilder::new("abstract")
+                .short_name("a")
+                .long_name("abstract")
+                .description("Compile to abstract machine"),
+        )
         .build();
 
     let args = parser.parse();
@@ -68,7 +75,8 @@ fn get_args() -> CommandLineResult {
                 || args.flags.contains("llvm")
                 || args.flags.contains("pisa")
                 || args.flags.contains("jvm"))
-                && args.flags.contains("interpret")
+                && (args.flags.contains("interpret")
+                || args.flags.contains("abstract"))
             {
                 println!("Error: Cannot compile and interpret at the same time");
                 println!("{}", parser);
@@ -111,9 +119,14 @@ fn main() {
     let input_file = args.arguments.get("input").unwrap();
     let mut output_file = DEFAULT_OUTPUT_FILE.to_string();
 
-    if args.flags.contains("interpret") {
-        let interpreter = interpreter::Interpreter::new(input_file.to_string());
-        interpreter.interpret().unwrap();
+    if args.flags.contains("interpret") || args.flags.contains("abstract") {
+        if args.flags.contains("abstract") {
+            let abstract_machine = abstract_machine::AbstractMachine::new(input_file.to_string());
+            abstract_machine.run().unwrap();
+        } else {
+            let interpreter = interpreter::Interpreter::new(input_file.to_string());
+            interpreter.interpret().unwrap();
+        }
     } else {
         let output_file_opt = args.arguments.get("output");
         if output_file_opt.is_some() {

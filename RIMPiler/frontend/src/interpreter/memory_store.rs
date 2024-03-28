@@ -201,10 +201,6 @@ pub enum Value {
     Float(f32),
 }
 
-// implement the following operators for Value
-// <, >, ==, !=
-// +, -, *, /, ^
-// unary -
 impl std::ops::Add for Value {
     type Output = Self;
 

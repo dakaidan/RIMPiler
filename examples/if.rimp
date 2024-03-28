@@ -1,6 +1,6 @@
 int a = 10;
 
-if a > 5 then {
+if a > 11 then {
     a = a + 1;
 } else {
     a = a - 1;

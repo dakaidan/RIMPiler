@@ -1,5 +1,5 @@
 use RIMPiler_frontend::lexer::Tokeniser;
-use RIMPiler_frontend::parser::parse;
+use RIMPiler_frontend::parser::{parse, parse_without_transform};
 use RIMPiler_frontend::AST::Program;
 use utilities::debug::Result;
 
@@ -12,4 +12,15 @@ pub fn create_ast(input_file: &str) -> Result<Program> {
         .unwrap();
 
     parse(&mut tokens.into())
+}
+
+pub fn create_ast_without_transform(input_file: &str) -> Result<Program> {
+    let input_file_contents = utilities::files::load_file(input_file).unwrap();
+
+    let tokens = Tokeniser::new()
+        .initialise()
+        .tokenise(input_file_contents)
+        .unwrap();
+
+    parse_without_transform(&mut tokens.into())
 }

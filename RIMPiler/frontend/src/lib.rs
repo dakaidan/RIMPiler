@@ -9,6 +9,8 @@ pub mod parser;
 pub mod post_parse;
 pub mod JVM;
 
+pub mod abstract_machine;
+
 pub trait Backend {
     fn compile(program: &Program) -> String;
 }

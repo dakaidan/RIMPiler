@@ -1,4 +1,4 @@
-int n = 2;
+int n = 1;
 
 while n > 0 do {
     n = n - 1;

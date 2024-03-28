@@ -1,4 +1,4 @@
-mod memory_store;
+pub mod memory_store;
 #[cfg(test)]
 mod tests;
 

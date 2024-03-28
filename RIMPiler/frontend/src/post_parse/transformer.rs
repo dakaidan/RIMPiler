@@ -39,6 +39,36 @@ fn transform_statement(statement: &Statement, name_generator: &mut NameGenerator
     }
 }
 
+pub fn transform_if_only(program: &Program) -> Program {
+    let mut name_generator = NameGenerator::new(String::from("semantic_transformer"));
+    transform_program_if_only(program, &mut name_generator)
+}
+
+fn transform_program_if_only(program: &Program, name_generator: &mut NameGenerator) -> Program {
+    match program {
+        Program::Statements(statements) => {
+            let mut new_statements = Vec::new();
+            for statement in statements {
+                if let Some(statements) = transform_statement_if_only(statement, name_generator) {
+                    new_statements.extend(statements);
+                } else {
+                    new_statements.push(statement.clone());
+                }
+            }
+            Program::Statements(new_statements)
+        }
+    }
+}
+
+fn transform_statement_if_only(statement: &Statement, name_generator: &mut NameGenerator) -> Option<Block> {
+    match statement {
+        Statement::If(boolean_expression, if_block, else_block) => {
+            transform_if_statement(boolean_expression, if_block, else_block, name_generator)
+        }
+        _ => None,
+    }
+}
+
 fn transform_if_statement(
     boolean_expression: &BooleanExpression,
     if_block: &Block,

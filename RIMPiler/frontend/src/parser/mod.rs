@@ -94,6 +94,17 @@ pub fn parse(tokens: &mut Tokens) -> Result<Program> {
     Ok(transform(&result.unwrap()))
 }
 
+pub fn parse_without_transform(tokens: &mut Tokens) -> Result<Program> {
+    let mut parser = Parser::new();
+    let result = parser.parse_program(tokens);
+    if result.is_err() {
+        return Err(result.unwrap_err());
+    }
+
+    Ok(result.unwrap())
+}
+
+
 struct Parser {
     variable_type: HashMap<String, String>
 }
@@ -214,6 +225,7 @@ impl Parser {
                 }
                 RIMPToken::Keyword(keyword) => match keyword {
                     Keyword::While => {
+                        // TODO: Accept maths in here as well
                         let condition = self.parse_boolean_expression(tokens, 0);
 
                         if condition.is_err() {
