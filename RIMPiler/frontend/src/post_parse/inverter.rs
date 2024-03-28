@@ -1,8 +1,6 @@
-use ordered_float::NotNan;
-use crate::AST::Variable;
 use super::super::AST::{
     ArithmeticExpression, Block, BooleanExpression, Program, RelationOperator,
-    Statement,
+    Statement, Variable
 };
 
 pub fn invert_and_combine(program: &Program) -> Program {
@@ -31,7 +29,6 @@ fn invert_program(program: &Program) -> Program {
         Program::Statements(statements) => {
             let mut new_statements = Vec::with_capacity(statements.len());
 
-            // TODO: Fix this complete mess
             for _ in 0..statements.len() {
                 new_statements.push(Statement::Skip);
             }
@@ -121,7 +118,6 @@ fn invert_assignment(variable: &Variable, expression: &ArithmeticExpression) -> 
 
 fn invert_block(block: &Block) -> Block {
     let mut new_block = Vec::with_capacity(block.len());
-    // TODO: And this one
     for _ in 0..block.len() {
         new_block.push(Statement::Skip);
     }

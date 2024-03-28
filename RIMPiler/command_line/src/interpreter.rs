@@ -1,5 +1,5 @@
 use super::ast::create_ast;
-use RIMPiler_frontend::{interpreter::InterpreterEngine, post_parse::inverter::invert_and_combine};
+use RIMPiler_frontend::{interpreter::interpreter::InterpreterEngine, post_parse::inverter::invert_and_combine};
 
 pub struct Interpreter {
     input_file: String,

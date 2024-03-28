@@ -1,5 +1,5 @@
-use RIMPiler_frontend::lexer::Tokeniser;
-use RIMPiler_frontend::parser::{parse, parse_without_transform};
+use RIMPiler_frontend::lexer::lexer::Tokeniser;
+use RIMPiler_frontend::parser::parser::{parse, parse_without_transform};
 use RIMPiler_frontend::AST::Program;
 use utilities::debug::Result;
 

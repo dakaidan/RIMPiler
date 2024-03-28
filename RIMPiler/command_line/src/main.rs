@@ -5,7 +5,7 @@ mod types;
 mod abstract_machine;
 
 use utilities::args_parser::*;
-use crate::types::Target;
+use types::Target;
 
 fn get_args() -> CommandLineResult {
     let parser = CommandLineArgumentsBuilder::new()

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::io::Read;
-use crate::AST::{ArithmeticExpression, ArithmeticOperator, Block, BooleanExpression, BooleanOperator, Program, RelationOperator, Statement, UnaryArithmeticOperator, UnaryBooleanOperator, Variable};
-use crate::Backend;
+use super::super::AST::{ArithmeticExpression, ArithmeticOperator, Block, BooleanExpression, BooleanOperator, Program, RelationOperator, Statement, UnaryArithmeticOperator, UnaryBooleanOperator, Variable};
+use super::super::Backend;
 
 #[derive(Debug, Eq, PartialEq, Clone, Hash)]
 enum Type {

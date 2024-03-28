@@ -1,10 +1,9 @@
 use super::super::post_parse::name_generator::NameGenerator;
 use super::super::AST::{
     ArithmeticExpression, ArithmeticOperator, Block, BooleanExpression, Program,
-    Statement,
+    Statement, Variable
 };
 use std::collections::{HashMap, HashSet};
-use crate::AST::Variable;
 
 pub fn transform(program: &Program) -> Program {
     let mut name_generator = NameGenerator::new(String::from("semantic_transformer"));

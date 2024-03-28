@@ -1,4 +1,4 @@
-use super::super::parser::{Parser};
+use super::super::parser::parser::{Parser};
 use super::super::AST::{
     ArithmeticExpression, ArithmeticOperator, BooleanExpression, BooleanOperator,
     Program, RelationOperator, Statement, UnaryArithmeticOperator, UnaryBooleanOperator,
@@ -222,7 +222,7 @@ fn parse_programs() {
     let mut tokeniser = crate::lexer::Tokeniser::new().initialise();
     let tokens = tokeniser.tokenise(while_program.to_string()).unwrap();
 
-    let result = crate::parser::Parser::new().parse_program(&mut tokens.into());
+    let result = Parser::new().parse_program(&mut tokens.into());
 
     assert_eq!(
         result.unwrap(),

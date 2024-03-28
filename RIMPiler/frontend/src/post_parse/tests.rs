@@ -1,10 +1,9 @@
-use crate::AST::Variable;
 use super::super::lexer::Tokeniser;
-use super::super::parser::parse;
+use super::super::parser::parser::parse;
 use super::super::post_parse::inverter::invert;
 use super::super::AST::{
     ArithmeticExpression, ArithmeticOperator, BooleanExpression, Program,
-    RelationOperator, Statement,
+    RelationOperator, Statement, Variable
 };
 
 #[test]

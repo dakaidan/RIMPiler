@@ -2,10 +2,6 @@ use ordered_float::NotNan;
 
 mod display;
 
-// TODO: If types are ever extended add a type checker.
-//       Since there are no functions or anything,
-//       we can just walk the tree with a big hashmap to easily check types.
-
 pub type Block = Vec<Statement>;
 
 #[derive(Debug, Eq, PartialEq, Clone, Hash)]
