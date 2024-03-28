@@ -30,7 +30,7 @@ impl Interpreter {
         }
 
         println!(
-            "result: \n{}",
+            "result: \n\t{}",
             interpreter.get_reverse_point_snapshot().as_ref().unwrap()
         );
 

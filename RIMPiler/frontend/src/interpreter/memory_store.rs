@@ -331,7 +331,7 @@ impl Display for MemoryStore {
             if index == 0 {
                 memory.push_str(&format!("{}: {}", variable, value));
             } else {
-                memory.push_str(&format!("\n{}: {}", variable, value));
+                memory.push_str(&format!("\n\t{}: {}", variable, value));
             }
         }
         write!(f, "{}", memory)

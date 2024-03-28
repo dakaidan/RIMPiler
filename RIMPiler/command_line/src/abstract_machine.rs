@@ -1,5 +1,5 @@
 use std::io::Write;
-use RIMPiler_frontend::abstract_machine::engine::Engine;
+use RIMPiler_frontend::abstract_machine::engine::{Engine, Rules};
 use super::ast::create_ast_without_transform;
 
 pub struct AbstractMachine {
@@ -70,6 +70,7 @@ impl AbstractMachine {
                     println!("store: \n{}", engine.get_store());
                 }
                 "print all" | "pa" => {
+                    println!("Rule {} has been applied", engine.get_next_rule());
                     println!("control stack: \n{}", engine.get_control_stack());
                     println!("result stack: \n{}", engine.get_result_stack());
                     println!("store: \n{}", engine.get_store());
@@ -81,6 +82,7 @@ impl AbstractMachine {
                         continue;
                     }
                     engine.step();
+                    println!("Rule {} has been applied", engine.get_next_rule());
                     println!("control stack: \n{}", engine.get_control_stack());
                     println!("result stack: \n{}", engine.get_result_stack());
                     println!("store: \n{}", engine.get_store());
@@ -94,16 +96,18 @@ impl AbstractMachine {
                 "run and print" | "rp" => {
                     while !engine.is_done() {
                         engine.step();
+                        println!("Rule {} has been applied", engine.get_next_rule());
                         println!("control stack: \n{}", engine.get_control_stack());
                         println!("result stack: \n{}", engine.get_result_stack());
                         println!("store: \n{}", engine.get_store());
                         println!("back stack: \n{}", engine.get_back_stack());
-                        println!("");
+                        println!();
                     }
                 }
                 "run print reverse" | "rpr" => {
                     while !engine.is_done() {
                         engine.step();
+                        println!("Rule {} has been applied", engine.get_next_rule());
                         println!("control stack: \n{}", engine.get_control_stack());
                         println!("result stack: \n{}", engine.get_result_stack());
                         println!("store: \n{}", engine.get_store());
@@ -115,10 +119,60 @@ impl AbstractMachine {
 
                     while !engine.is_done() {
                         engine.step();
+                        println!("Rule {} has been applied", engine.get_next_rule());
                         println!("control stack: \n{}", engine.get_control_stack());
                         println!("result stack: \n{}", engine.get_result_stack());
                         println!("store: \n{}", engine.get_store());
                         println!("back stack: \n{}", engine.get_back_stack());
+                    }
+                }
+                "run until rule" | "rr" => {
+                    let mut rule = None;
+
+                    while rule.is_none() {
+                        print!("Enter the rule to run until or c to cancel: ");
+                        std::io::stdout().flush().unwrap();
+                        let mut input = String::new();
+                        std::io::stdin().read_line(&mut input).unwrap();
+                        let input = input.trim();
+
+                        if input == "c" {
+                            break;
+                        }
+
+                        rule = Rules::new(input);
+                        if rule.is_none() {
+                            println!("Invalid rule: {}", input);
+                        }
+                    }
+
+                    if rule.is_none() {
+                        continue;
+                    } else {
+                        while !engine.is_done() && engine.get_next_rule() != rule.clone().unwrap() {
+                            print!("{} -> ", engine.get_next_rule());
+                            engine.step();
+                        }
+
+                        if engine.is_done() {
+                            print!("done");
+                            println!("Program has finished executing");
+                        } else {
+                            println!("{}", engine.get_next_rule());
+                            println!();
+                            println!("Previous state:");
+                            println!("\tcontrol stack: \n\t{}", engine.get_control_stack());
+                            println!("\tresult stack: \n\t{}", engine.get_result_stack());
+                            println!("\tstore: \n\t{}", engine.get_store());
+                            println!("\tback stack: \n\t{}", engine.get_back_stack());
+                            engine.step();
+                            println!();
+                            println!("Next state:");
+                            println!("\tcontrol stack: \n\t{}", engine.get_control_stack());
+                            println!("\tresult stack: \n\t{}", engine.get_result_stack());
+                            println!("\tstore: \n\t{}", engine.get_store());
+                            println!("\tback stack: \n\t{}", engine.get_back_stack());
+                        }
                     }
                 }
                 "direction" | "d" => {
@@ -131,6 +185,15 @@ impl AbstractMachine {
                 "reverse" | "rv" => {
                     engine.reverse();
                     is_forward = !is_forward;
+                }
+                "rule" | "pr" => {
+                    println!("Next rule: {}", engine.get_next_rule());
+                }
+                "rules" | "rl" => {
+                    let rules = Rules::all_rules();
+                    for rule in rules {
+                        println!("{}", rule);
+                    }
                 }
                 "quit" | "q" => {
                     break;
@@ -156,8 +219,11 @@ impl AbstractMachine {
                     println!("run (r) - run the program to completion");
                     println!("run and print (rp) - run the program to completion and print all stacks and the store");
                     println!("run print reverse (rpr) - run the program to completion, reverse, then repeat");
+                    println!("run until rule (rr) - run the program until a specific rule is applied");
                     println!("direction (d) - check the direction of execution");
                     println!("reverse (rv) - reverse the direction of execution");
+                    println!("rule (pr) - print the rule that will be applied next");
+                    println!("rules (rl) - print the rules of the abstract machine");
                     println!("quit (q) - quit the program");
                     println!("help (h) - print this help message");
                 }

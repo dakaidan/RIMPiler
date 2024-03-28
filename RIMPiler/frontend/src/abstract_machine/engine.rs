@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fmt::Display;
 use ordered_float::NotNan;
 use crate::abstract_machine::stack::{Stack, ResultStack, ControlStack, BackStack, Builder, C, P, Lab, R, Num, Type, Var, BinOp};
 use crate::abstract_machine::store::Store;
@@ -6,7 +7,7 @@ use crate::AST::Program;
 use crate::interpreter::memory_store::{MemoryStoreElement, MemoryStoreTrait, Value};
 
 #[derive(Debug, Eq, PartialEq, Clone, Hash)]
-enum Rules {
+pub enum Rules {
     // expression rules
     Num,
     Mun,
@@ -55,13 +56,160 @@ enum Rules {
     WRexp,
 }
 
+impl Rules {
+    pub fn new(name: &str) -> Option<Self> {
+        match name {
+            "Num" => Some(Rules::Num),
+            "Mun" => Some(Rules::Mun),
+            "Var" => Some(Rules::Var),
+            "Rav" => Some(Rules::Rav),
+            "Exp" => Some(Rules::Exp),
+            "UnExp" => Some(Rules::UnExp),
+            "Pxe" => Some(Rules::Pxe),
+            "UnPxe" => Some(Rules::UnPxe),
+            "BinOp" => Some(Rules::BinOp),
+            "BinPo" => Some(Rules::BinPo),
+            "UnOp" => Some(Rules::UnOp),
+            "UnPo" => Some(Rules::UnPo),
+            "Skip" => Some(Rules::Skip),
+            "Asgn" => Some(Rules::Asgn),
+            "Ngsa" => Some(Rules::Ngsa),
+            "Assign" => Some(Rules::Assign),
+            "AsgnR" => Some(Rules::AsgnR),
+            "NgsaR" => Some(Rules::NgsaR),
+            "Ngissa" => Some(Rules::Ngissa),
+            "Seq" => Some(Rules::Seq),
+            "Qes" => Some(Rules::Qes),
+            "Sequence" => Some(Rules::Sequence),
+            "Cond" => Some(Rules::Cond),
+            "Dnoc" => Some(Rules::Dnoc),
+            "IfT" => Some(Rules::IfT),
+            "FiT" => Some(Rules::FiT),
+            "IfF" => Some(Rules::IfF),
+            "FiF" => Some(Rules::FiF),
+            "EndIf" => Some(Rules::EndIf),
+            "IfRexp" => Some(Rules::IfRexp),
+            "Loop" => Some(Rules::Loop),
+            "Pool" => Some(Rules::Pool),
+            "LoopT" => Some(Rules::LoopT),
+            "PoolT" => Some(Rules::PoolT),
+            "LoopF" => Some(Rules::LoopF),
+            "PoolF" => Some(Rules::PoolF),
+            "EndWF" => Some(Rules::EndWF),
+            "WEndF" => Some(Rules::WEndF),
+            "EndWT" => Some(Rules::EndWT),
+            "WEndT" => Some(Rules::WEndT),
+            "EndW" => Some(Rules::EndW),
+            "WRexp" => Some(Rules::WRexp),
+            _ => None,
+        }
+    }
+
+    pub fn all_rules() -> Vec<Rules> {
+        vec![
+            Rules::Num,
+            Rules::Mun,
+            Rules::Var,
+            Rules::Rav,
+            Rules::Exp,
+            Rules::UnExp,
+            Rules::Pxe,
+            Rules::UnPxe,
+            Rules::BinOp,
+            Rules::BinPo,
+            Rules::UnOp,
+            Rules::UnPo,
+            Rules::Skip,
+            Rules::Asgn,
+            Rules::Ngsa,
+            Rules::Assign,
+            Rules::AsgnR,
+            Rules::NgsaR,
+            Rules::Ngissa,
+            Rules::Seq,
+            Rules::Qes,
+            Rules::Sequence,
+            Rules::Cond,
+            Rules::Dnoc,
+            Rules::IfT,
+            Rules::FiT,
+            Rules::IfF,
+            Rules::FiF,
+            Rules::EndIf,
+            Rules::IfRexp,
+            Rules::Loop,
+            Rules::Pool,
+            Rules::LoopT,
+            Rules::PoolT,
+            Rules::LoopF,
+            Rules::PoolF,
+            Rules::EndWF,
+            Rules::WEndF,
+            Rules::EndWT,
+            Rules::WEndT,
+            Rules::EndW,
+            Rules::WRexp,
+        ]
+    }
+}
+
+impl Display for Rules {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // TODO: Potentially provide transition rules here too
+        match self {
+            Rules::Num => write!(f, "Num"),
+            Rules::Mun => write!(f, "Mun"),
+            Rules::Var => write!(f, "Var"),
+            Rules::Rav => write!(f, "Rav"),
+            Rules::Exp => write!(f, "Exp"),
+            Rules::UnExp => write!(f, "UnExp"),
+            Rules::Pxe => write!(f, "Pxe"),
+            Rules::UnPxe => write!(f, "UnPxe"),
+            Rules::BinOp => write!(f, "BinOp"),
+            Rules::BinPo => write!(f, "BinPo"),
+            Rules::UnOp => write!(f, "UnOp"),
+            Rules::UnPo => write!(f, "UnPo"),
+            Rules::Skip => write!(f, "Skip"),
+            Rules::Asgn => write!(f, "Asgn"),
+            Rules::Ngsa => write!(f, "Ngsa"),
+            Rules::Assign => write!(f, "Assign"),
+            Rules::AsgnR => write!(f, "AsgnR"),
+            Rules::NgsaR => write!(f, "NgsaR"),
+            Rules::Ngissa => write!(f, "Ngissa"),
+            Rules::Seq => write!(f, "Seq"),
+            Rules::Qes => write!(f, "Qes"),
+            Rules::Sequence => write!(f, "Sequence"),
+            Rules::Cond => write!(f, "Cond"),
+            Rules::Dnoc => write!(f, "Dnoc"),
+            Rules::IfT => write!(f, "IfT"),
+            Rules::FiT => write!(f, "FiT"),
+            Rules::IfF => write!(f, "IfF"),
+            Rules::FiF => write!(f, "FiF"),
+            Rules::EndIf => write!(f, "EndIf"),
+            Rules::IfRexp => write!(f, "IfRexp"),
+            Rules::Loop => write!(f, "Loop"),
+            Rules::Pool => write!(f, "Pool"),
+            Rules::LoopT => write!(f, "LoopT"),
+            Rules::PoolT => write!(f , "PoolT"),
+            Rules::LoopF => write!(f, "LoopF"),
+            Rules::PoolF => write!(f, "PoolF"),
+            Rules::EndWF => write!(f, "EndWF"),
+            Rules::WEndF => write!(f, "WEndF"),
+            Rules::EndWT => write!(f, "EndWT"),
+            Rules::WEndT => write!(f, "WEndT"),
+            Rules::EndW => write!(f, "EndW"),
+            Rules::WRexp => write!(f, "WRexp"),
+        }
+    }
+}
+
 pub struct Engine {
     pub control_stack: ControlStack,
     pub back_stack: BackStack,
     pub result_stack: ResultStack,
     pub store: Store,
 
-    pub while_condition: HashMap<usize, P>
+    pub while_condition: HashMap<usize, P>,
 }
 
 impl Engine {
@@ -72,7 +220,7 @@ impl Engine {
             back_stack: Stack::new(),
             result_stack: Stack::new(),
             store: Store::new(),
-            while_condition: Self::while_map(cs)
+            while_condition: Self::while_map(cs),
         }
     }
 
@@ -92,9 +240,13 @@ impl Engine {
         &self.store
     }
 
+    pub fn get_next_rule(&self) -> Rules {
+        let rule = self.check_rule();
+        rule
+    }
+
     pub fn step(&mut self) {
         let rule = self.check_rule();
-        println!("Rule: {:?}", rule);
         match rule {
             // Expressions
             Rules::Num => {

@@ -2,7 +2,7 @@ pub mod memory_store;
 #[cfg(test)]
 mod tests;
 
-use crate::interpreter::memory_store::{Integer, MemoryStoreElement, Value};
+use crate::interpreter::memory_store::{MemoryStoreElement, Value};
 use crate::AST::{ArithmeticExpression, ArithmeticOperator, Block, BooleanExpression, BooleanOperator, Program, RelationOperator, Statement, UnaryArithmeticOperator, UnaryBooleanOperator, Variable};
 use memory_store::MemoryStore;
 
