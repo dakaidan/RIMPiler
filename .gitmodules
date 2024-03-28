@@ -1,0 +1,3 @@
+[submodule "external_dependencies/krakatau"]
+	path = external_dependencies/krakatau
+	url = https://github.com/Storyyeller/Krakatau.git
