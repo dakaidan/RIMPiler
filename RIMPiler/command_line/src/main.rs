@@ -71,18 +71,24 @@ fn get_args() -> CommandLineResult {
                 || (args.flags.contains("compile") && args.flags.contains("abstract machine"))
                 || (args.flags.contains("interpret") && args.flags.contains("abstract machine"))
             {
+                println!("{}", LOGO);
                 println!("Error: Only one of the flags compile, interpret, or abstract machine can be used at a time");
+                println!();
                 println!("{}", parser);
                 std::process::exit(1);
             } else if args.arguments.get("output").is_none()
                 && !args.flags.contains("abstract machine")
                 && !args.flags.contains("interpret") {
+                println!("{}", LOGO);
                 println!("Error: The output flag is required when compiling a file");
+                println!();
                 println!("{}", parser);
                 std::process::exit(1);
             } else if args.arguments.get("output").is_some()
                 && (args.flags.contains("abstract machine") || args.flags.contains("interpret")) {
+                println!("{}", LOGO);
                 println!("Error: The output flag is only required when running the compiler");
+                println!();
                 println!("{}", parser);
                 std::process::exit(1);
             } else {
@@ -90,6 +96,7 @@ fn get_args() -> CommandLineResult {
             }
         }
         Err(error) => {
+            println!("{}", LOGO);
             println!("Error: {}", error);
             println!("{}", parser);
             std::process::exit(1);
@@ -120,6 +127,6 @@ fn main() {
         let interpreter = interpreter::Interpreter::new(input_file.to_string());
         interpreter.interpret().unwrap();
     } else {
-        panic!("Error: No flag was provided")
+        unreachable!("Invalid flag combination")
     }
 }
