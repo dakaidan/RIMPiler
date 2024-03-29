@@ -1,11 +1,18 @@
 mod ast;
 mod compiler;
 mod interpreter;
-mod types;
 mod abstract_machine;
 
 use utilities::args_parser::*;
-use types::Target;
+
+const LOGO: &str = r#"
+██████╗ ██╗███╗   ███╗██████╗ ██╗██╗     ███████╗██████╗
+██╔══██╗██║████╗ ████║██╔══██╗██║██║     ██╔════╝██╔══██╗
+██████╔╝██║██╔████╔██║██████╔╝██║██║     █████╗  ██████╔╝
+██╔══██╗██║██║╚██╔╝██║██╔═══╝ ██║██║     ██╔══╝  ██╔══██╗
+██║  ██║██║██║ ╚═╝ ██║██║     ██║███████╗███████╗██║  ██║
+╚═╝  ╚═╝╚═╝╚═╝     ╚═╝╚═╝     ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝
+"#;
 
 fn get_args() -> CommandLineResult {
     let parser = CommandLineArgumentsBuilder::new()
@@ -38,28 +45,16 @@ fn get_args() -> CommandLineResult {
                 .description("Interpret the input file"),
         )
         .add_flag(
-            FlagBuilder::new("llvm")
-                .short_name("l")
-                .long_name("llvm")
-                .description("Compile to LLVM IR"),
-        )
-        .add_flag(
-            FlagBuilder::new("jvm")
-                .short_name("j")
-                .long_name("jvm")
-                .description("Compile to JVM"),
-        )
-        .add_flag(
-            FlagBuilder::new("pisa")
-                .short_name("p")
-                .long_name("pisa")
-                .description("Compile to PISA"),
-        )
-        .add_flag(
-            FlagBuilder::new("abstract")
-                .short_name("a")
+            FlagBuilder::new("abstract machine")
+                .short_name("m")
                 .long_name("abstract")
-                .description("Compile to abstract machine"),
+                .description("Run the abstract machine"),
+        )
+        .add_flag(
+            FlagBuilder::new("help")
+                .short_name("h")
+                .long_name("help")
+                .description("Prints the help message"),
         )
         .build();
 
@@ -67,41 +62,32 @@ fn get_args() -> CommandLineResult {
 
     match args {
         Ok(args) if args.flags.contains("help") => {
-            println!("{}", args);
+            println!("{}", LOGO);
+            println!("{}", parser);
             std::process::exit(0);
         }
         Ok(args) => {
-            if (args.flags.contains("compile")
-                || args.flags.contains("llvm")
-                || args.flags.contains("pisa")
-                || args.flags.contains("jvm"))
-                && (args.flags.contains("interpret")
-                || args.flags.contains("abstract"))
+            if (args.flags.contains("compile") && args.flags.contains("interpret"))
+                || (args.flags.contains("compile") && args.flags.contains("abstract machine"))
+                || (args.flags.contains("interpret") && args.flags.contains("abstract machine"))
             {
-                println!("Error: Cannot compile and interpret at the same time");
+                println!("Error: Only one of the flags compile, interpret, or abstract machine can be used at a time");
                 println!("{}", parser);
                 std::process::exit(1);
-            }
-
-            if args.flags.contains("llvm") && args.flags.contains("pisa") {
-                println!("Error: Cannot compile to both LLVM IR and PISA");
+            } else if args.arguments.get("output").is_none()
+                && !args.flags.contains("abstract machine")
+                && !args.flags.contains("interpret") {
+                println!("Error: The output flag is required when compiling a file");
                 println!("{}", parser);
                 std::process::exit(1);
-            }
-
-            if args.flags.contains("llvm") && args.flags.contains("jvm") {
-                println!("Error: Cannot compile to both LLVM IR and JVM");
+            } else if args.arguments.get("output").is_some()
+                && (args.flags.contains("abstract machine") || args.flags.contains("interpret")) {
+                println!("Error: The output flag is only required when running the compiler");
                 println!("{}", parser);
                 std::process::exit(1);
+            } else {
+                args
             }
-
-            if args.flags.contains("jvm") && args.flags.contains("pisa") {
-                println!("Error: Cannot compile to both JVM and PISA");
-                println!("{}", parser);
-                std::process::exit(1);
-            }
-
-            args
         }
         Err(error) => {
             println!("Error: {}", error);
@@ -119,27 +105,21 @@ fn main() {
     let input_file = args.arguments.get("input").unwrap();
     let mut output_file = DEFAULT_OUTPUT_FILE.to_string();
 
-    if args.flags.contains("interpret") || args.flags.contains("abstract") {
-        if args.flags.contains("abstract") {
-            let abstract_machine = abstract_machine::AbstractMachine::new(input_file.to_string());
-            abstract_machine.run().unwrap();
-        } else {
-            let interpreter = interpreter::Interpreter::new(input_file.to_string());
-            interpreter.interpret().unwrap();
-        }
-    } else {
+    if args.flags.is_empty() || args.flags.contains("compile") {
         let output_file_opt = args.arguments.get("output");
         if output_file_opt.is_some() {
             output_file = output_file_opt.unwrap().to_string();
         }
-        let target = if args.flags.contains("llvm") {
-            Target::LLVM
-        } else if args.flags.contains("jvm") {
-            Target::JVM
-        } else {
-            Target::JVM
-        };
-        let compiler = compiler::Compiler::new(input_file.to_string(), output_file.to_string(), target);
+
+        let compiler = compiler::Compiler::new(input_file.to_string(), output_file.to_string());
         compiler.compile().unwrap();
+    } else if args.flags.contains("abstract machine") {
+        let abstract_machine = abstract_machine::AbstractMachine::new(input_file.to_string());
+        abstract_machine.run().unwrap();
+    } else if args.flags.contains("interpret") {
+        let interpreter = interpreter::Interpreter::new(input_file.to_string());
+        interpreter.interpret().unwrap();
+    } else {
+        panic!("Error: No flag was provided")
     }
 }

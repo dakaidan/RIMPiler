@@ -254,10 +254,10 @@ impl Display for CommandLineArguments {
         for specification in self.specifications.values() {
             match specification {
                 CommandLineSpecification::Argument(_, _, _, _, _) => {
-                    output.push_str(&format!("{}", specification));
+                    output.push_str(&format!("{}\n", specification));
                 }
                 CommandLineSpecification::Flag(_, _, _) => {
-                    output.push_str(&format!("{}", specification));
+                    output.push_str(&format!("{}\n", specification));
                 }
             }
         }
@@ -447,6 +447,9 @@ impl CommandLineArguments {
             }
         }
 
+        if result.flags.contains("help") {
+            return Ok(result);
+        }
         for (identifier, specification) in self.specifications.iter() {
             match specification {
                 CommandLineSpecification::Argument(_, _, _, required, _) => {
