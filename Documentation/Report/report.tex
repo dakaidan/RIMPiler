@@ -6,11 +6,20 @@
 \usepackage{color}
 \usepackage[square,sort,comma,numbers]{natbib} %References
 
-\usepackage[color=red]{todonotes}
-\usepackage{listings}
+\usepackage{amsmath}
+\usepackage[
+color=red,
+% disable
+]{todonotes}
+\PackageError{RIMP}{Remove todos}{Uncomment disable}
+
+\usepackage{wrapfig}
+\usepackage{listings, listings-rust}
 \usepackage{tikz}
 \usetikzlibrary{shapes,arrows,positioning,fit}
 \usepackage{xspace}
+\usepackage{floatflt,amsmath,amssymb}
+\usepackage[ligature, inference]{semantic}
 
 \def\rimp{RIMPiler\xspace}
 \def\rimplang{RIMP\xspace}
@@ -18,7 +27,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Front Matter - project title, name, supervisor name and date
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\title{6CCS3PRJ Final Year\\\vspace{0.2cm}RIMPiler}
+\title{6CCS3PRJ Final Year\\\vspace{0.2cm}RIMPiler\\\large Towards a Comprehensive Framework for Reversible \\Imperative Languages}
 \author{Aidan Dakhama}
 \studentID{21034945}
 \supervisor{Professor Maribel Fernandez}
@@ -44,7 +53,7 @@
 
 \include{Chapters/Introduction}
 \include{Chapters/Context}
-\include{Chapters/Body}
+\include{Chapters/Requirements}
 \include{Chapters/Specification}
 \include{Chapters/DesignImplementation}
 \include{Chapters/ProfessionalIssues}
@@ -61,7 +70,7 @@
 % Appendices
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \appendix
-\include{Appendices/appendix}
-\include{Appendices/UserGuide}
-\include{Appendices/SourceCode}
+%\include{Appendices/appendix}
+%\include{Appendices/UserGuide}
+%\include{Appendices/SourceCode}
 \end{document}

@@ -5,8 +5,10 @@
 
 \section{Reversible Computing}
 
-Reversible computing is a paradigm of computing where computation is both forward deterministic, and backward deterministic \cite{IntroductionToReversibleComputing}. This allows a reversible program to be run forwards, stopped at any point, and then run backwards, completely reconstructing the state in which it started.
-Unlike traditional computing, which is not backward deterministic, which inevitably leads to information loss, which is dissipated as heat energy \cite{landauerIrreversibility}. Reversible computing allows the conservation of this information, and therefore energy, throughout computation \cite{Landauer}.
+% 5-10 pages
+
+Reversible computing is a paradigm of computing where computation is both forward deterministic, and backward deterministic\cite{IntroductionToReversibleComputing}. This allows a reversible program to be run forwards, stopped at any point, and then run backwards, completely reconstructing the state in which it started.
+Unlike traditional computing, which is not backward deterministic, which inevitably leads to information loss, which is dissipated as heat energy\cite{landauerIrreversibility}. Reversible computing allows the conservation of this information, and therefore energy, throughout computation\cite{Landauer}.
 
 Research in this area is diverse, but can be split by their level of abstraction. While there is no widespread use of reversible hardware, there has still be significant research into programming abstractions which may run on top of them.
 
@@ -14,10 +16,10 @@ Research in this area is diverse, but can be split by their level of abstraction
 
 Programming languages serve as abstractions over the underlying computational model, providing a structure easier for humans to reason and communicate instructions with each other and the computer. 
 
-The structure of a programming language is largely dictated by the underlying model. Imperative languages abstract over the Turing Machine \cite{onComputableNumbers}, while Functional languages abstract over Lambda Calculus \cite{Lambda}. Additionally, programming languages are also impacted by the level of abstraction they wish to provide, being split into high-level and low-level languages. A low-level language is one which directly follows the underlying model, without hiding much detail from the user, while high-level languages aim to hide much of this detail.
+The structure of a programming language is largely dictated by the underlying model. Imperative languages abstract over the Turing Machine\cite{onComputableNumbers}, while Functional languages abstract over Lambda Calculus\cite{Lambda}. Additionally, programming languages are also impacted by the level of abstraction they wish to provide, being split into high-level and low-level languages. A low-level language is one which directly follows the underlying model, without hiding much detail from the user, while high-level languages aim to hide much of this detail.
 
 The area of programming languages is an open and active area of research. This includes type systems, and memory management.
-\todo{Give details here, reference some survey papers maybe}
+\todo{Survey paper?}
 
 \section{Compilers, Interpreters, \& Abstract Machines}
 
@@ -28,13 +30,13 @@ Additionally, each provide benefits and drawbacks, but work well to complement e
 
 \subsection{Lexing}
 
-Lexing is typically performed first in the context of compilation and interpreting. Lexing is the process where a lexer takes some text input, and outputs a list of tokens. Each token corresponds to a part of the original text which makes sense to group together. For example, we may group letters comprising keywords into a keyword token. 
+Lexing is typically performed first in the context of compilation and interpreting\cite{CompilerConstruction, DragonBook}. Lexing is the process where a lexer takes some text input, and outputs a list of tokens. Each token corresponds to a part of the original text which makes sense to group together. For example, we may group letters comprising keywords into a keyword token. 
 
 This is frequently a crucial step in the process of working with programming languages, as it permits the later stages of the process to disregard irrelevant input elements, such as whitespace.
 
 \subsection{Parsing}
 
-Parsing is the process of transforming some source, typically a token stream, into a hierarchical structure such as an abstract syntax tree (AST). This is done following some specification for the grammar of the language.
+Parsing is the process of transforming some source, typically a token stream, into a hierarchical structure such as an abstract syntax tree (AST)\cite{CompilerConstruction, DragonBook}. This is done following some specification for the grammar of the language.
 
 The grammar defines what is a valid set of symbols that can appear, and the order in which they are allowed to appear.
 
@@ -48,34 +50,32 @@ During the process of compilation, there are typically other processes taking pl
 
 Typically, compilers are placed at the end of the development cycle. Before a program is passed to its users, it will be compiled. This is done for many reasons, such as:
 \begin{enumerate}
-    \item Ease of use: The compiled target can often be run directly.
-    \item Efficiency and speed: The compiler typically optimises many factors of the program.
-    \item Protecting IP: The original human-readable source is mutated, typically to an unrecognisable degree.
+    \item Ease of use: The compiled target can often be run directly\cite{PortabilityofC}.
+    \item Efficiency and speed: The compiler typically optimises many factors of the program\cite{UnifiedOptimisations, HPCOPtimisations, CompCert}.
+    \item Protecting IP: The original human-readable source is mutated, typically to an unrecognisable degree\cite{CompilerObfuscationSurvey, ASMObfuscation}.
 \end{enumerate}
-
-\todo{Add citations for each point}
 
 \subsection{Interpreters}
 
-Interpreters are programs which immediately evaluate a program they are given. Unlike compilers, they do not produce a new output which can be run after. Instead, interpreters usually produce an abstract syntax tree and evaluate directly from that.
+Interpreters are programs which immediately evaluate a program they are given. Unlike compilers, they do not produce a new output which can be run after. Instead, interpreters usually produce an abstract syntax tree and evaluate directly from that\cite{InterpreterStructure}.
 
-Interpreters are, for this reason, faster to start, and so can be a useful tool for fast iteration while developing. 
+Interpreters are, for this reason, faster to start, and so can be a useful tool for fast iteration while developing\cite{OptimisingInterpreters, InterpreterStructure}. 
 
-However, as interpreters are expected to immediately execute the program they are given, they don't have time to optimise like compilers do, and so are typically far slower to run the same program through when compared to compilers.
+However, as interpreters are expected to immediately execute the program they are given, they don't have time to optimise like compilers do, and so are typically far slower to run the same program through when compared to compilers\cite{CompilersAndInterpretersJava, InterpreterStructure}.
 
 \subsection{Abstract Machines}
 
-Like interpreters, abstract machines evaluate program representations, however, they diverge in their operational methodologies, and the level of abstraction. Abstract machines function at a lower level of abstraction compared to interpreters. This difference makes abstract machines particularly valuable in debugging, as they allow the developer to observe small changes in program state after each step is evaluated.
+Like interpreters, abstract machines evaluate program representations, however, they diverge in their operational methodologies, and the level of abstraction\cite{AbstractMachine, AbstractMachineForLanguage}. Abstract machines function at a lower level of abstraction compared to interpreters. This difference makes abstract machines particularly valuable in debugging, as they allow the developer to observe small changes in program state after each step is evaluated.
 
 \section{Reversible Languages}
 
-Reversible languages are languages which in some way enforce the constraints of reversible computing. That is, a program in a reversible language can be stopped at some point, and returned to the exact same initial state.
+Reversible languages are languages which in some way enforce the constraints of reversible computing. That is, a program in a reversible language can be stopped at some point, and returned to the exact same initial state. There are many reversible languages, spanning a range of paradigms, including object-oriented, functional, and imperative\cite{Janus, RFun, ROOP}.
 
 \subsection{Methods of Reversibility}
 
 There are several methods languages can employ to achieve reversibility. One such method is state capture, this is where all relevant state is recorded at each execution step, so when reversing the computation, you simply go back to the last command, and refresh the state to the previous point.
 
-Another way to achieve reversibility is to prevent any executions which are not inherently backwards deterministic. For example, in many languages it is common to be able to overwrite a variable with a new value, such as \lstinline{x = 5}. However, using this method, we would prohibit use of this kind of assignment as it would lose any state associated with \lstinline{x} Instead we would prefer statements of the form \lstinline{x += 5}.
+Another way to achieve reversibility is to prevent any executions which are not inherently backwards deterministic. For example, in many languages it is common to be able to overwrite a variable with a new value, such as \lstinline{x = 5}. However, using this method, we would prohibit use of this kind of assignment as it would lose any state associated with \lstinline{x} Instead we would prefer statements of the form \lstinline{x += 5}\cite{ReversibleTaxonomy}.
 
 Another consideration of reversible languages is what we refer to as transparency, this can be thought of in a way as how high-level they are. Languages can be classed as transparent if they reflect the underlying reversible model being used, and opaque if they hide this. Essentially, if the developer has to be aware that they are targeting a reversible model of computation, then the language is transparent (or low-level), however, if not it is opaque (or high-level).
 
