@@ -1,117 +1,306 @@
 \chapter{Design \& Implementation}
 
+% 15 to 25 pages
+
 \section{Architecture}
 
 \tikzset{
-    block/.style={rectangle, draw, text width=6em, text centered, rounded corners, minimum height=3em},
+    block/.style={rectangle, draw, text width=6em, rounded corners, minimum height=3em},
     line/.style={draw, -latex},
 }
 
 \begin{center}
 \begin{figure}[hbt!]
-\begin{tikzpicture}[node distance=2cm and .75cm]
+\centering
+\scalebox{0.8}{
+    \begin{tikzpicture}[node distance=1cm and .75cm]
 
-% Shared Frontend
+    % Shared Frontend
     \node (frontend) [block] {Lexing and Parsing};
-
-% Semantic Transformations
+    
+    % Semantic Transformations
     \node (semantic) [block, below=of frontend] {Semantic Transformations};
 
-% Rev
+    % Rev
     \node (rev) [block, below left=of semantic] {Reverse};
 
-% Interpreter
+    % Interpreter
     \node (interpreter) [block, below left=of rev, xshift=-1.5cm] {Interpreter};
 
-% Compiler to LLVM
-    \node (llvm) [block, below right=of rev, xshift=1.5cm] {Compiler to LLVM};
+    % Compiler to LLVM
+    \node (llvm) [block, below=of rev, xshift=1.5cm, dashed] {Compiler to LLVM};
 
-% Compiler to JVM
-    \node (jvm) [block, below=of rev, xshift=1.5cm] {Compiler to JVM};
+    % Compiler to JVM
+    \node (jvm) [block, below=of rev, xshift=-1.5cm] {Compiler to JVM};
 
-% Abstract Machine
-    \node (amachine) [block, below=of rev, xshift=-1.5cm] {Compiler to Abstract Machine};
+    % Abstract Machine
+    \node (amachine) [block, below right=of rev, xshift=1.5cm] {Abstract Machine};
 
-% Compiler to RSSA
-    \node (rssa) [block, below right=of semantic, xshift=1.5cm, yshift=-3.2cm] {Compiler to RSSA};
+    % Compiler to RSSA
+    \node (rssa) [block, below right=of semantic, xshift=1.5cm, yshift=-2.2cm, dashed] {Compiler to RSSA};
 
-% Backend of RSSA
-    \node (backend) [block, below=of rssa] {PISA Backend of RSSA};
+    % Backend of RSSA
+    \node (backend) [block, below=of rssa, dashed] {PISA Backend of RSSA};
 
-% Backend of Abstract Machine
-    \node (abstract_backend) [block, below=of amachine] {Backend of Abstract Machine};
-
-% Groupings
+    % Groupings
     \node (frontend_group) [fit=(frontend) (semantic) (rev), draw, inner ysep=0.6cm,inner xsep=5cm, label={Frontend}, rounded corners] {};
 
-    \node (reversible) [fit=(rssa) (backend), draw, inner sep=0.2cm, label={[label distance=-5.7cm]90:Reversible Backend}, rounded corners] {};
+    \node (reversible) [fit=(rssa) (backend) (amachine), draw, inner sep=0.2cm, label={[label distance=-4.6cm]90:Reversible Backend}, rounded corners] {};
 
-    \node (conventional) [fit=(abstract_backend) (interpreter) (llvm) (jvm) (amachine), draw, inner sep=0.2cm, label={[label distance=-6cm]90:Conventional Backend}, rounded corners] {};
+    \node (conventional) [fit=(interpreter) (llvm) (jvm), draw, inner sep=0.2cm, label={[label distance=-2cm]90:Conventional Backend}, rounded corners] {};
 
 % Arrows
     \draw [line] (frontend) -- (semantic);
     \draw [line] (semantic) -- (rev);
-    \draw [line] (semantic) -- (rssa);
+    \draw [line, dashed] (semantic) -- (rssa);
     \draw [line] (rev) -- (interpreter);
-    \draw [line] (rev) -- (amachine);
-    \draw [line] (rev) -- (llvm);
+    \draw [line] (semantic) -- (amachine);
+    \draw [line, dashed] (rev) -- (llvm);
     \draw [line] (rev) -- (jvm);
-    \draw [line] (amachine) -- (abstract_backend);
-    \draw [line] (rssa) -- (backend);
-
+    \draw [line, dashed] (rssa) -- (backend);
 \end{tikzpicture}
-\caption{High level overfiew of the system architecture}
+}
+\caption{High level overview of the system architecture, dotted lines are used to indicate systems not implemented within the current version of \rimp, but which are logical future steps to build.}
 \label{fig:system_architecture}
 \end{figure}
 \end{center}
 
-What are the components?
-How are they connected?
-Why is it done like this?
-How does it help meet the requirements?
+\rimp is intended as a complete system for the language \rimplang. For this reason, its architecture has modularity in mind, allowing each component to share infrastructure built by others. Additionally, it allows for new infrastructure to be built and dropped in fairly easily.
+
+Broadly, we have three systems, a frontend, a conventional backend, and a reversible backend.
+
+\subsection{Frontend}
+
+The frontend comprises the functionality shared between most backend systems. 
+
+The lexing and parsing component handles taking a \rimplang program, and producing a plain abstract syntax tree. This tree closely resembles the semantics of a conventional language, and does not yet embed the required infrastructure for reversibility.
+
+The semantic transformations component handles embedding the infrastructure for reversibility into the AST produced by the previous step. It then produces an AST which can be used by future components.
+
+The reverse component is required for all conventional backends. The reverse component takes the transformed AST, and applies the reverse function to it, producing the reverse execution of the program. As conventional backends are not implicitly reversible, they require this additional step in order to reverse the computation at the end of the forward computation. \todo{Make this clearer}
+
+\subsection{Conventional Backend}
+
+Each component of the conventional backend accepts an AST which has the requisite semantic transformations applied, and which includes the reverse execution of the program. The job of each component in the backend is to evaluate the program directly, or produce compiled code for the AST.
+Within \rimp, an interpreter and a compiler to the JVM is included. Other systems may be included within this larger component in the future, such as a backend targeting LLVM. \todo{Should I be mentioning future work here, or refrain until the very end}
+
+\subsection{Reversible Backend}
+
+The reversible backend mirrors the conventional backend, however, the components it encompasses are inherently reversible. For this reason, they do not require the reverse component from the frontend, and can handle the reversal of the program independently.
+
+Within \rimp, an abstract machine component is provided, with the ability to step through execution. \todo{This may be repetition of other areas mentioning AM}
 
 \section{Lexing Algorithm}
-What is the theory of the lexing algorithm used?
-What are alternatives?
-Why use this method?
-How was it actually implemented?
+
+There are many methods by which lexers can be implemented, each with certain benefits and drawbacks. One common consideration, however, is to produce a lexer which is POSIX compliant. A POSIX compliant lexer is a lexer in which the leftmost longest string is always matched. This helps keep the rules we use to match strings simple, and disambiguate potential matches.
+
+There are several ways to implement POSIX lexers, two of the most common approaches being using finite automata backed regular expression matchers, and using derivative backed regular expression matchers.
+
+Finite automata backed regular expression matchers are some of the most common implementations of regular expression engines. They are often available as a default in many programming languages\todo{reference some examples}. As they are readily available, they are relatively easy to use within lexing algorithms. However, one issue with these kinds of matchers, is that they may suffer from catastrophic backtracking. Catastrophic backtracking occurs due to the fact that many of the finite automata's used here are actually non-deterministic. This non-determinism, in certain situations, inevitably leads to the need to backtrack. 
+
+Unlike finite automata regular expression matchers, derivative based matchers do not suffer from backtracking. Derivative based matchers are based on the process of reducing a regular expression based on each character observed until you either reach a match, or finish the characters. \todo{Reference derivatives paper here.} 
+In addition, with derivative matchers, there is no need to construct any automata. This reduces both the computation needed up front, and the space used to store the automata, making them an efficient choice of matcher. 
+Derivative matchers are, however, relatively uncommon still, not appearing in common language's default implementation. 
+
+\todo{Maybe pick one alternative to discuss in more detail}
+
+Derivative based matching was chosen in order to ensure the speed of the lexing phase.
+
+\rimp uses the algorithm described by Sulzmann and Lu for derivative based matching. \todo{Add citation} 
+This algorithm broadly follows two phases, as seen in figure \ref{fig:lexing}. The first phase is a continual application of the derivative function. This function reduces the input string to be matched until there are no remaining characters to match. The second phase is repeated application of the injection function, the job of this chain is to reconstruct the string which was matched in the first phase, allowing us to build tokens from the strings we match.
+
+\begin{center}
+\begin{figure}[hbt!]
+\centering
+\scalebox{0.9}{
+\begin{tikzpicture}[node distance=2cm and 2cm]
+    % Input string and regex
+    \node (r1) [block] {r1};
+    \node (r2) [block, right=of r1] {r2};
+    \node (r3) [block, right=of r2] {r3};
+    \node (r4) [block, right=of r3] {r4};
+    \node (v4) [block, below=of r4] {v4};
+    \node (v3) [block, left=of v4] {v3};
+    \node (v2) [block, left=of v3] {v2};
+    \node (v1) [block, left=of v2] {v1};
+
+    \draw [thick, ->] (r1) -- (r2) node[midway,above] {der a};
+    \draw [dotted, ->] (r1) -- (v1) node[midway,above] {};
+    \draw [thick, ->] (r2) -- (r3) node[midway,above] {der b};
+    \draw [dotted, ->] (r2) -- (v2) node[midway,above] {};
+    \draw [thick, ->] (r3) -- (r4) node[midway,above] {der c};
+    \draw [dotted, ->] (r3) -- (v3) node[midway,above] {};
+    \draw [thick, ->] (r4) -- (v4) node[midway,right] {mkeps};
+    \draw [thick, ->] (v4) -- (v3) node[midway,below] {injection c};
+    \draw [thick, ->] (v3) -- (v2) node[midway,below] {injection b};
+    \draw [thick, ->] (v2) -- (v1) node[midway,below] {injection a};
+\end{tikzpicture}
+}
+\caption{Lexing with derivatives. This diagram is inspired by ref, but included here for clarity.}
+\label{fig:lexing}
+\end{figure}
+\end{center}
+\todo{Site urban}
+
+The exact method of the derivative function is omitted for brevity. In general, the derivative function works by finding the regular expression which represents what is left to match after matching the current regular expression with the current character. This function does also rely on another supporting function, which is nullable. Nullable indicated if a regular expression is able to match the empty string or not.
+
+One issue with lexing however, is \rimp is intended to be a system which is easy to evolve over time. And as such, it was intended to be easy for changes to this lexer to be made.
+For this reason, the lexing system was largely divided in two. One underlying system which acts as a general purpose tokeniser and regular expression matcher, and another system within \rimp which simply calls this system.
+
+This allows \rimp to define the grammar using regular expressions, tokens, and lex within two lines as seen in figure \ref{fig:lexing_system} 
+
+\begin{figure}[h]
+    \centering
+    \begin{lstlisting}[language=Rust,label={lst:derivative}]
+let lexer = Lexer::new(self.rimp);
+let result = lexer.tokenise::<tokens::RIMPToken>(&input);
+    \end{lstlisting}
+    \caption{Call to the lexing system}
+    \label{fig:lexing_system}
+\end{figure}
+
 
 \section{Parsing Algorithm}
-What is the theory of the parsing algorithm used?
-What are alternatives?
-Why not use parser generators?
-Why use this method?
-How was it actually implemented?
+
+Broadly, there are two kinds of parsing algorithms, top-down, and bottom-up. Top-down parsing algorithms aim to start from the root grammar rule, and match the program with this rule. Bottom-up, on the other hand, aims to construct a valid grammar starting at the terminals, and ending on the root rule.
+
+Bottom-up parsers are relatively common parsing techniques and often provide excellent performance. However, in the case of \rimp we prefer the use of top-down parsing algorithms. Top-down algorithms are typically clearer to understand and easier to extend or adapt in the initial stages. 
+
+\todo{Discuss alternative forms of top-down parsers}
+
+In the case of \rimp, a combination of two general methods of top-down parsing were used — Pratt parsing, and a kind of recursive descent parser.
+
+Pratt parsing is used purely on expressions within \rimplang, as it allows for a clear operator precedence to be set, and to be easily extended in the future with new operators if needed. However, implementing a pure Pratt parser for statements as well is non-trivial, and difficult to understand. This is the reason for the hybrid approach. In the case of statements, a recursive descent parser is used instead, maintaining a simple structure to the parsing algorithm.
+
+Like this, the problem of parsing a \rimplang program is reduced into few simple functions.
+
+\begin{figure}[h]
+    \centering
+    \begin{lstlisting}[language=rust,label={lst:parser}, basicstyle=\small]
+fn parse_program(&mut self, tokens: &mut Tokens) -> Result<Program>;
+
+fn parse_statement(&mut self, tokens: &mut Tokens) -> Result<Statement>;
+
+fn parse_block(&mut self, tokens: &mut Tokens) -> Result<Block>;
+
+fn parse_arithmetic_expression(
+        &mut self,
+        tokens: &mut Tokens,
+        min_binding_power: u8,
+    ) -> Result<ArithmeticExpression>;
+    
+fn parse_boolean_expression(
+        &mut self,
+        tokens: &mut Tokens,
+        min_binding_power: u8,
+    ) -> Result<BooleanExpression>;
+    \end{lstlisting}
+    \caption{Overview of the parsing algorithm for \rimp}
+    \label{fig:parser}
+\end{figure}
+
+\subsection{Type System}
+
+% \inference[T-Add]{
+% $\Gamma \vdash e_1$ : \text{Int} \quad $\Gamma \vdash e_2$ : \text{Int}
+% }{
+% $\Gamma$ \vdash e_1 + e_2 : \text{Int}
+% }
+
+% \rimp has a basic type system currently, consisting only of \lstinline{Integers}, \lstinline{Floats}, and to a point \lstinline{Booleans}. 
+
+% The \lstinline{Boolean} type within \rimp is treated somewhat differently to the other types, in that the type is implicitly inferred from its location within the program. There is no direct way to create a \lstinline{Boolean} outside the conditionals of while loops and if statements. This was chosen in order to reduce the complexity of the type checker.
+
+% The remaining types are both of the class numeric. And as such, they are largely interoperable. Intuitively, the type system in \rimp works by fitting the right-hand side expression into the type of the left-hand side as late as possible. \todo{Improve the flow here}
+
+% Currently, the checking of the validity of types is handled syntactically, as the only place in which it is possible to mismatch types is within assignments, or conditionals, both of which ensure syntactically that the types provided are valid. While it is possible to coerce the types here, as we do in other cases, this has been skipped. The reason for avoiding coercion in cases such as assignment, is these are likely cases where the developer has made a mistake. Consider the following:
+
+% \begin{lstlisting}
+% int x = 5.5;
+% \end{lstlisting}
+
+% Here we have the \lstinline{Integer} \lstinline{x} being assigned a literal value which is not an \lstinline{Integer}, this likely indicated an error on the part of the programmer. They likely intended one of the following two cases:
+
+% \begin{lstlisting}
+% int x = 5;
+% float x = 5.5;
+% \end{lstlisting}
+
+% And so in this case, we will simply return an error.
+% This is similar in the case of conditions, where we simply return an error in the event the conditional is not syntactically a boolean expression.
+
+% In any cases in which there is a type mismatch which is not protected against syntactically, we can perform coercion.
+% There are two categories where this may occur. In assignment, the developer may attempt to assign, to an \lstinline{Integer} variable, a value which is not a literal, but of type \lstinline{Float}. In this event, we will evaluate the right-hand side, but before the assignment, we will coerce the value to be an \lstinline{Integer}. We will do the same in the event of an \lstinline{Integer} value being assigned to a \lstinline{Float}.
+% The other case is within arithmetic expressions. This could occur if we use an operator on two values with different types. In this case, we simply coerce the right-hand value into the same type as the left hand.
+
+% With the type system described, possible mistakes are avoided through errors in literal value type mismatches. The system remains relatively easy to use by handling type coercion for the developer, and we avoid runtime type errors due to mismatched types.
+
+
 
 \section{Semantic Transformations for Reversibility}
-What is the theory used?
-How does it differ from RIMPs paper?
-What motivates that?
-What were some of the compromises with it?
+
 How was it implemented?
 Does it meet the needs of the requirements?
 
 \section{Reverse Function}
-What is the theory used?
-How does it differ from RIMPs paper?
-What motivates that?
-What were some of the compromises with it?
+
 How was it implemented?
 Does it meet the needs of the requirements?
 
 \section{Interpreter}
-What are some ways of implementing an interpreter/evaluator?
-How was it implemented?
-Why?
+
+
+\section{Compiler}
+
+The compiler is one of the key components of \rimp. It is intended as the final part of any development cycle. 
+
+Compilers can be implemented in many ways, such as by targeting many intermediate representations. This is a common approach, as different intermediate representations provide different advantages in terms of optimisations and type checking. \todo{Discuss LLVM and Hindley-Milner}
+
+Targetting intermediate representations also provides additional benefits, in that more infrastructure can be shared between more target outputs. For example, many languages will first compile to a custom intermediate, perform some operations relevant to that language while in this representation, and then compile to targets, such as LLVM IR, X86, ARM, or others. The reason for this is it is often far easier to work with an intermediate representation than the source, allowing for simpler code, and more efficient algorithms.
+Another approach is to ignore this intermediate representation, this greatly simplifies the compiler, however, may limit, or interfere with future operations which must be performed such as language specific optimisations.
+
+\rimp currently has no internal intermediate representations. This was done due to time constraints, and in order to maintain simplicity. Rather, \rimp directly targets the JVM, directly generating byte code from the AST. This is a compromise, as it restricts the abilities of \rimp to what is easy to do on an AST. However, the JVM is just one target, and, is a relatively simple target to rewrite from an intermediate language, so this is a minor compromise in the current version of \rimp.
+
+The choice to initially target the JVM was made due to the relative simplicity as a compilation target, as well as its universality. As \rimp targets the JVM, any device which is capable of running Java is also capable of running \rimp, making it easily accessible to many users. \todo{Discuss further the reasons to avoid LLVM and the difficulties with that}
+
+The implementation of the code generator for the JVM is simply a post-order traversal of the AST. 
+As the JVM is a stack machine, its operation follows exactly the structure of the AST we have generated for \rimplang. Like this, we avoid any complications that can arise from compiling to targets such as LLVM IR, in which we would need to use methods discussed such as CPS. 
+
+One complication, however, is due to the nature of variables with \rimplang. A variable is not simply a value, as it is in the JVM. In order to store the back stack of values, we have to introduce a wrapper for variables.
+
+In \rimp, we have two possible variables, Integers, and Floats. As these are both single-valued variables, unlike for example arrays, they are largely treated the same.
+
+We provide a library implementation of \lstinline{RIMPInt} and \lstinline{RIMPFloat}, using these in place of raw integers and floats within the generated byte code. These provide the functions needed to assign, and unassign values, as well as additional features for debugging, and displaying output.
+
+\begin{figure}[h]
+    \centering
+    \begin{lstlisting}[language=java,label={lst:RIMPInt},basicstyle=\small]
+public class RIMPInt {
+    String name;
+    int value;
+    Stack<Integer> history;
+
+    boolean debug = false;
+
+    public RIMPInt(String name);
+
+    public void assign(int value);
+
+    public void unAssign();
+
+    public int get();
+
+    public void print();
+}
+    \end{lstlisting}
+    \caption{Interface of RIMPInt utility class for the JVM}
+    \label{fig:RIMPInt}
+\end{figure}
+
+We provide four main functions, as well as a debug flag which is used to log information during \rimp development. \lstinline{assign} simply handles updating the value, as well as the history stack. \lstinline{unAssign}, similarly, updates the value and history stack. \lstinline{get} acts as a dereference operator, returning the value of the variable, allowing it to be used in expressions. \lstinline{print} simply prints the value and history of the variable, along with its name, this is intended to be used at the reversal point of \rimp to act as an output for programs. The interface for intergers can be seen in figure \ref{fig:RIMPInt}, the implementation is similar for floats, however, in that case we store floats rather than integer values.
 
 \section{Abstract Machine}
 What are ways of implementing an abstract machine?
 Why not use a stack machine implementation?
 Why not compile to an intermediary?
-How was it done?
-
-\section{Compiler}
-What ways are there to implement a compiler?
-What targets are there?
-Why chose this specific compiler method target combination?
 How was it done?

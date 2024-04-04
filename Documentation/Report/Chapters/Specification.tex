@@ -1,38 +1,380 @@
 \chapter{Specification}
 
+The following is a specification which will be followed in the design and implementation of \rimp. It acts as a theoretical foundation. \todo{Rewrite this, or remove it}
+
 \section{RIMP's Concrete Syntax}
 
-What is it?
-Why is it like this?
-How it differs from others?
-How it achieves the requirements?
+We will define the grammar used in \rimp as being an instance of the \lstinline{Program} class defined below.
+\begin{figure}
+    \centering
+    \begin{lstlisting}[language=TeX,label={lst:grammar}, basicstyle=\small]
+<Program> ::= <Statements>
 
-\section{RIMP's Semantics}
-What is it?
-Why is it like this?
-How it differs from others?
-How it achieves the requirements?
+<Statement> ::= skip
+    | <type> identifier = <ArithmeticExpression>
+    | identifier = <ArithmeticExpression>
+    | if <BooleanExpression> then <Block> else <Block>
+    | while <BooleanExpression> do <Block>
+
+<Statements> ::= <Statement> ; <Statement>
+    | <Statement> ;
+
+<Block> ::= { <Statements> ; } ;
+    | { <Statement> ; } ;
+
+<ArithmeticExpression> ::= <ArithmeticTerm> + <ArithmeticExpression>
+    | <ArithmeticTerm> - <ArithmeticExpression>
+    | - <ArithmeticTerm>
+    | <ArithmeticTerm>
+
+<ArithmeticTerm> ::= <ArithmeticFactor> * <ArithmeticTerm>
+    | <ArithmeticFactor> / <ArithmeticTerm>
+    | <ArithmeticFactor> ^ <ArithmeticTerm>
+    | <ArithmeticFactor>
+
+<ArithmeticFactor> ::= ( <ArithmeticExpression> )
+    | number
+    | identifier
+
+<BArithmeticExpression> ::= <BArithmeticTerm> + <BArithmeticExpression>
+    | <BArithmeticTerm> - <BArithmeticExpression>
+    | - <BArithmeticTerm>
+    | <BArithmeticTerm>
+
+<BArithmeticTerm> ::= <BArithmeticFactor> * <BArithmeticTerm>
+    | <BArithmeticFactor> / <BArithmeticTerm>
+    | <BArithmeticFactor> ^ <BArithmeticTerm>
+    | <BArithmeticFactor>
+
+<BArithmeticFactor> ::= number
+    | identifier
+
+<BooleanExpression> ::= <BArithmeticExpression> == <BArithmeticExpression>
+    | <BArithmeticExpression> < <BArithmeticExpression>
+    | <BArithmeticExpression> > <BArithmeticExpression>
+    | <BArithmeticExpression> != <BArithmeticExpression>
+    | <BooleanTerm>
+
+<BooleanTerm> ::= <BooleanFactor> && <BooleanExpression>
+    | <BooleanFactor>||<BooleanExpression>
+    | ! <BooleanExpression>
+    | <BooleanFactor>
+
+<BooleanFactor> ::= (<BooleanExpression>)
+
+<type> ::= int
+    | float
+\end{lstlisting}
+    \caption{Grammar of \rimplang}
+    \label{fig:grammar}
+\end{figure}
+
+One feature to note from the grammar is the distinction between the \\\lstinline{Arithmetic[Expression,Term,Factor]} and the \lstinline{BArithmetic[Expression,Term,Factor]}.
+This distinction amounts to not being able to use parenthesis within any \lstinline{BArithmetic}. While this difference is minor, it was chosen in order to greatly simplify the algorithm used to parse this grammar, which will be explored further in \todo{Link to implementation}.
+Despite the similarities between the two forms, this does add some inconvenience to developers using \rimp, as they may need to move parts of particularly complex arithmetic outside their conditionals, and into variables. However, this grammar is easily, and non-destructively designed as to be modifiable to allow for this in the future.
+
+Otherwise, this grammar closely follows that of C-like languages. This grammar was selected in order to be intuitive to many developers. Further, by mirroring traditional languages, it assists in making \rimplang a language which is separated from its underlying model of computation, reducing further the barrier to use.
 
 \section{RIMP's Type System}
-What is it?
-Why is it like this?
-How it differs from others?
-How it achieves the requirements?
+
+The aim of \rimp's type system is to balance ease of use with error avoidance. For this, we introduce some basic types in the current version of \rimp: 32-bit integers, denoted \lstinline{int}, and 32-bit floating-point, denoted \lstinline{float}. Within this system, we have a form of type polymorphism, where \lstinline{int} and \lstinline{float} are both treated as subtypes of an abstract \lstinline{numeric} type, which in the future will allow for the extension of this \lstinline{numeric} type, as well as additional types.
+
+Currently, \rimp has a basic type system consisting of only numerics and booleans. 
+We formally define it in figure \ref{fig:type-system}.
+\begin{figure}[hbt!]
+    \centering
+    \[
+        \inference[numeric-binop]{
+        \Gamma \vdash e_1 : \text{T} & \Gamma \vdash e_2 : \text{Numeric} 
+        }{
+        \Gamma \vdash e_1\ op\ e_2 : \text{T}
+        }
+        % I'm so sorry to anyone reading the next line
+        \text{where } op\in \{+, -, *, /, {}^\land\}
+    \]
+    \vspace{0.1cm}
+    \[
+        \inference[numeric-unop]{
+        \Gamma \vdash e : \text{T}
+        }{
+        \Gamma \vdash op\ e : \text{T}
+        } \text{where } op\in \{-\}
+    \]
+    \vspace{0.1cm}
+    \[
+        \inference[boolean-relational-binop]{
+        \Gamma \vdash e_1 : \text{Numeric} & \Gamma \vdash e_2 : \text{Numeric} 
+        }{
+        \Gamma \vdash e_1\ op\ e_2 : \text{Boolean}
+        } \text{where } op\in \{>, <, ==, !=\}
+    \]
+    \vspace{0.1cm}
+    \[
+        \inference[boolean-logical-binop]{
+        \Gamma \vdash e_1 : \text{Boolean} & \Gamma \vdash e_2 : \text{Boolean} 
+        }{
+        \Gamma \vdash e_1\ op\ e_2 : \text{Boolean}
+        } \text{where } op\in \{\&\&, ||\}
+    \]
+    \vspace{0.1cm}
+    \[
+        \inference[boolean-unop]{
+        \Gamma \vdash e : \text{Boolean} 
+        }{
+        \Gamma \vdash op\ e : \text{Boolean}
+        } \text{where } op\in \{!\}
+    \]
+    \caption{Formal definition of the type system within \rimp}
+    \label{fig:type-system}
+\end{figure}
+
+In order to maintain ease of use, we also employ type inference and coercion. From the type rules, we can obtain the method to perform type inference. We aim to apply type inference and coercion to only certain cases in which it would be cumbersome to have to denote the types, such as in arithmetic operations. For example, we aim to avoid cases like \lstinline{int x = (int x) * (int 2)}, preferring \lstinline{x = x * 2}.
+We do this by applying the rules for \lstinline{numeric-binop}, \lstinline{numeric-unop}. We only use do it on these two rules as to avoid any unintended type coercions, such as an integer being interpreted as a boolean within a conditional, which may lead to logical errors. Further, we aim to restrict this further as more types will be introduced, to ensure programs written in \rimp maintain free of type errors, or logical errors, only applying coercions to certain type groups such as numerics.
+
+\section{RIMP's Semantics}
+
+We present the complete semantics of \rimp we use, extending the existing semantics of \rimplang for types. We will denote the application of an arbitrary operator as $\overline{op}$.
+
+\begin{figure}[hbt!]
+    \centering
+    \footnotesize
+    \[
+        \inference[const]{
+        {}
+        }{
+        \langle c, s \rangle \Downarrow \langle c, s \rangle\ \text{if } \Gamma \vdash c : \text{Numeric}
+        }
+        \quad\quad
+        \inference[var]{
+        {}
+        }{
+        \langle !l, s \rangle \Downarrow \langle n, s \rangle\ \text{if } l \in s \land s(l) = n
+        }
+    \]
+    \vspace{0.2cm}
+    \[
+        \inference[skip]{
+        {}
+        }{
+        \langle skip, s \rangle \Downarrow \langle skip, s \rangle
+        }\quad \quad
+        \inference[seq]{
+        \langle C_1, s \rangle \Downarrow \langle skip, s' \rangle \quad \langle C_2, s' \rangle \Downarrow \langle skip, s'' \rangle
+        }{
+        \langle C_1;C_2, s \rangle \Downarrow \langle skip, s'' \rangle
+        }
+    \]
+    \vspace{0.2cm}
+    \[
+        \inference[unary boolean]{
+        \langle E_1, s \rangle \Downarrow \langle b_1, s \rangle
+        }{
+        \langle op\ E_1, s \rangle \Downarrow \langle b, s \rangle\ \text{if } op \in \{\neg\} \land \Gamma \vdash b_1 :  \text{Boolean} \land b = \overline{op}\ b_1
+        }
+    \]
+    \vspace{0.2cm}
+    \[
+        \inference[unary numeric]{
+        \langle E_1, s \rangle \Downarrow \langle n_1, s \rangle
+        }{
+        \langle op\ E_1, s \rangle \Downarrow \langle n, s \rangle\ \text{if } op \in \{-\} \land \Gamma \vdash n_1 : \text{Numeric} \land n = \overline{op}\ n_1
+        }
+    \]
+    \vspace{0.2cm}
+    \[
+        \inference[numeric]{
+        \langle E_1, s \rangle \Downarrow \langle n_1, s \rangle \quad \langle E_2, s \rangle \Downarrow \langle n_2, s \rangle
+        }{
+        \langle E_1\ op\ E_2, s \rangle \Downarrow \langle n, s \rangle\ \text{if } op \in \{+, -, /, *, {}^\land \} \land \Gamma \vdash n_1, n_2 : \text{Numeric} \land n = n_1 \overline{op}\ n_2
+        }
+    \]
+    \vspace{0.2cm}
+    \[
+        \inference[logical]{
+        \langle E_1, s \rangle \Downarrow \langle b_1, s \rangle \quad \langle E_2, s \rangle \Downarrow \langle b_2, s \rangle
+        }{
+        \langle E_1\ op\ E_2, s \rangle \Downarrow \langle b, s \rangle\ \text{if } op \in \{\&\&, || \} \land \Gamma \vdash n_1, n_2 : \text{Boolean} \land b = b_1 \overline{op}\ b_2
+        }
+    \]
+    \vspace{0.2cm}
+    \[
+        \inference[relation]{
+        \langle E_1, s \rangle \Downarrow \langle n_1, s \rangle \quad \langle E_2, s \rangle \Downarrow \langle n_2, s \rangle
+        }{
+        \langle E_1\ op\ E_2, s \rangle \Downarrow \langle b, s \rangle\ \text{if } op \in \{>, <, ==, != \} \land \Gamma \vdash n_1, n_2 : \text{Numeric} \land b = n_1 \overline{op}\ n_2
+        }
+    \]
+    \vspace{0.2cm}
+    \[
+        \inference[:=]{
+        \langle E, s \rangle \Downarrow \langle n, s \rangle
+        }{
+        \langle l := E, s \rangle \Downarrow \langle skip, s[l \to (n, +(n_1, s(l)))] \rangle \text{if } l \in s \land \Gamma \vdash n : \text{Numeric} \land n_1 = n - s(l)
+        }
+    \]
+    \vspace{0.2cm}
+    \[
+        \inference[=:]{
+        \langle E, s[l \to (n - n_1, v)] \rangle \Downarrow \langle n, s[l \to (n - n_1, v)] \rangle
+        }{
+        \langle l =: E, s[l \to (n, +(n_1, v)] \rangle \Downarrow \langle skip, s[l \to (n - n_1, v)] \rangle \text{if } l \in s_1 \land \Gamma \vdash n : \text{Numeric}
+        }
+    \]
+    \vspace{0.2cm}
+    \[
+        \inference[if true]{
+        \langle E, s \rangle \Downarrow \langle true, s \rangle \quad \langle C_1, s \rangle \Downarrow \langle skip, s' \rangle
+        }{
+        \langle \text{if } E \text{ then } C_1 \text{ else } c_2, s \rangle \Downarrow \langle skip, s' \rangle \text{if } \Gamma \vdash E : \text{Boolean}
+        }
+    \]
+    \vspace{0.2cm}
+    \[
+        \inference[if false]{
+        \langle E, s \rangle \Downarrow \langle false, s \rangle \quad \langle C_2, s \rangle \Downarrow \langle skip, s' \rangle
+        }{
+        \langle \text{if } E \text{ then } C_1 \text{ else } c_2, s \rangle \Downarrow \langle skip, s' \rangle \text{if } \Gamma \vdash E : \text{Boolean}
+        }
+    \]
+    \vspace{0.2cm}
+    \[
+        \inference[while true]{
+        \langle E, s \rangle \Downarrow \langle true, s \rangle \quad \langle C, s \rangle \Downarrow \langle skip, s' \rangle \quad \langle \text{while } E \text{ do } C, s' \rangle \Downarrow \langle skip, s'' \rangle
+        }{
+        \langle \text{while } E \text{ do } C, s \rangle \Downarrow \langle skip, s'' \rangle \text{if } \Gamma \vdash E : \text{Boolean}
+        }
+    \]
+    \vspace{0.2cm}
+    \[
+        \inference[while false]{
+        \langle E, s \rangle \Downarrow \langle false, s \rangle
+        }{
+        \langle \text{while } E \text{ do } C, s \rangle \Downarrow \langle skip, s \rangle \text{if } \Gamma \vdash E : \text{Boolean}
+        }
+    \]
+    \caption{Axioms and semantic rules defining \rimp's evaluation}
+    \label{fig:semantic-system}
+\end{figure}
+
+From the semantic system presented in figure \ref{fig:semantic-system}, we can see the enforcing of our type rules within the construction of expressions, ensuring that the program will be free of runtime errors.
+
 
 \section{Semantic Transformations for Reversibility}
-What is it?
-Why is it like this?
-How it differs from others?
-How it achieves the requirements?
+
+To ensure the reversibility of \rimplang, we must apply the following semantic transformations: if remapping, and while counters\footnote{This follows closely the definitions provided by \rimplang, however, is included here for reader's convenience, and clarity.}.
+
+\subsection{If Remapping}
+
+if remapping must ensure that any variables used within the condition of an if statement are not modified within the body.
+
+For example, if we had the following program
+
+\begin{figure}[ht]
+    \centering
+    \begin{lstlisting}[label={lst:ifexample}, basicstyle=\small]
+int x := 4;
+if x < 5 do {
+    x := x + 1;
+} else {
+    x := x - 1;
+};
+    \end{lstlisting}
+    \caption{Example of an if statement which needs to be transformed}
+    \label{fig:ifexample}
+\end{figure}
+
+from this, we observe that when executing the program, whichever branch is taken results in the value of \lstinline{X} changing, however, this transformation will also need to apply if only one branch modifies the variable.
+
+We will define a function \lstinline{modifies} which will check if a \rimplang program modifies a given variable, and a function \lstinline{get_variables} which will return all variables contained within a \rimplang program.
+We can then check if an if statement needs to be remapped through the following.
+
+\begin{figure}[ht]
+    \centering
+    \begin{lstlisting}[label={lst:ifcheckpseudo}, basicstyle=\small]
+define check_if_statement(statement) {
+    if statement is if_statement {
+        let variables = get_variables statement.condition
+
+        for variable in variables {
+            if (modifies statement.if_block variable) {
+                return true
+            } else if (modifies statement.else_block variable) {
+                return true
+            }
+        }
+    }
+
+    return false
+}
+    \end{lstlisting}
+    \caption{Pseudocode to check if an if statement needs to be remapped}
+    \label{fig:ifcheckpseudo}
+\end{figure}
+
+If this is true on a given statement, we must then perform a remapping to the if statement. To do this, we must exchange the variables in the condition with new variables which remain unchanged. This swap preserves the semantics, but also allows us to ensure the correct branch of the if statement is taken when reversing the program.
+Using the example from \ref{fig:ifexample} we will obtain the following.
+
+\begin{figure}[hbt!]
+    \centering
+    \begin{lstlisting}[label={lst:ifexamplemodified}, basicstyle=\small]
+int x := 4;
+int reserved_x := x;
+if reserved_x < 5 do {
+    x := x + 1;
+} else {
+    x := x - 1;
+};
+    \end{lstlisting}
+    \caption{Transformation result of \ref{fig:ifexample}}
+    \label{fig:ifexamplemodified}
+\end{figure}
+
+\subsection{While Counters}
+
+While transformations ensure a counter is associated with each while loop. With each while loop in \rimplang, we associate an index $i$ with it. This index is unique to this while loop, and can simply be the number of while loops preceding it. With this, we can then insert two commands, the first command must come before the while statement, and initialise a counter to $0$. This counter must also be associated with the same index as the while loop we are currently transforming. We then add in increment statement to the end of the body of the while loop, incrementing its associated counter variable.
+
+For example, we may have the following program.
+
+\begin{figure}[hbt!]
+    \centering
+    \begin{lstlisting}[label={lst:whileloop}, basicstyle=\small]
+int x := 4;
+while x > 0 do {
+    x := x - 1;
+}
+    \end{lstlisting}
+    \caption{Example of a while loop which needs to be transformed}
+    \label{fig:whileloop}
+\end{figure}
+
+Through the while counter transformation, we will obtain the following modified program.
+
+\begin{figure}[hbt!]
+    \centering
+    \begin{lstlisting}[label={lst:whileloopmodified}, basicstyle=\small]
+int x := 4;
+int counter_0 = 0;
+while x > 0 do {
+    x := x - 1;
+    counter_0 := counter_0 + 1;
+}
+    \end{lstlisting}
+    \caption{Transformation result of \ref{fig:whileloop}}
+    \label{fig:whileloopmodified}
+\end{figure}
+
+We will then find that by the end of the execution of this program, the value at \lstinline{counter_0} will be $4$, as expected from $x$.
 
 \section{Reverse Function}
-What is it?
-Why is it like this?
-How it differs from others?
-How it achieves the requirements?
+
+What is the theory used?
+How does it differ from RIMPs paper?
+What motivates that?
+What were some of the compromises with it?
 
 \section{Abstract Machine}
-What is it?
-Why is it like this?
-How it differs from others?
-How it achieves the requirements?
+
+What is the theory used?
+How does it differ from RIMPs paper?
+What motivates that?
+What were some of the compromises with it?
