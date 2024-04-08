@@ -1,4 +1,4 @@
-use super::super::lexer::Tokeniser;
+use super::super::lexer::lexer::Tokeniser;
 use super::super::parser::parser::parse;
 use super::super::post_parse::inverter::invert;
 use super::super::AST::{

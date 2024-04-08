@@ -8,3 +8,6 @@ members = [
     "regex",
     "utilities",
 ]
+
+[profile.release]
+opt-level = 3

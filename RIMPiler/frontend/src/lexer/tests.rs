@@ -1,4 +1,4 @@
-use super::Tokeniser;
+use super::lexer::Tokeniser;
 use super::super::lexer::tokens::{Bracket, Keyword, Operator, RIMPToken};
 
 use utilities::debug::{Location, Meta};

@@ -4,8 +4,7 @@ A compiler for the rimp programming language.
 
 ## Documents
 
-- [BSPR](./Documentation/BSPR/BSPR.pdf)
-- [Report](./Documentation/Report/Report.pdf)
+[Report](./Documentation/Report/Report.pdf)
 
 ## Building
 
