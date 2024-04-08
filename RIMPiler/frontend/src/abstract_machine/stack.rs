@@ -777,10 +777,11 @@ impl Builder {
                       Box::new(self.from_block(*else_block)))
             },
             Statement::While(condition, block) => {
+                let index = self.loop_count;
                 self.loop_count += 1;
                 P::While(Box::new(self.from_expression(*condition)),
                          Box::new(self.from_block(*block)),
-                            self.loop_count - 1)
+                         index)
             },
             Statement::Assignment(variable, expression) => {
                 P::Asgn(Var::from_variable(variable), Box::new(self.from_arithmetic_expression(expression)))
@@ -949,5 +950,3 @@ impl Display for R {
 }
 
 pub type ResultStack = Stack<R>;
-
-// TODO: actually count whiles

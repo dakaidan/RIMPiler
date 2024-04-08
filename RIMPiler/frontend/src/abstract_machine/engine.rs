@@ -155,7 +155,6 @@ impl Rules {
 
 impl Display for Rules {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        // TODO: Potentially provide transition rules here too
         match self {
             Rules::Num => write!(f, "Num"),
             Rules::Mun => write!(f, "Mun"),
@@ -1022,9 +1021,7 @@ impl Engine {
                 // (loopi · c, n · C1 · E · C · r, m, endwi' · rev(C) · true · whilei' · loopi' · b) −→
                 // (loopi · c, n + 1 · C1 · E · C · r, m, endwi' · b)
                 let n = self.result_stack.pop().unwrap();
-
-                // TODO: If this cant be done, clear the junk from te result stack
-
+                
                 let top = self.back_stack.peek_n(5);
 
                 let endwi = self.back_stack.pop().unwrap();
@@ -1311,9 +1308,42 @@ impl Engine {
         let mut stack = stack.clone();
         while !stack.is_empty() {
             let top = stack.pop().unwrap();
-            if let C::P(P::While(E, _, i)) = top {
-                let inner_E = E.as_ref();
-                map.insert(i, inner_E.clone());
+            match top {
+                C::P(p) => match p {
+                    P::While(E, C, i) => {
+                        let inner_E = E.as_ref();
+                        map.insert(i, inner_E.clone());
+
+                        let mut s = ControlStack::new();
+                        s.push(C::P(*C));
+                        let inner_map = Self::while_map(s);
+                        map.extend(inner_map);
+                    },
+                    P::If(_, C1, C2) => {
+                        let mut s = ControlStack::new();
+                        s.push(C::P(*C1));
+                        let inner_map = Self::while_map(s);
+                        map.extend(inner_map);
+
+                        let mut s = ControlStack::new();
+                        s.push(C::P(*C2));
+                        let inner_map = Self::while_map(s);
+                        map.extend(inner_map);
+                    },
+                    P::Seq(C1, C2) => {
+                        let mut s = ControlStack::new();
+                        s.push(C::P(*C1));
+                        let inner_map = Self::while_map(s);
+                        map.extend(inner_map);
+
+                        let mut s = ControlStack::new();
+                        s.push(C::P(*C2));
+                        let inner_map = Self::while_map(s);
+                        map.extend(inner_map);
+                    },
+                    _ => {}
+                }
+                _ => {}
             }
         }
         map
@@ -1347,9 +1377,9 @@ impl Engine {
         let name = format!("while_counter_{}", i);
         let current = self.store.get(&name);
         if let Some(MemoryStoreElement::Integer(n)) = current {
-            self.store.assign(&name, Value::Integer(n.get() - 1));
+            self.store.un_assign(&name, Value::Integer(n.get() - 1));
         } else {
-            self.store.assign(&name, Value::Integer(0));
+            self.store.un_assign(&name, Value::Integer(0));
         }
     }
 }

@@ -13,26 +13,36 @@ pub fn transform(program: &Program) -> Program {
 fn transform_program(program: &Program, name_generator: &mut NameGenerator) -> Program {
     match program {
         Program::Statements(statements) => {
-            let mut new_statements = Vec::new();
-            for statement in statements {
-                if let Some(statements) = transform_statement(statement, name_generator) {
-                    new_statements.extend(statements);
-                } else {
-                    new_statements.push(statement.clone());
-                }
-            }
-            Program::Statements(new_statements)
+            Program::Statements(transform_block(statements, name_generator))
         }
     }
+}
+
+fn transform_block(block: &Block, name_generator: &mut NameGenerator) -> Block {
+    let mut new_block = Vec::new();
+    for statement in block {
+        if let Some(new_statement) = transform_statement(statement, name_generator) {
+            new_block.extend(new_statement);
+        } else {
+            new_block.push(statement.clone());
+
+        }
+    }
+    new_block
 }
 
 fn transform_statement(statement: &Statement, name_generator: &mut NameGenerator) -> Option<Block> {
     match statement {
         Statement::If(boolean_expression, if_block, else_block) => {
-            transform_if_statement(boolean_expression, if_block, else_block, name_generator)
+            transform_if_statement(boolean_expression,
+                                   &transform_block(if_block, name_generator),
+                                   &transform_block(else_block, name_generator),
+                                   name_generator)
         }
         Statement::While(boolean_expression, block) => {
-            transform_while_statement(boolean_expression, block, name_generator)
+            transform_while_statement(boolean_expression,
+                                      &transform_block(block, name_generator),
+                                      name_generator)
         }
         _ => None,
     }
