@@ -331,7 +331,7 @@ if reserved_x < 5 do {
 
 \subsection{While Counters}
 
-While transformations ensure a counter is associated with each while loop. With each while loop in \rimplang, we associate an index $i$ with it, allowing us to identify other structures associated with it. This index is unique to this while loop, and can simply be the number of while loops preceding it. With this, we can then insert two commands, the first command must come before the while statement, and initialise a counter to $0$. This counter must also be associated with the same index as the while loop we are currently transforming. We then add in increment statement to the end of the body of the while loop, incrementing its associated counter variable.
+While transformations ensure a counter is associated with each while loop. With each while loop in \rimplang, we associate an index $i$ with it, allowing us to identify other structures associated with it. This index is unique to this while loop, and can simply be the number of while loops preceding it. With this, we can then insert two commands, the first command must come before the while statement, and initialise a counter to $0$. This counter must also be associated with the same index as the while loop we are currently transforming. We then add in an increment statement to the end of the body of the while loop, incrementing its associated counter variable.
 
 For example, we may have the following program.
 
