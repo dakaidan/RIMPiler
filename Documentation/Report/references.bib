@@ -37,14 +37,12 @@
 
 @article{Landauer,
  ISSN = {00368733, 19467087},
- URL = {http://www.jstor.org/stable/24967723},
  author = {Charles H. Bennett and Rolf Landauer},
  journal = {Scientific American},
  number = {1},
  pages = {48--57},
  publisher = {Scientific American, a division of Nature America, Inc.},
  title = {The Fundamental Physical Limits of Computation},
- urldate = {2024-03-16},
  volume = {253},
  year = {1985}
 }
@@ -252,9 +250,160 @@
   organization={Springer}
 }
 
+@article{LinearTimeJanusInterpreter,
+  title={A linear-time self-interpreter of a reversible imperative language},
+  author={Gl{\"u}ck, Robert and Yokoyama, Tetsuo},
+  journal={Information and Media Technologies},
+  volume={11},
+  pages={160--180},
+  year={2016},
+  publisher={Information and Media Technologies Editorial Board}
+}
+
+@misc{JanusPlayground,
+  author = {diku},
+  title = {Janus Playground},
+  howpublished = {\url{http://topps.diku.dk/pirc/janus-playground/}},
+  note = {Accessed on 2024-04-05}
+}
+
+@inproceedings{JanusToRSSA,
+  title={Compiling Janus to RSSA},
+  author={Kutrib, Martin and Meyer, Uwe and Deworetzki, Niklas and Schuster, Marc},
+  booktitle={International Conference on Reversible Computation},
+  pages={64--78},
+  year={2021},
+  organization={Springer}
+}
+
+@inproceedings{RSSA,
+  title={RSSA: a reversible SSA form},
+  author={Mogensen, Torben {\AE}gidius},
+  booktitle={International Andrei Ershov Memorial Conference on Perspectives of System Informatics},
+  pages={203--217},
+  year={2015},
+  organization={Springer}
+}
+
+@article{Hermes,
+  title={Hermes: a reversible language for lightweight encryption},
+  author={Mogensen, Torben {\AE}gidius},
+  journal={Science of Computer Programming},
+  volume={215},
+  pages={102746},
+  year={2022},
+  publisher={Elsevier}
+}
+
+@inproceedings{HermesExtension,
+  title={Hermes: a language for light-weight encryption},
+  author={Mogensen, Torben {\AE}gidius},
+  booktitle={Reversible Computation: 12th International Conference, RC 2020, Oslo, Norway, July 9-10, 2020, Proceedings 12},
+  pages={93--110},
+  year={2020},
+  organization={Springer}
+}
+
+@inproceedings{Regions,
+  title={Region-based memory management in Cyclone},
+  author={Grossman, Dan and Morrisett, Greg and Jim, Trevor and Hicks, Michael and Wang, Yanling and Cheney, James},
+  booktitle={Proceedings of the ACM SIGPLAN 2002 Conference on Programming language design and implementation},
+  pages={282--293},
+  year={2002}
+}
+
+@article{Posix, 
+author={IEEE}, 
+journal={IEEE Std. 1516-2000}, 
+title={{IEEE Standard for Information Technology--Portable Operating System Interface (POSIX(TM)) Base Specifications}}, 
+year={2017}, 
+volume={}, 
+doi={10.1109/IEEESTD.2016.7582338}, 
+}
+
+@article{UrbanposixDerivatives,
+  title={POSIX Lexing with Derivatives of Regular Expressions},
+  author={Urban, Christian},
+  journal={Journal of Automated Reasoning},
+  volume={67},
+  number={3},
+  pages={24},
+  year={2023},
+  publisher={Springer}
+}
+
+@inproceedings{UrbanTan,
+  title={POSIX Lexing with Bitcoded Derivatives},
+  author={Tan, Chengsong and Urban, Christian},
+  booktitle={14th International Conference on Interactive Theorem Proving (ITP 2023)},
+  year={2023},
+  organization={Schloss Dagstuhl-Leibniz-Zentrum f{\"u}r Informatik}
+}
 
 
-///////////////////////////////
+@inproceedings{SulzmanPosix,
+  title={POSIX regular expression parsing with derivatives},
+  author={Sulzmann, Martin and Lu, Kenny Zhuo Ming},
+  booktitle={International Symposium on Functional and Logic Programming},
+  pages={203--220},
+  year={2014},
+  organization={Springer}
+}
+
+@book{LexGenerator,
+  title={Lex: A lexical analyzer generator},
+  author={Lesk, Michael E and Schmidt, Eric},
+  volume={39},
+  year={1975},
+  publisher={Bell Laboratories Murray Hill, NJ}
+}
+
+@article{RegularExpressionsToFA,
+  title={Regular expressions into finite automata},
+  author={Br{\"u}ggemann-Klein, Anne},
+  journal={Theoretical Computer Science},
+  volume={120},
+  number={2},
+  pages={197--213},
+  year={1993},
+  publisher={Elsevier}
+}
+
+@article{RegularExpressionsToDFA,
+  title={From regular expressions to deterministic automata},
+  author={Berry, Gerard and Sethi, Ravi},
+  journal={Theoretical computer science},
+  volume={48},
+  pages={117--126},
+  year={1986},
+  publisher={Elsevier}
+}
+
+@misc{PythonRe,
+  author = {Python},
+  title = {Python re Module},
+  howpublished = {\url{https://github.com/python/cpython/blob/3.12/Lib/re/_compiler.py}},
+  note = {Accessed on 2024-04-08}
+}
+
+@misc{V8Re,
+  author = {Google},
+  title = {Google's V8 engine regex Module},
+  howpublished = {\url{https://github.com/v8/v8/tree/main/src/regexp}},
+  note = {Accessed on 2024-04-08}
+}
+
+@article{BrzozowskiDerivatives,
+  title={Derivatives of regular expressions},
+  author={Brzozowski, Janusz A},
+  journal={Journal of the ACM (JACM)},
+  volume={11},
+  number={4},
+  pages={481--494},
+  year={1964},
+  publisher={ACM New York, NY, USA}
+}
+
 @article{LRParsing,
   title={On the translation of languages from left to right},
   author={Knuth, Donald E},
@@ -264,4 +413,173 @@
   pages={607--639},
   year={1965},
   publisher={Elsevier}
+}
+
+@inproceedings{PrattTDOP,
+  title={Top down operator precedence},
+  author={Pratt, Vaughan R},
+  booktitle={Proceedings of the 1st annual ACM SIGACT-SIGPLAN symposium on Principles of programming languages},
+  pages={41--51},
+  year={1973}
+}
+
+@inproceedings{TotalCombinators,
+  title={Total parser combinators},
+  author={Danielsson, Nils Anders},
+  booktitle={Proceedings of the 15th ACM SIGPLAN international conference on Functional programming},
+  pages={285--296},
+  year={2010}
+}
+
+@article{AmbiguousCombinators,
+  title={A new top-down parsing algorithm to accommodate ambiguity and left recursion in polynomial time},
+  author={Frost, Richard A and Hafiz, Rahmatullah},
+  journal={ACM SIGPLAN Notices},
+  volume={41},
+  number={5},
+  pages={46--54},
+  year={2006},
+  publisher={ACM New York, NY, USA}
+}
+
+@article{ComputingSSA,
+  title={Algorithms for computing the static single assignment form},
+  author={Bilardi, Gianfranco and Pingali, Keshav},
+  journal={Journal of the ACM (JACM)},
+  volume={50},
+  number={3},
+  pages={375--425},
+  year={2003},
+  publisher={ACM New York, NY, USA}
+}
+
+@misc{Krakatau,
+  author = {Storyyeller},
+  title = {Krakatau},
+  howpublished = {\url{https://github.com/Storyyeller/Krakatau}},
+  note = {Accessed on 2024-04-10}
+}
+
+@misc{Jasmin,
+  author = {Storyyeller},
+  title = {Jonathan Meyer, Daniel Reynaud},
+  howpublished = {\url{https://jasmin.sourceforge.net/}},
+  note = {Accessed on 2024-04-10}
+}
+
+@article{LiterateProgramming,
+  title={Literate programming},
+  author={Knuth, Donald Ervin},
+  journal={The computer journal},
+  volume={27},
+  number={2},
+  pages={97--111},
+  year={1984},
+  publisher={Oxford University Press}
+}
+
+@inproceedings{EnvironmentalComputing,
+  title={Chasing carbon: The elusive environmental footprint of computing},
+  author={Gupta, Udit and Kim, Young Geun and Lee, Sylvia and Tse, Jordan and Lee, Hsien-Hsin S and Wei, Gu-Yeon and Brooks, David and Wu, Carole-Jean},
+  booktitle={2021 IEEE International Symposium on High-Performance Computer Architecture (HPCA)},
+  pages={854--867},
+  year={2021},
+  organization={IEEE}
+}
+
+@article{USDigitalInequality,
+  title={Internet and Web use in the US},
+  author={Hoffman, Donna L and Kalsbeek, William D and Novak, Thomas P},
+  journal={Communications of the ACM},
+  volume={39},
+  number={12},
+  pages={36--46},
+  year={1996},
+  publisher={ACM New York, NY, USA}
+}
+
+@misc{USRacialDigitalInequality,
+  title={Bridging the racial divide on the Internet},
+  author={Hoffman, Donna L and Novak, Thomas P},
+  journal={Science},
+  volume={280},
+  number={5362},
+  pages={390--391},
+  year={1998},
+  publisher={American Association for the Advancement of Science}
+}
+
+@book{DigitalInequalitySouth,
+  title={Digital inequalities in the Global South},
+  author={Ragnedda, Massimo and Gladkova, Anna},
+  year={2020},
+  publisher={Springer}
+}
+
+@inproceedings{GreenFuzzer,
+  title={Green Fuzzer Benchmarking},
+  author={Ounjai, Jiradet and W{\"u}stholz, Valentin and Christakis, Maria},
+  booktitle={Proceedings of the 32nd ACM SIGSOFT International Symposium on Software Testing and Analysis},
+  pages={1396--1406},
+  year={2023}
+}
+
+@article{sustainableAI,
+  title={Sustainable AI: AI for sustainability and the sustainability of AI},
+  author={Van Wynsberghe, Aimee},
+  journal={AI and Ethics},
+  volume={1},
+  number={3},
+  pages={213--218},
+  year={2021},
+  publisher={Springer}
+}
+
+@inproceedings{TestOracles,
+  title={Inferring automatic test oracles},
+  author={Langdon, William B and Yoo, Shin and Harman, Mark},
+  booktitle={2017 IEEE/ACM 10th International Workshop on Search-Based Software Testing (SBST)},
+  pages={5--6},
+  year={2017},
+  organization={IEEE}
+}
+
+@inproceedings{SearchGem5,
+  title={SearchGEM5: Towards Reliable gem5 with Search Based Software Testing and Large Language Models},
+  author={Dakhama, Aidan and Even-Mendoza, Karine and Langdon, William B and Menendez, Hector and Petke, Justyna},
+  booktitle={International Symposium on Search Based Software Engineering},
+  pages={160--166},
+  year={2023},
+  organization={Springer}
+}
+
+@inproceedings{GrammarFuzz,
+  title={Grammar-based whitebox fuzzing},
+  author={Godefroid, Patrice and Kiezun, Adam and Levin, Michael Y},
+  booktitle={Proceedings of the 29th ACM SIGPLAN conference on programming language design and implementation},
+  pages={206--215},
+  year={2008}
+}
+
+@phdthesis{PISA,
+  title={Pendulum--a reversible computer architecture},
+  author={Vieri, Carlin James},
+  year={1995},
+  school={Massachusetts Institute of Technology}
+}
+
+@misc{time,
+  author = {Linux},
+  title = {time utility man page},
+  howpublished = {\url{https://man7.org/linux/man-pages/man1/time.1.html}},
+  note = {Accessed on 2024-04-10}
+}
+
+@inproceedings{Optimisation,
+  title={Optimizing reversible programs},
+  author={Deworetzki, Niklas and Kutrib, Martin and Meyer, Uwe and Ritzke, Pia-Doreen},
+  booktitle={International Conference on Reversible Computation},
+  pages={224--238},
+  year={2022},
+  organization={Springer}
 }

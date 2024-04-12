@@ -5,13 +5,14 @@
 \documentclass[11pt]{informatics-report}
 \usepackage{color}
 \usepackage[square,sort,comma,numbers]{natbib} %References
+\usepackage{url}
 
 \usepackage{amsmath}
+\usepackage{mathtools}
 \usepackage[
 color=red,
-% disable
+disable
 ]{todonotes}
-\PackageError{RIMP}{Remove todos}{Uncomment disable}
 
 \usepackage{wrapfig}
 \usepackage{listings, listings-rust}
@@ -20,6 +21,7 @@ color=red,
 \usepackage{xspace}
 \usepackage{floatflt,amsmath,amssymb}
 \usepackage[ligature, inference]{semantic}
+\usepackage{footmisc}
 
 \def\rimp{RIMPiler\xspace}
 \def\rimplang{RIMP\xspace}
@@ -70,7 +72,6 @@ color=red,
 % Appendices
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \appendix
-%\include{Appendices/appendix}
-%\include{Appendices/UserGuide}
-%\include{Appendices/SourceCode}
+\include{Appendices/appendix}
+\include{Appendices/UserGuide}
 \end{document}

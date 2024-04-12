@@ -2,3 +2,403 @@
 % \section{Tables, proofs, graphs, test cases, ...}
 % The appendices contain information that is peripheral to the main body of the report. Information typically included in the Appendix are things like tables, proofs, graphs, test cases or any other material that would break up the theme of the text if it appeared in the body of the report. It is necessary to include your source code listings in an appendix that is separate from the body of your written report (see the information on Program Listings below).
 
+\section{Abstract Machine}
+
+\subsection{Details of Definition}\label{appendix:amdetails}
+
+Here we provide the definition of $lab$ and $program$.
+
+\begin{figure}[hbt!]
+    \centering
+    \begin{align*}
+        lab ::=&\quad exp \\
+        |&\quad unexp \\
+        |&\quad op \\
+        |&\quad \underline{op} \\
+        |&\quad asgn \\
+        |&\quad := \\
+        |&\quad asgn^r \\
+        |&\quad =: \\
+        |&\quad seq \\
+        |&\quad ; \\
+        |&\quad cond \\
+        |&\quad if \\
+        |&\quad \underline{cond} \\
+        |&\quad \underline{if} \\
+        |&\quad loop_i \\
+        |&\quad \underline{loop_i} \\
+        |&\quad while_i \\
+        |&\quad \underline{while_i} \\
+        |&\quad \underline{endw_i} \\
+        \end{align*}
+    \caption{Definition of the labels within the abstract machine}
+    \label{fig:lab}
+\end{figure}
+
+\begin{figure}[hbt!]
+    \centering
+    \begin{align*}
+        program ::=&\quad n \\
+        |&\quad \underline{n} \\
+        |&\quad !l \\
+        |&\quad \underline{!l} \\
+        |&\quad (E_1\ oper\ E_2) \\
+        |&\quad (oper\ E) \\
+        |&\quad \underline{E} \\
+        |&\quad skip \\
+        |&\quad (l\ :=\ E) \\
+        |&\quad (l\ =:\ E) \\
+        |&\quad (C_1;C_2) \\
+        |&\quad (if\ E\ then\ C_1\ else\ C_2) \\
+        |&\quad (while_i\ E\ do\ C)
+    \end{align*}
+    \caption{Definition of the programs in the abstract machine}
+    \label{fig:prog}
+\end{figure}
+
+\subsection{Issue With Existing System}\label{appendix:amissue}
+
+An issue was encountered upon implementing the abstract machine as provided. An example of this issue is seen below:
+
+\begin{lstlisting}[label={lst:whileloopproblem}]
+n := 0;
+
+while n > 0 do {
+    n := !n - 1;
+};
+\end{lstlisting}
+
+Here we have an example of a \rimp program with a loop which we expect to never iterate. The expected behaviour of this would then to conclude with $n \mapsto 0$, and to reverse back to this state.
+
+Below we have the forward execution as described by the original abstract machine.
+\footnotesize
+\begin{flalign*}
+\langle while_0 \ !n\ >\ 0 \ do \ \ {n \ := \ !n - 1} \cdot nil, nil,m\{n \mapsto 0\}, nil \rangle & \overset{loop}{\to} \\
+\langle !n > 0 \cdot while_0 \cdot loop_0 \cdot nil, !n > 0 \cdot n :=\ !n - 1 \cdot nil, m\{n \mapsto 0\}, \underline{loop_0} \cdot nil\rangle & \overset{exp}{\to} \\
+\langle !n \cdot 0 \cdot > \cdot while_0 \cdot loop_0 \cdot nil, !n > 0 \cdot n :=\ !n - 1 \cdot nil, m\{n \mapsto 0\}, exp \cdot \underline{!n} \cdot \underline{0} \cdot \underline{loop_0} \cdot nil\rangle & \overset{var}{\to} \\
+\langle 0 \cdot > \cdot while_0 \cdot loop_0 \cdot nil, 0 \cdot !n > 0 \cdot n :=\ !n - 1 \cdot nil, m\{n \mapsto 0\}, \underline{!n} \cdot exp \cdot \underline{!n} \cdot \underline{0} \cdot \underline{loop_0} \cdot nil\rangle & \overset{num}{\to} \\
+\langle > \cdot while_0 \cdot loop_0 \cdot nil, 0 \cdot 0 \cdot !n > 0 \cdot n :=\ !n - 1 \cdot nil, m\{n \mapsto 0\}, \underline{0} \cdot \underline{!n} \cdot exp \cdot \underline{!n} \cdot \underline{0} \cdot \underline{loop_0} \cdot nil\rangle & \overset{op}{\to} \\
+\langle while_0 \cdot loop_0 \cdot nil, False \ \cdot !n > 0 \cdot n :=\ !n - 1 \cdot nil, m\{n \mapsto 0\}, (!n \underline{>} 0) \cdot \underline{loop_0} \cdot nil\rangle & \overset{loop_F}{\to} \\
+\langle loop_0 \cdot nil, !n > 0 \cdot n :=\ !n - 1 \cdot nil, m\{n \mapsto 0\}, False \cdot \underline{while_0} \cdot \underline{loop_0} \cdot nil\rangle & \overset{endw_F}{\to} \\
+\langle loop_0 \cdot nil, 0 \cdot C \cdot !n > 0 \cdot n :=\ !n - 1 \cdot nil, m\{n \mapsto 0\}, \underline{endw_0} \cdot nil\rangle & \overset{endw}{\to} \\
+\text{where } C = while_0 \ !counter_0 \ > \ 0 \ do \{n =: \ !n - 1\} \\
+\langle nil, nil, m\{n \mapsto 0\}, (while_0 \ !counter_0 \ > \ 0 \ do \{n =: \ !n - 1\}) \cdot \underline{endw_0} \cdot nil\rangle
+\end{flalign*}
+\normalsize
+At this point we finished forward computation, and the reverse is\footnote{$counter_0$ will be initialised to 0 in memory but is left from m for brevity}.
+\footnotesize
+\begin{flalign*}
+\langle (while_0 \ !counter_0 \ > \ 0 \ do \{n =: \ !n - 1\}) \cdot \underline{endw_0} \cdot nil, nil, m\{n \mapsto 0\}, nil\rangle \overset{loop}{\to} \\
+\langle !counter_0 > 0 \cdot while_0 \cdot loop_0 \cdot \underline{endw_0} \cdot nil, !counter_0 > 0 \cdot n =: !n - 1 \cdot nil, m\{n \mapsto 0\}, \underline{loop_0} \cdot nil\rangle \overset{expr}{\to} \\
+\langle !counter_0 \cdot 0 \cdot > \cdot while_0 \cdot loop_0 \cdot \underline{endw_0} \cdot nil, !counter_0 > 0 \cdot n =: !n - 1 \cdot nil, m\{n \mapsto 0\},&\\ exp \cdot \underline{!counter_0} \cdot \underline{0} \cdot  \underline{loop_0} \cdot nil\rangle \overset{var}{\to} \\
+\langle 0 \cdot > \cdot while_0 \cdot loop_0 \cdot \underline{endw_0} \cdot nil, 0 \cdot !counter_0 > 0 \cdot n =: !n - 1 \cdot nil, m\{n \mapsto 0\},&\\
+\underline{!counter_0} \cdot exp \cdot \underline{!counter_0} \cdot \underline{0} \cdot  \underline{loop_0} \cdot nil\rangle \overset{num}{\to} \\
+\langle  > \cdot while_0 \cdot loop_0 \cdot \underline{endw_0} \cdot nil, 0 \cdot 0 \cdot !counter_0 > 0 \cdot n =: !n - 1 \cdot nil,&\\
+m\{n \mapsto 0\},\underline{0} \cdot\underline{!counter_0} \cdot exp \cdot \underline{!counter_0} \cdot \underline{0} \cdot \underline{loop_0} \cdot nil\rangle \overset{op}{\to} \\
+\langle while_0 \cdot loop_0 \cdot \underline{endw_0} \cdot nil, False \cdot !counter_0 > 0 \cdot n =: !n - 1 \cdot nil, m\{n \mapsto 0\}, &\\
+(!counter_0 \underline{>} 0) \cdot \underline{loop_0} \cdot nil\rangle \overset{loop_F}{\to} \\
+\langle loop_0 \cdot \underline{endw_0} \cdot nil, !counter_0 > 0 \cdot n =: !n - 1 \cdot nil, m\{n \mapsto 0\}, &\\
+False \cdot \underline{while_0} \cdot \underline{loop_0} \cdot nil\rangle \overset{endw_F}{\to} \\
+\langle loop_0 \cdot \underline{endw_0} \cdot nil, 0 \cdot C \cdot !counter_0 > 0 \cdot n =: !n - 1 \cdot nil, m\{n \mapsto 0\}, \underline{endw_0} \cdot nil\rangle \overset{endw}{\to} \\
+\text{where } C = while_0 \ !n \ > \ 0 \ do \{n := \ !n - 1\} \\
+\langle \underline{endw_0} \cdot nil, nil, m\{n \mapsto 0\}, (C = while_0 \ !n \ > \ 0 \ do \{n := \ !n - 1\}) \cdot\underline{endw_0} \cdot nil\rangle \\
+\end{flalign*}
+\normalsize
+
+At this point we can only apply either $wend_F$ or $wend_T$ as we have an $endw_0$ at the head of the control stack, but neither can be applied, as both require contents in the result stack, while we have $nil$, showing the definition provided cannot work in this case.
+
+\subsection{Proof of Correctness}\label{appendix:amproof}
+
+In order to prove the correctness of our implementation of the abstract machine, we must show it follows the results produced by the big-step semantics. To do this there are some important things to note, the big-step semantics to not distinguish between the next operation to produce and the result of an operation, while the abstract machine places results on the result stack, and the next operation on the control stack, so when showing correspondence we must keep this in mind. Additionally, there are many more states possible in the abstract machine, however, only a subset of them are reachable from valid \rimplang programs. So to show correspondence, we will show that for all valid starting configurations of the abstract machine, (including those for expressions) we reach the same results expected by the big-step semantics.
+
+\renewcommand{\astate}[4]{%
+    \langle%
+    \if\relax\detokenize{#1}\relax c\else #1 \cdot c\fi, %
+    \if\relax\detokenize{#2}\relax r\else #2 \cdot r\fi, %
+    \if\relax\detokenize{#3}\relax m\else m[#3]\fi, %
+    \if\relax\detokenize{#4}\relax b\else #4 \cdot b\fi %
+    \rangle% 
+}
+
+\renewcommand{\bstate}[4]{%
+    \langle%
+    \if\relax\detokenize{#1}\relax c\else #1 \cdot c\fi, %
+    \if\relax\detokenize{#2}\relax r\else #2 \cdot r\fi, %
+    \if\relax\detokenize{#3}\relax m\else m[#3]\fi, %
+    \if\relax\detokenize{#4}\relax b\else #4 \cdot b\fi %
+    \rangle% 
+}
+
+\renewcommand{\arule}[1]{\overset{#1}{\to}}
+
+\begin{figure}[hbt!]
+    \centering
+    \footnotesize
+    {
+        \[
+            \inference[const]{
+            {}
+            }{
+            \langle c, s \rangle \Downarrow \langle c, s \rangle\ \text{if } \Gamma \vdash c : \text{Numeric}
+            }
+        \]
+        \begin{align*}
+            \astate{c}{}{}{} \arule{num} \astate{}{c}{}{\underline{c}}
+        \end{align*}
+    }
+    {
+        \[
+            \inference[var]{
+            {}
+            }{
+            \langle !l, s \rangle \Downarrow \langle n, s \rangle\ \text{if } l \in s \land s(l) = n
+            }
+        \]
+        \begin{align*}
+            \astate{!l}{}{}{} \arule{var} \astate{}{m(l)}{}{\underline{!l}}
+        \end{align*}
+    }
+    {
+        \[
+            \inference[numeric]{
+            \langle E_1, s \rangle \Downarrow \langle n_1, s \rangle \quad \langle E_2, s \rangle \Downarrow \langle n_2, s \rangle
+            }{
+            \langle E_1\ op\ E_2, s \rangle \Downarrow \langle n, s \rangle\ \text{if } op \in \{+, -, /, *, {}^\land \} \land \Gamma \vdash n_1, n_2 : \text{Numeric} \land n = n_1 \overline{op}\ n_2
+            }
+        \]
+        \vspace{0.2cm}
+        \[
+            \inference[logical]{
+            \langle E_1, s \rangle \Downarrow \langle b_1, s \rangle \quad \langle E_2, s \rangle \Downarrow \langle b_2, s \rangle
+            }{
+            \langle E_1\ op\ E_2, s \rangle \Downarrow \langle b, s \rangle\ \text{if } op \in \{\&\&, || \} \land \Gamma \vdash n_1, n_2 : \text{Boolean} \land b = b_1 \overline{op}\ b_2
+            }
+        \]
+        \vspace{0.2cm}
+        \[
+            \inference[relation]{
+            \langle E_1, s \rangle \Downarrow \langle n_1, s \rangle \quad \langle E_2, s \rangle \Downarrow \langle n_2, s \rangle
+            }{
+            \langle E_1\ op\ E_2, s \rangle \Downarrow \langle b, s \rangle\ \text{if } op \in \{>, <, ==, != \} \land \Gamma \vdash n_1, n_2 : \text{Numeric} \land b = n_1 \overline{op}\ n_2
+            }
+        \]
+        \begin{align*}
+            \astate{(E_1\ op\ E_2)}{}{}{} \arule{binexp}& \astate{E_1 \cdot E_2 \cdot oper}{}{}{binexp \cdot \underline{E_1} \cdot \underline{E_2}} \\
+            \to^*& \astate{oper}{n_2 \cdot n_1}{}{underline{E_2} \cdot \underline{E_1} \cdot binexp \cdot \underline{E_1} \cdot \underline{E_2}}\\ 
+            \arule{binop}& \astate{}{n}{}{(E_1\ op\ E_2)} \\
+            &\quad\quad \text{Where } n\ =\ n_1\ \overline{op}\ n_2
+        \end{align*}
+    }
+    {
+        \[
+            \inference[unary boolean]{
+            \langle E_1, s \rangle \Downarrow \langle b_1, s \rangle
+            }{
+            \langle op\ E_1, s \rangle \Downarrow \langle b, s \rangle\ \text{if } op \in \{\neg\} \land \Gamma \vdash b_1 :  \text{Boolean} \land b = \overline{op}\ b_1
+            }
+        \]
+        \vspace{0.2cm}
+        \[
+            \inference[unary numeric]{
+            \langle E_1, s \rangle \Downarrow \langle n_1, s \rangle
+            }{
+            \langle op\ E_1, s \rangle \Downarrow \langle n, s \rangle\ \text{if } op \in \{-\} \land \Gamma \vdash n_1 : \text{Numeric} \land n = \overline{op}\ n_1
+            }
+        \]
+        \begin{align*}
+            \astate{(op\ E)}{}{}{} \arule{unexp}& \astate{E \cdot oper}{}{}{unexp \cdot \underline{E}} \\
+            \to^*& \astate{oper}{n_1}{}{underline{E} \cdot unexp \cdot \underline{E}}\\ 
+            \arule{unop}& \astate{}{n}{}{(op\ E)} \\
+            &\quad\quad \text{Where } n\ =\ \overline{op}\ n_1
+        \end{align*}
+    }
+    \caption{Proofs of correspondence between expressions}
+    \label{fig:expression_correspondence}
+\end{figure}
+
+From figure \ref{fig:expression_correspondence} using $const$ and $var$ as base cases, we can show all expressions correspond to big-step semantics of \rimplang. One thing missing here is an explicit proof of the reverse, however, this follows through the application of the as all inverse expressions are just wrapped versions of the original, we can achieve this through one of the unwrapping rules provided with the conditional and loop structures.
+
+\begin{figure}[hbt!]
+    \centering
+    \footnotesize
+    {
+        \[
+            \inference[skip]{
+            {}
+            }{
+            \langle skip, s \rangle \Downarrow \langle skip, s \rangle
+            }
+        \]
+        \begin{align*}
+            \astate{skip}{}{}{} \arule{skip} \astate{}{}{}{skip}
+        \end{align*}
+    }
+    {
+        \[
+            \inference[:=]{
+            \langle E, s \rangle \Downarrow \langle n, s \rangle
+            }{
+            \langle l := E, s \rangle \Downarrow \langle skip, s[l \to (n, +(n_1, s(l)))] \rangle \text{if } l \in s \land \Gamma \vdash n : \text{Numeric} \land n_1 = n - s(l)
+            }
+        \]
+        \begin{align*}
+            \astate{(l\ :=\ E)}{}{}{} \arule{asgn}& \astate{E \cdot !l \cdot :=}{l}{}{asgn \cdot E} \\
+            \to^*& \astate{!l \cdot :=}{n \cdot l}{}{\underline{E} \cdot asgn \cdot E} \\
+            \arule{var}& \astate{:=}{m(l) \cdot n \cdot l}{}{\underline{!l} \cdot \underline{E} \cdot asgn \cdot E} \\
+            \arule{:=}& \astate{}{}{l \mapsto (n, +(n - m(l), m(l)))}{(l =: E)}
+        \end{align*}
+    }
+    {
+        \[
+            \inference[=:]{
+            \langle E, s[l \to (n - n_1, v)] \rangle \Downarrow \langle n, s[l \to (n - n_1, v)] \rangle
+            }{
+            \langle l =: E, s[l \to (n, +(n_1, v)] \rangle \Downarrow \langle skip, s[l \to (n - n_1, v)] \rangle \text{if } l \in s_1 \land \Gamma \vdash n : \text{Numeric}
+            }
+        \]
+        \begin{align*}
+            \astate{(l\ =:\ E)}{}{}{} \arule{asgn^r}& \astate{E \cdot !l \cdot =:}{l}{l \mapsto (n_1 - n, v)}{asgn^r \cdot n \cdot E} \\
+            \to^*& \astate{!l \cdot =:}{n \cdot l}{l \mapsto (n_1 - n, v)}{\underline{E} \cdot asgn^r \cdot n \cdot E} \\
+            \arule{var}& \astate{=:}{m(l) \cdot n \cdot l}{l \mapsto (n_1 - n, v)}{\underline{!l} \cdot \underline{E} \cdot asgn^r \cdot n \cdot E} \\
+            \arule{=:}& \astate{}{}{}{(l := E)}
+        \end{align*}
+    }
+    {
+        \[
+            \inference[seq]{
+            \langle C_1, s \rangle \Downarrow \langle skip, s' \rangle \quad \langle C_2, s' \rangle \Downarrow \langle skip, s'' \rangle
+            }{
+            \langle C_1;C_2, s \rangle \Downarrow \langle skip, s'' \rangle
+            }
+        \]
+        \begin{align*}
+            \astate{(C_1;C_2)}{}{}{} \arule{seq}& \astate{C_1 \cdot C_2 \cdot ;}{}{}{seq} \\
+            \to^*& \astate{;}{}{}{rev(C_2) \cdot rev(C_1) \cdot seq} \\
+            \arule{;}& \astate{}{}{}{(rev(C_2);rev(C_1))}
+        \end{align*}
+    }
+    \caption{Proofs of correspondence between statements}
+    \label{fig:statement_correspondence}
+\end{figure}
+
+Similar to before, we use $skip$, $:=$, and $=:$ as base cases, as well as all expressions, and the $seq$ as the recursive step.
+\newpage
+
+\begin{figure}[hbt!]
+    \centering
+    \footnotesize
+    {
+        \[
+            \inference[if true]{
+            \langle E, s \rangle \Downarrow \langle true, s \rangle \quad \langle C_1, s \rangle \Downarrow \langle skip, s' \rangle
+            }{
+            \langle \text{if } E \text{ then } C_1 \text{ else } c_2, s \rangle \Downarrow \langle skip, s' \rangle \text{if } \Gamma \vdash E : \text{Boolean}
+            }
+        \]
+        \begin{align*}
+            \astate{(if\ E\ then\ C_1\ else\ C_2)}{}{}{} \arule{cond}& \astate{E \cdot if \cdot cond}{C_1\cdot C_2}{}{\underline{cond}} \\
+            \to^*& \astate{if \cdot cond}{true \cdot C_1\cdot C_2}{}{\underline{E} \cdot \underline{cond}} \\
+            \arule{if_T}& \astate{C_1 \cdot cond}{C_1\cdot C_2}{}{E \cdot \underline{if} \cdot \underline{cond}} \\
+            \to^*& \astate{cond}{C_1\cdot C_2}{}{\underline{C_1} \cdot E \cdot \underline{if} \cdot \underline{cond}} \\
+            \arule{endif}& \astate{}{}{}{(if\ E\ then\ rev(C_1)\ else\ rev(C_2))}
+        \end{align*}
+    }
+    {
+        \[
+            \inference[if false]{
+            \langle E, s \rangle \Downarrow \langle false, s \rangle \quad \langle C_2, s \rangle \Downarrow \langle skip, s' \rangle
+            }{
+            \langle \text{if } E \text{ then } C_1 \text{ else } c_2, s \rangle \Downarrow \langle skip, s' \rangle \text{if } \Gamma \vdash E : \text{Boolean}
+            }
+        \]
+        \begin{align*}
+        \astate{(if\ E\ then\ C_1\ else\ C_2)}{}{}{} \arule{cond}& \astate{E \cdot if \cdot cond}{C_1\cdot C_2}{}{\underline{cond}} \\
+        \to^*& \astate{if \cdot cond}{false \cdot C_1\cdot C_2}{}{\underline{E} \cdot \underline{cond}} \\
+        \arule{if_F}& \astate{C_2 \cdot cond}{C_1\cdot C_2}{}{E \cdot \underline{if} \cdot \underline{cond}} \\
+        \to^*& \astate{cond}{C_1\cdot C_2}{}{\underline{C_2} \cdot E \cdot \underline{if} \cdot \underline{cond}} \\
+        \arule{endif}& \astate{}{}{}{(if\ E\ then\ rev(C_1)\ else\ rev(C_2))}
+        \end{align*}
+    }
+    \caption{Proofs of correspondence between conditionals}
+    \label{fig:if_correspondence}
+\end{figure}
+
+\begin{figure}[hbt!]
+    \centering
+    \footnotesize
+    {
+        \[
+            \inference[while true]{
+            \langle E, s \rangle \Downarrow \langle true, s \rangle \quad \langle C, s \rangle \Downarrow \langle skip, s' \rangle \quad \langle \text{while } E \text{ do } C, s' \rangle \Downarrow \langle skip, s'' \rangle
+            }{
+            \langle \text{while } E \text{ do } C, s \rangle \Downarrow \langle skip, s'' \rangle \text{if } \Gamma \vdash E : \text{Boolean}
+            }
+        \]
+        \begin{align*}
+            \astate{(while_i\ E\ do\ C)}{}{}{} 
+            \arule{loop}& 
+            \astate{E \cdot while_i \cdot loop_i}{E \cdot C}{}{\underline{loop_i}} \\
+            \to^*& \astate{while_i \cdot loop_i}{true \cdot E \cdot C}{}{\underline{E} \cdot \underline{loop_i}} \\
+            \arule{loop_T}& \astate{C \cdot (while_i\ E\ do\ C)}{E \cdot C}{}{\underline{true} \cdot \underline{while_i} \cdot \underline{loop_i}} \\
+            \to*& \astate{(while_i\ E\ do\ C)}{E \cdot C}{}{\underline{C} \cdot \underline{true} \cdot \underline{while_i} \cdot \underline{loop_i}} \\
+            \to*& \astate{}{}{}{(while_i\ E\ do\ rev(C))} \\
+        \end{align*}
+    }
+    {
+        \[
+            \inference[while false]{
+            \langle E, s \rangle \Downarrow \langle false, s \rangle
+            }{
+            \langle \text{while } E \text{ do } C, s \rangle \Downarrow \langle skip, s \rangle \text{if } \Gamma \vdash E : \text{Boolean}
+            }
+        \]
+        \begin{align*}
+            \astate{(while_i\ E\ do\ C)}{}{}{} 
+            \arule{loop}& 
+            \astate{E \cdot while_i \cdot loop_i}{E \cdot C}{}{\underline{loop_i}} \\
+            \to^*& \astate{while_i \cdot loop_i}{false \cdot E \cdot C}{}{\underline{E} \cdot \underline{loop_i}} \\
+            \to^*& \astate{}{}{}{(while_i\ E\ do\ rev(C))}
+        \end{align*}
+    }
+    \caption{Proofs of correspondence between loops}
+    \label{fig:while_correspondence}
+\end{figure}
+
+With conditionals and loops, we treat all commands and expressions as the base cases.
+
+\textit{Note that the proofs given here are informal and do not provide an entirely complete proof, skipping some steps for simplicity. particularly in the case of the while, as the complete proof is very long and cumborsome.}
+
+% \begin{figure}[hbt!]
+%     \centering
+%     \footnotesize
+%     \vspace{0.2cm}
+%     \[
+%         \quad \quad
+        
+%     \]
+%     \vspace{0.2cm}
+    
+%     \vspace{0.2cm}
+    
+%     \vspace{0.2cm}
+%     \vspace{0.2cm}
+    
+%     \vspace{0.2cm}
+%     \[
+
+%     \]
+%     \vspace{0.2cm}
+%     \[
+
+%     \]
+%     \vspace{0.2cm}
+%     \[
+        
+%     \]
+%     \vspace{0.2cm}
+%     \[
+
+%     \]
+%     \caption{Axioms and semantic rules defining \rimp's evaluation}
+%     \label{fig:semantic-fo}
+% \end{figure}

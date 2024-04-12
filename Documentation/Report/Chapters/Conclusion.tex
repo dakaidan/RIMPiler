@@ -4,7 +4,14 @@
 
 %2 pages
 
-What is demonstrated here?
-How is it unique?
-What could be done better?
-What are some avenues for future exploration?
+\rimp provides a cohesive and complete framework for the development and release of reversible languages. We were able to extend the language to allow for types, and practical implementations, making suitable optimisations on the theory. 
+Unlike existing systems for reversible languages, we impose no restrictions to the developer.
+We have shown the development using reversible languages can potentially be as easy to use as that of a conventional language, and with extensions could be a practical target, while also allowing for the benefits reversibility has to provide, including enhanced debugging, reduced power consumption, and increased speed\cite{PrologDebugger, landauerIrreversibility}.
+
+\rimp could greatly benefit from future work on extending the language to allow for more common language facilities such as functions, objects, closures, threads, etc. These features would provide a more comprehensive and familiar programming experience for developers using \rimp, potentially increasing its practicality in real-world scenarios. Additionally, further research into optimisation techniques\cite{Optimisation} specific to reversible languages could enhance the performance and efficiency of \rimplang programs, making them more competitive with traditional irreversible languages.
+
+Future work into targetting an SSA form such as RSSA\cite{RSSA}, and later a reversible ISA such as PISA\cite{pisa} could help seed a reversible equivalent to systems like LLVM, providing further common infrastructure to the greater development of reversible languages. Additionally, the targetting of an intermediate SSA form would allow for the implementation of an optimising compiler for \rimp, improving its performance\cite{Optimisation}.
+
+Further, as seen in languages such as Hermes\cite{Hermes}, we could aim to produce domain specific variations of \rimplang to enhance the development of many tools which may benefit from reversibility such as compression algorithms. 
+
+\rimp provides a test bed on which easy and fast development and trials of new concepts can be applied to the reversible domain, pushing for the advancement of this promising area.
