@@ -1,10 +1,10 @@
 \chapter{Requirements}
 % The central part of the report usually consists of three or four chapters detailing the technical work undertaken during the project. {\bf{\textcolor{red}{The structure of these chapters is highly project dependent}}}. They can reflect the chronological development of the project, e.g. design, implementation, experimentation, optimisation, evaluation, etc (although this is not always the best approach). However you choose to structure this part of the report, you should make it clear how you arrived at your chosen approach in preference to other alternatives. In terms of the software that you produce, you should describe and justify the design of your programs at some high level, e.g. using OMT, Z, VDL, etc., and you should document any interesting problems with, or features of, your implementation. Integration and testing are also important to discuss in some cases. You may include fragments of your source code in the main body of the report to illustrate points; the full source code is included in an appendix to your written report.
 
+The goal of \rimp is to provide a complete, and cohesive framework for developing programs in \rimplang, while also being extensible to allow for future development of the language and the tool.
+
 The following lists the metrics and functionalities which this project aims to fulfil, and by which this project will be evaluated.
 Within the specification, \rimp will be used to refer to the software produced in this project.
-\todo{Discuss the point of the project here to motivate why these are the requirements set}
-
 
 \section{Functional Requirements}
 
@@ -17,15 +17,27 @@ Within the specification, \rimp will be used to refer to the software produced i
     \item \rimp must be able to be run through an abstract machine.
     \item The \rimp abstract machine must allow to step forwards and backwards
     \item \rimp must be able to compile to the JVM providing information about the value of variables until the reversal point.
+    \item \rimp should be able to compile to an intermediate representation in SSA form.
+    \item \rimp should be able to target a reversible backend.
+    \item \rimp should be extended to allow for arrays.
+    \item \rimp should be extended to allow for user defined structures.
+    \item \rimp should be extended to allow for procedures.
+    \item \rimp should be extended to allow for multi-threading.
 \end{enumerate}
+
+In order to be considered complete, requirements 1-8 must be completed, as they provide the basis for a development cycle (test-debug-release). The remaining features are nice-to-haves, or future goals of the \rimp framework.
 
 \section{Non-Functional Requirements}
 
 \begin{enumerate}
-    \item \rimp should compile short programs within 10 seconds on a modern desktop computer.
-    \item \rimp should give some level of feedback when things go wrong to help guide the user to the issue.
-    \item \rimp should be an extensible system which is able to evolve over time.
-    \todo{quantify}
+    \item \rimp must compile short programs within 10 seconds on a modern desktop computer.
+    \item \rimp must give some level of feedback when things go wrong to help guide the user to the issue.
+    \item \rimp must be an extensible system which is able to evolve over time.
+    \item \rimp should be easy to learn for a developer coming from conventional languages such as C or Python.
+    \item \rimp should be a portable system, able to run on a range of system.
+    \item \rimp should be easy to develop on and extend.
 \end{enumerate}
 
-\todo{Discuss priority}
+To be considered a complete project, requirements 1-3 must be met, the remaining are aims, or future extensions to the project\footnote{Some of these requirements cannot be meaningfully evaluated in this project, as they would require a survey of users to evaluate.}.
+
+By fulfilling the core requirements, we can ensure that \rimp provides a complete system demonstrating the advantages of a multifaceted approach to developing reversible programming languages. 

@@ -7,8 +7,8 @@
 
 % 5-10 pages
 
-Reversible computing is a paradigm of computing where computation is both forward deterministic, and backward deterministic\cite{IntroductionToReversibleComputing}. This allows a reversible program to be run forwards, stopped at any point, and then run backwards, completely reconstructing the state in which it started.
-Unlike traditional computing, which is not backward deterministic, which inevitably leads to information loss, which is dissipated as heat energy\cite{landauerIrreversibility}. Reversible computing allows the conservation of this information, and therefore energy, throughout computation\cite{Landauer}.
+Reversible computing is a paradigm where computation is both forward deterministic, and backward deterministic\cite{IntroductionToReversibleComputing}. This allows a reversible program to be run forwards, stopped at any point, and then rerun backwards, completely reconstructing the state in which it started.
+Unlike traditional computing, which is not backward deterministic, which inevitably leads to information loss. This loss of information is then, in turn, dissipated as heat energy\cite{landauerIrreversibility}. Reversible computing allows the conservation of information, and therefore energy, throughout computation\cite{Landauer}.
 
 Research in this area is diverse, but can be split by their level of abstraction. While there is no widespread use of reversible hardware, there has still be significant research into programming abstractions which may run on top of them.
 
@@ -18,8 +18,7 @@ Programming languages serve as abstractions over the underlying computational mo
 
 The structure of a programming language is largely dictated by the underlying model. Imperative languages abstract over the Turing Machine\cite{onComputableNumbers}, while Functional languages abstract over Lambda Calculus\cite{Lambda}. Additionally, programming languages are also impacted by the level of abstraction they wish to provide, being split into high-level and low-level languages. A low-level language is one which directly follows the underlying model, without hiding much detail from the user, while high-level languages aim to hide much of this detail.
 
-The area of programming languages is an open and active area of research. This includes type systems, and memory management.
-\todo{Survey paper?}
+The area of programming languages is an open and active area of research. This includes type systems, and memory management\cite{Regions}.
 
 \section{Compilers, Interpreters, \& Abstract Machines}
 
@@ -30,9 +29,9 @@ Additionally, each provide benefits and drawbacks, but work well to complement e
 
 \subsection{Lexing}
 
-Lexing is typically performed first in the context of compilation and interpreting\cite{CompilerConstruction, DragonBook}. Lexing is the process where a lexer takes some text input, and outputs a list of tokens. Each token corresponds to a part of the original text which makes sense to group together. For example, we may group letters comprising keywords into a keyword token. 
+Lexing is typically performed first in the context of compilation and interpretation\cite{CompilerConstruction, DragonBook}. Lexing is the process where a lexer takes some text input, and outputs a list of tokens. Each token corresponds to a part of the original text which makes sense to group together. For example, we may group letters comprising keywords into a keyword token. 
 
-This is frequently a crucial step in the process of working with programming languages, as it permits the later stages of the process to disregard irrelevant input elements, such as whitespace.
+This is frequently a crucial step in the process of working with programming languages, as it permits the later stages of the process to disregard irrelevant input elements, such as whitespace and comments.
 
 \subsection{Parsing}
 
@@ -40,11 +39,9 @@ Parsing is the process of transforming some source, typically a token stream, in
 
 The grammar defines what is a valid set of symbols that can appear, and the order in which they are allowed to appear.
 
-\todo{I have references somewhere for both of these}
-
 \subsection{Compilers}
 
-A compiler is a system which translates some source language to a target language, allowing the program to be directly executed on some system. This is done through some kind of transformation from a source code language to a machine code language, which can then be directly executed on hardware. 
+A compiler is a system which translates some source language to a target language, allowing the program to be directly executed on some system. This is done through a transformation from a source code language to a machine code language, which can then be directly executed on hardware. 
 
 During the process of compilation, there are typically other processes taking place. Optimisation is the process of producing some new program which is semantically identical to the original, however, minimises some property of it, such as run time, or power consumption.
 
@@ -57,15 +54,14 @@ Typically, compilers are placed at the end of the development cycle. Before a pr
 
 \subsection{Interpreters}
 
-Interpreters are programs which immediately evaluate a program they are given. Unlike compilers, they do not produce a new output which can be run after. Instead, interpreters usually produce an abstract syntax tree and evaluate directly from that\cite{InterpreterStructure}.
-
+Interpreters are programs which immediately evaluate the program they are given. Unlike compilers, they do not produce a new output which can be run after. Instead, interpreters usually produce an internal representation, such as an abstract syntax tree\footnote{In practice, it is often not an AST used for the internal representation.}, and evaluate directly from that\cite{InterpreterStructure}.
 Interpreters are, for this reason, faster to start, and so can be a useful tool for fast iteration while developing\cite{OptimisingInterpreters, InterpreterStructure}. 
 
 However, as interpreters are expected to immediately execute the program they are given, they don't have time to optimise like compilers do, and so are typically far slower to run the same program through when compared to compilers\cite{CompilersAndInterpretersJava, InterpreterStructure}.
 
 \subsection{Abstract Machines}
 
-Like interpreters, abstract machines evaluate program representations, however, they diverge in their operational methodologies, and the level of abstraction\cite{AbstractMachine, AbstractMachineForLanguage}. Abstract machines function at a lower level of abstraction compared to interpreters. This difference makes abstract machines particularly valuable in debugging, as they allow the developer to observe small changes in program state after each step is evaluated.
+Like interpreters, abstract machines evaluate program representations, however, they diverge in their operational methodologies, and the level of abstraction\cite{AbstractMachine, AbstractMachineForLanguage}. Abstract machines function at a lower level of abstraction compared to interpreters. This difference makes abstract machines particularly valuable in debugging, as they allow the developer to observe small changes in program state after each step is evaluated. Additionally, abstract machines can, and often are used in deferred execution of a program, operating on some compiled result of a previous compilation.
 
 \section{Reversible Languages}
 
@@ -73,22 +69,54 @@ Reversible languages are languages which in some way enforce the constraints of 
 
 \subsection{Methods of Reversibility}
 
-There are several methods languages can employ to achieve reversibility. One such method is state capture, this is where all relevant state is recorded at each execution step, so when reversing the computation, you simply go back to the last command, and refresh the state to the previous point.
+There are several methods languages can employ to achieve reversibility. One such method is state capture, this is where all relevant state is recorded at each execution step, so when reversing the computation, you simply go back to the last command, and refresh the state to the previous point for all cases you can not reconstruct from the commands alone.
 
-Another way to achieve reversibility is to prevent any executions which are not inherently backwards deterministic. For example, in many languages it is common to be able to overwrite a variable with a new value, such as \lstinline{x = 5}. However, using this method, we would prohibit use of this kind of assignment as it would lose any state associated with \lstinline{x} Instead we would prefer statements of the form \lstinline{x += 5}\cite{ReversibleTaxonomy}.
+Another way to achieve reversibility is to prevent any executions which are not inherently backwards deterministic. For example, in many languages it is common to be able to overwrite a variable with a new value, such as \lstinline{x = 5}. However, using this method, we would prohibit use of this kind of assignment as it would lose any state associated with \lstinline{x} instead we would prefer statements of the form \lstinline{x += 5}\cite{ReversibleTaxonomy}.
 
-Another consideration of reversible languages is what we refer to as transparency, this can be thought of in a way as how high-level they are. Languages can be classed as transparent if they reflect the underlying reversible model being used, and opaque if they hide this. Essentially, if the developer has to be aware that they are targeting a reversible model of computation, then the language is transparent (or low-level), however, if not it is opaque (or high-level).
+Another consideration of reversible languages is what we refer to as transparency, this can be thought of in a way as how high-level they are. Languages can be classed as transparent if they reflect the underlying reversible model being used, and opaque if they hide this. Essentially, if the developer has to be aware that they are targeting a reversible model of computation, then the language is transparent (or low-level), if not it is opaque (or high-level).
 
 
 \subsection{Janus}
 
-What is it?
-Why benefits does it have?
-What has been researched so far?
-What are examples of reversible languages?
-What gaps remain?
+Janus is a general-purpose, reversible imperative language with support for structures such as functions\cite{Janus}. Janus ensures reversibility by only allowing the developer to perform non-destructive operations. For example, we cannot destructively reassign a variable to a completely new value, as we would in conventional languages \lstinline{x = 5;}. Rather, we must update it, for example through an addition \lstinline{x += 5;}. The result is a reversible language, which we will class as transparent, as the developer has to be aware of the limitations of the underlying model they are using, and avoid any destructive operations. This provides the benefit of limiting the amount of information we must store to maintain reversibility, as all operations remain inherently and deterministically reversible, all we need is the program state which would be kept by any conventional program, improving the memory footprint of such a program\cite{JanusFormalism, JanusReversibleSurvey}.
+
+Janus has also had many implementations provided and proposed over time, largely being interpreters\cite{JanusFormalism, JanusPlayground, LinearTimeJanusInterpreter}. There has also been some effort to provide compilation of Janus, including to targets which are inherently reversible themselves, such as Reversible Static Single-Assignment (RSSA)\cite{RSSA}, an intermediate representation ideal for optimisations and static analysis to be performed on\cite{JanusToRSSA}.
+
+However, what remains relatively unexplored in Janus is a complete environment which would allow for development, debugging, and release of software. We currently only have a disparate collection of tools without any common interoperability.
 
 \subsection{Hermes}
 
+Hermes is a domain-specific reversible language targetted at encryption algorithms\cite{Hermes, HermesExtension}. It builds on many of the same concepts present in Janus, such as non-destructive assignments. 
+The primary benefit of this is to allow for a developer to write an encryption algorithm within Hermes, and obtain the corresponding decryption algorithm by simply reversing the program. As Hermes is reversible, this reversal is well-defined, unlike in conventional languages. This therefore guarantees that, if the encryption algorithm is correct, your decryption will be, as well as reducing the overhead for the developer.
+
+However, as Hermes also achieves reversibility through developer restrictions, this does add overhead to the development process, increasing the complexity of developing with such a language.
+
 \subsection{\rimplang}
-\todo{rev function and semantic transformations}
+
+\rimplang is a simple imperative reversible language. Unlike many other reversible languages such as Janus or Hermes, \rimplang allows for destructive assignments, making it an opaque language, obscuring its underlying model from the developer. \rimplang maintains reversibility by maintaining runtime values for destructive operations, allowing the values of variables to be tracked back through any destructive assignments that occur\cite{Rimp}.
+
+\begin{figure}[ht]
+    \centering
+    \begin{lstlisting}[label={lst:rimpruntime}, basicstyle=\small]
+x := 5;
+y := 3;
+
+if x < y do {
+    x := 8;
+} else {
+    x := 0;
+}
+
+while x > 0 do {
+    y := y + 1;
+}
+    \end{lstlisting}
+    \caption{A basic example of a \rimplang program}
+    \label{fig:rimpruntime}
+\end{figure}
+
+We can see that in figure \ref{fig:rimpruntime}, we have two initial assignments, one being $5$ to the variable $x$, the other being $3$ to the variable $y$. We also, within the body of the if statement, have destructive assignments, where the value of $x$ is updated to a value with no correspondence to the original value (either $8$ or $0$). In this case, \rimp remains reversible by building a stack of value changes during runtime, so in this case we would initially obtain the value of $x$ of $(5, +(5, 0))$ where the first element refers to the current value, and the rest refers to the changes made, here being to add $5$ to $0$ to initialise it with the value $5$. When the destructive assignment is made in the else branch, we will update the value and its history to be $(0, -(5, +(5, 0)))$, indicating that the current value is $0$, and the previous value was obtained by subtracting $5$.
+
+Another consideration with this is that \rimp must perform some transformations to ensure the program is reversible before execution. These will mutate if statements and while loops to ensure we can reverse them. For example, in figure \ref{fig:rimpruntime} we can see that when we execute the if statement, the value of $x$ is lost until we undo the assignment within the body, however, until we have done this, we do not know which branch was taken. Similarly, with the while loop, when finished, we have no way of telling how many iterations occurred before the condition was met\footnote{For more details on the specifics of these transformations, you may check Fern{\'a}ndez et al.\cite{Rimp}, or section \ref{sec:SemanticTransformations}}.
+
+Finally, in order to perform the reverse of a program, we need a program inverter, which we will refer to as the reverse function or $rev$. This function should take a program with the appropriate transformations performed as described above, and return a new program which is the semantic inverse of the original. When run, this program should return a program to its initial state before it was run in the forward direction.

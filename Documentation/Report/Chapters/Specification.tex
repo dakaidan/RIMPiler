@@ -1,10 +1,10 @@
 \chapter{Specification}
 
-The following is a specification which will be followed in the design and implementation of \rimp. It acts as a theoretical foundation. \todo{Rewrite this, or remove it}
+% The following is a specification which will be followed in the design and implementation of \rimp. It acts as a theoretical foundation. \todo{Rewrite this, or remove it}
 
 \section{RIMP's Concrete Syntax}
 
-We will define the grammar used in \rimp as being an instance of the \lstinline{Program} class defined below.
+We will define the grammar used in \rimp as being an instance of the \lstinline{Program} class defined in figure \ref{fig:grammar}.
 \begin{figure}
     \centering
     \begin{lstlisting}[language=TeX,label={lst:grammar}, basicstyle=\small]
@@ -70,14 +70,14 @@ We will define the grammar used in \rimp as being an instance of the \lstinline{
 \end{figure}
 
 One feature to note from the grammar is the distinction between the \\\lstinline{Arithmetic[Expression,Term,Factor]} and the \lstinline{BArithmetic[Expression,Term,Factor]}.
-This distinction amounts to not being able to use parenthesis within any \lstinline{BArithmetic}. While this difference is minor, it was chosen in order to greatly simplify the algorithm used to parse this grammar, which will be explored further in \todo{Link to implementation}.
-Despite the similarities between the two forms, this does add some inconvenience to developers using \rimp, as they may need to move parts of particularly complex arithmetic outside their conditionals, and into variables. However, this grammar is easily, and non-destructively designed as to be modifiable to allow for this in the future.
+This distinction amounts to not being able to use parenthesis within any \lstinline{BArithmetic}. While this difference is minor, it was chosen in order to greatly simplify the algorithm used to parse this grammar, which will be explored further in section \ref{sec:ParsingAlgorithm}.
+Despite the similarities between the two forms, this does add some inconvenience to developers using \rimp, as they may need to move parts of particularly complex arithmetic outside their conditionals, and into variables. However, this grammar is designed to be easily, and non-destructively modifiable to allow for this in the future to improve the quality of development, while still providing a complete system at the present.
 
 Otherwise, this grammar closely follows that of C-like languages. This grammar was selected in order to be intuitive to many developers. Further, by mirroring traditional languages, it assists in making \rimplang a language which is separated from its underlying model of computation, reducing further the barrier to use.
 
 \section{RIMP's Type System}
 
-The aim of \rimp's type system is to balance ease of use with error avoidance. For this, we introduce some basic types in the current version of \rimp: 32-bit integers, denoted \lstinline{int}, and 32-bit floating-point, denoted \lstinline{float}. Within this system, we have a form of type polymorphism, where \lstinline{int} and \lstinline{float} are both treated as subtypes of an abstract \lstinline{numeric} type, which in the future will allow for the extension of this \lstinline{numeric} type, as well as additional types.
+The aim of \rimp's type system is to balance ease of use with error avoidance. For this, we introduce some basic types in the current version of \rimp: 32-bit integers, denoted \lstinline{int}, and 32-bit floating-point, denoted \lstinline{float}. Within this system, we have a form of type polymorphism, where \lstinline{int} and \lstinline{float} are both treated as subtypes of an abstract \lstinline{numeric} type, which in the future will allow for the extension of this \lstinline{numeric} type to encompass more numerics, as well as additional types in a similar manner.
 
 Currently, \rimp has a basic type system consisting of only numerics and booleans. 
 We formally define it in figure \ref{fig:type-system}.
@@ -129,7 +129,7 @@ We formally define it in figure \ref{fig:type-system}.
 \end{figure}
 
 In order to maintain ease of use, we also employ type inference and coercion. From the type rules, we can obtain the method to perform type inference. We aim to apply type inference and coercion to only certain cases in which it would be cumbersome to have to denote the types, such as in arithmetic operations. For example, we aim to avoid cases like \lstinline{int x = (int x) * (int 2)}, preferring \lstinline{x = x * 2}.
-We do this by applying the rules for \lstinline{numeric-binop}, \lstinline{numeric-unop}. We only use do it on these two rules as to avoid any unintended type coercions, such as an integer being interpreted as a boolean within a conditional, which may lead to logical errors. Further, we aim to restrict this further as more types will be introduced, to ensure programs written in \rimp maintain free of type errors, or logical errors, only applying coercions to certain type groups such as numerics.
+We do this by applying the rules for \lstinline{numeric-binop}, \lstinline{numeric-unop}. We only use this on these two rules as to avoid any unintended type coercions, such as an integer being interpreted as a boolean within a conditional, which may lead to logical errors. Further, we aim to restrict this further as more types will be introduced, to ensure programs written in \rimp are free of type errors, or logical errors, only applying coercions to certain type groups such as numerics.
 
 \section{RIMP's Semantics}
 
@@ -252,20 +252,20 @@ We present the complete semantics of \rimp we use, extending the existing semant
         \langle \text{while } E \text{ do } C, s \rangle \Downarrow \langle skip, s \rangle \text{if } \Gamma \vdash E : \text{Boolean}
         }
     \]
-    \caption{Axioms and semantic rules defining \rimp's evaluation}
+    \caption{Axioms and semantic rules defining \rimp's evaluation, extending that of Fern{\'a}ndez et al.\cite{Rimp}}
     \label{fig:semantic-system}
 \end{figure}
 
 From the semantic system presented in figure \ref{fig:semantic-system}, we can see the enforcing of our type rules within the construction of expressions, ensuring that the program will be free of runtime errors.
 
 
-\section{Semantic Transformations for Reversibility}
+\section{Semantic Transformations for Reversibility}\label{sec:SemanticTransformations}
 
 To ensure the reversibility of \rimplang, we must apply the following semantic transformations: if remapping, and while counters\footnote{This follows closely the definitions provided by \rimplang, however, is included here for reader's convenience, and clarity.}.
 
 \subsection{If Remapping}
 
-if remapping must ensure that any variables used within the condition of an if statement are not modified within the body.
+if remapping must ensure that any variables used within the condition of an if statement are not modified within the body, ensuring we can reconstruct which branch was taken.
 
 For example, if we had the following program
 
@@ -283,7 +283,7 @@ if x < 5 do {
     \label{fig:ifexample}
 \end{figure}
 
-from this, we observe that when executing the program, whichever branch is taken results in the value of \lstinline{X} changing, however, this transformation will also need to apply if only one branch modifies the variable.
+From this, we observe that when executing the program, whichever branch is taken results in the value of \lstinline{X} changing, however, this transformation will also need to apply if only one branch modifies the variable.
 
 We will define a function \lstinline{modifies} which will check if a \rimplang program modifies a given variable, and a function \lstinline{get_variables} which will return all variables contained within a \rimplang program.
 We can then check if an if statement needs to be remapped through the following.
@@ -311,7 +311,7 @@ define check_if_statement(statement) {
     \label{fig:ifcheckpseudo}
 \end{figure}
 
-If this is true on a given statement, we must then perform a remapping to the if statement. To do this, we must exchange the variables in the condition with new variables which remain unchanged. This swap preserves the semantics, but also allows us to ensure the correct branch of the if statement is taken when reversing the program.
+If this is true on a given statement, we must then perform a remapping to the if statement. To do this, we must exchange the variables in the condition with new variables which remain unchanged. This swap preserves the semantics, but also allows us to ensure the correct branch of the if statement is taken when reversing the program by maintaining unmodified copies of the variables after the branch.
 Using the example from \ref{fig:ifexample} we will obtain the following.
 
 \begin{figure}[hbt!]
@@ -331,7 +331,7 @@ if reserved_x < 5 do {
 
 \subsection{While Counters}
 
-While transformations ensure a counter is associated with each while loop. With each while loop in \rimplang, we associate an index $i$ with it. This index is unique to this while loop, and can simply be the number of while loops preceding it. With this, we can then insert two commands, the first command must come before the while statement, and initialise a counter to $0$. This counter must also be associated with the same index as the while loop we are currently transforming. We then add in increment statement to the end of the body of the while loop, incrementing its associated counter variable.
+While transformations ensure a counter is associated with each while loop. With each while loop in \rimplang, we associate an index $i$ with it, allowing us to identify other structures associated with it. This index is unique to this while loop, and can simply be the number of while loops preceding it. With this, we can then insert two commands, the first command must come before the while statement, and initialise a counter to $0$. This counter must also be associated with the same index as the while loop we are currently transforming. We then add in increment statement to the end of the body of the while loop, incrementing its associated counter variable.
 
 For example, we may have the following program.
 
@@ -367,14 +367,249 @@ We will then find that by the end of the execution of this program, the value at
 
 \section{Reverse Function}
 
-What is the theory used?
-How does it differ from RIMPs paper?
-What motivates that?
-What were some of the compromises with it?
+Within \rimp, we will make use of two similar, but subtly different reverse functions. These are used in either the conventional backend or in the abstract machine. In the case of the former, we only ever reverse at the end of the forward computation, while the later may reverse at any point.
 
-\section{Abstract Machine}
+In the general case used by the abstract machine, we must use an additional structure to perform the reverse function, which is the $while\_table$. This while table maps an instance of $while$ indexed on some $i$ to the expression it has in the forward direction. This store acts as a way to recover the initial condition of while loops to restore a reversed program to its original form.
 
-What is the theory used?
-How does it differ from RIMPs paper?
-What motivates that?
-What were some of the compromises with it?
+\begin{figure}[hbt!]
+    \centering
+    \small
+    \begin{align}
+        rev(E) &=\quad\quad E \tag{expression} \\
+        rev(x := E) &=\quad\quad x =: E \tag{assignment} \\
+        rev(x =: E) &=\quad\quad x := E \tag{reverse assignment}\label{eq:assignrev} \\
+        rev(\text{skip}) &=\quad\quad \text{skip} \tag{skip} \\
+        rev(\text{if } E \text{ then } C_1 \text{ else } C_2) &=\quad\quad \text{if } E \text{ then } rev(C_1) \text{ else } rev(C_2) \tag{if} \\
+        rev(\text{while}_i\ E \text{ do } C) &=\quad\quad \text{while}_i\ !counter_i > 0 \text{ do } C \quad if\ counter_i \not\in E \tag{while forward} \\
+        rev(\text{while}_i\ !counter_i > 0 \text{ do } C) &=\quad\quad \text{while}_i\ E \text{ do } C \quad if\ while\_table(i) = E \tag{while backward}\label{eq:whilerev}
+    \end{align}
+    \caption{The generic reverse function function}
+    \label{fig:revfunc}
+\end{figure}
+
+\rimp simplifies on this somewhat in the implementation of the conventional compilation targets. In \rimp's conventional targets, we only reverse these targets once, during compilation, to obtain the reverse of the entire program. For this reason, we will never have to perform anything of the form $rev(rev(P))$. Because of this, we can simplify the generic case of the $rev$ function by dropping all cases which cannot occur in the forward direction of \rimplang. We obtain a new definition without \ref{eq:assignrev} and \ref{eq:whilerev}. This has the additional benefit of not requiring the $while\_table$ in these cases.
+
+\section{Abstract Machine}\label{AbstractMachine}
+
+The abstract machine is a $4$-tuple $\langle c, r, s, b \rangle$ where $c$ is the control stack, $r$ is the result stack, $s$ is the store, and $b$ is the back stack. Due to the nature of the $rev$ function, we will also consider the $while\_table$ to be part of the abstract machine, however, we will omit it from the rules.
+
+The purpose of the control stack is to hold the elements to be executed next, while that of the back stack is to hold the reverse of these. The result stack is used to store intermediate results. The store is used to store variable values and their runtime values.
+
+We will define the tuple elements in figure \ref{fig:stackdefinition} in section \ref{appendix:amdetails} of the appendix.
+ 
+
+\begin{figure}[ht]
+    \centering
+    \begin{align*}
+    c, b ::=&\quad C \\
+    \\
+    C ::=&\quad nil \\|&\quad lab \cdot C \\|&\quad program \cdot C \\|&\quad l \cdot C \\
+    r ::=&\quad nil \\|&\quad program \cdot r \\|&\quad l \cdot r \\
+    \end{align*}
+    \caption{Composition of stacks in \rimp's abstract machine}
+    \label{fig:stackdefinition}
+\end{figure}
+
+The objective is to implement the abstract machine outlined by Fern{\'a}ndez et al.\cite{Rimp}, incorporating new operators and types. However, during the adaptation process, challenges arose particularly concerning erroneous states, notably within loop structures\footnote{Unfortunately, there was not enough time to thoroughly investigate this issue; please refer to appendix \ref{appendix:amissue} for details\label{fn:amissue}}.
+
+Instead, we present a new abstract machine, heavily based on the original, but adapted to overcome these issues. There is a minimal and informal proof for correspondence between the abstract machine presented in this paper and that of the big-step semantics provided in figure \ref{fig:semantic-system} which can be found in appendix \ref{appendix:amproof}.
+
+The main differences provided are as follows:
+\begin{enumerate} 
+    \item[-] Explicit inverse expressions, which require explicit rules. This is to simplify implementation, while allowing expansion of this system more easily in the future.
+    \item[-] Aggregation of unary operators into a set of rules, this then allows for any number of unary operators to extend the current operators with minimal effort.
+    \item[-] Addition of a cleaning step in the $EndW$ rule to ensure no additional copies of the while condition and body are left on the result stack\footnote{This is to resolve the issue mentioned in footnote \ref{fn:amissue}}.
+\end{enumerate}
+
+In the following rules, we will use an underline to denote the inverse of the symbol, for example $E$'s inverse would be $\underline{E}$. we use an overline to denote the standard application of the operation, so $\overline{op}$ indicates the standard application of the operator $op$. We will also add an asterisk beside the name of any rule which is significantly updated. It is also important to note that by this point we assume type checking has occurred, and so we do not handle any erroneous types here.
+
+% Overleaf doesn't like me putting this anywhere else annoyingly
+\newcommand{\astate}[4]{%
+    \langle%
+    \if\relax\detokenize{#1}\relax c\else #1 \cdot c\fi, %
+    \if\relax\detokenize{#2}\relax r\else #2 \cdot r\fi, %
+    \if\relax\detokenize{#3}\relax m\else m[#3]\fi, %
+    \if\relax\detokenize{#4}\relax b\else #4 \cdot b\fi %
+    \rangle% 
+}
+
+\newcommand{\bstate}[4]{%
+    \langle%
+    \if\relax\detokenize{#1}\relax c\else #1 \cdot c\fi, %
+    \if\relax\detokenize{#2}\relax r\else #2 \cdot r\fi, %
+    \if\relax\detokenize{#3}\relax m\else m[#3]\fi, %
+    \if\relax\detokenize{#4}\relax b\else #4 \cdot b\fi %
+    \rangle% 
+}
+
+\newcommand{\arule}[1]{\overset{#1}{\to}}
+
+\begin{figure}[ht]
+    \centering
+    \footnotesize
+    \begin{align*}
+    \astate{n}{}{}{} \arule{num}& \astate{}{n}{}{\underline{n}} \\
+    \bstate{\underline{n}}{n}{}{} \arule{mun}& \bstate{}{}{}{n} \\
+    \\
+    \astate{!l}{}{}{} \arule{var}& \astate{}{m(l)}{}{\underline{!l}} \\
+    \bstate{\underline{!l}}{n}{}{} \arule{rav}& \bstate{}{}{}{!l} \\
+    \\
+    \astate{(oper\ E)}{}{}{} \arule{un exp*}& 
+    \astate{E \cdot oper}{}{}{unexp \cdot \underline{E}} \\
+       &\text{where } oper = op\ or\ \underline{op} \\
+    \bstate{unexp \cdot \underline{E}}{}{}{E \cdot oper} 
+    \arule{un pxe*}& \bstate{}{}{}{(oper\ E)} \\
+    \\
+    \astate{op}{n_1}{}{\underline{E} \cdot unexp \cdot \underline{E}} 
+    \arule{un op*}& \astate{}{n}{}{(op\ E)} \\
+    & \text{where } n = \overline{op}\ n_1 \\
+    \bstate{\underline{op}}{n_1 \cdot n}{}{\underline{E} \cdot unexp \cdot \underline{E}} 
+    \arule{un po*}& \bstate{}{}{}{(op\ E)} \\
+    & \text{where } n = \overline{op}\ n_1 \\
+    \\
+    \astate{(E_1\ oper\ E_2)}{}{}{} \arule{bin exp}& 
+    \astate{E_1 \cdot E_2 \cdot oper}{}{}{binexp \cdot \underline{E_1} \cdot \underline{E_2}} \\
+       &\text{where } oper = op\ or\ \underline{op} \\
+    \bstate{binexp \cdot \underline{E_1} \cdot \underline{E_2}}{}{}{E_1 \cdot E_2 \cdot oper} 
+    \arule{bin pxe}& \bstate{}{}{}{(E_1\ oper\ E_2)} \\
+    \\
+    \astate{op}{n_2 \cdot n_1}{}{\underline{E_2} \cdot \underline{E_1} \cdot binexp \cdot \underline{E_1} \cdot \underline{E_2}} 
+    \arule{bin op}& \astate{}{n}{}{(E_1\ op\ E_2)} \\
+    & \text{where } n = n_1\ \overline{op}\ n_2 \\
+    \bstate{\underline{op}}{n_2 \cdot n_1 \cdot n}{}{\underline{E_2} \cdot \underline{E_1} \cdot binexp \cdot \underline{E_1} \cdot \underline{E_2}} 
+    \arule{bin po}& \bstate{}{}{}{(E_1\ op\ E_2)} \\
+    & \text{where } n = n_1\ \overline{op}\ n_2 
+    \end{align*}
+    \caption{Abstract Machine rules for expressions}
+    \label{fig:abstract_machine_expressions}
+\end{figure}
+
+With the expressions, we can see the only changes made here are to consolidate the $neg$, $\neg$, and their inverse rules into a generic unary expression set of rules. 
+\newpage
+We can see from the command rules that we require the rev function, and so we must maintain the $while\_table$ as part of the abstract machine.
+\begin{figure}[ht]
+    \centering
+    \footnotesize
+    \begin{align*}
+    \astate{skip}{}{}{} \arule{skip}& \astate{}{}{}{skip} \\
+    \\
+    \astate{(l := E)}{}{}{} \arule{asgn}& \astate{E \cdot !l \cdot :=}{l}{}{asgn \cdot E} \\
+    \bstate{asgn \cdot E}{l}{}{E \cdot !l \cdot :=} \arule{ngsa}& \bstate{}{}{}{(l := E)} \\
+    \\
+    \astate{:=}{n_2 \cdot n_1 \cdot l}{}{\underline{!l} \cdot \underline{E} \cdot asgn \cdot E}
+    \arule{:=}& \astate{}{}{l \mapsto (n_1, +(n_1 - n_2, m(l)))}{(l =: E} \\
+    \\
+    \astate{(l =: E}{}{l \mapsto (n_1, +(n, v))}{} \arule{asgn^r}&
+    \astate{E \cdot !l \cdot =:}{l}{l \mapsto (n_1 - n, v)}{asgn^r \cdot n \cdot E} \\
+    \bstate{asgn^r \cdot n \cdot E}{l}{}{E \cdot !l \cdot =:} \arule{ngsa^r}&
+    \bstate{}{}{l \mapsto (m(l) + n, +(n, m(l)))}{(l =: E} \\
+    \\
+    \astate{=:}{n_2 \cdot n_1 \cdot l}{l \mapsto (n_1, +(n_1 - n_2, m(l)))&}{\underline{!l} \cdot \underline{E} \cdot asgn^r \cdot n \cdot E}
+    \arule{=:}& \\ &\astate{}{}{}{(l := E)} \\
+    \\
+    \astate{(C_1;C_2)}{}{}{} \arule{seq}& \astate{C_1 \cdot C_2 \cdot ;}{}{}{seq} \\
+    \bstate{seq}{}{}{C_1 \cdot C_2 \cdot ;} \arule{qes}& \astate{}{}{}{(C_1;C_2)} \\
+    \astate{;}{}{}{rev(C_2) \cdot rev(C_1) \cdot seq} \arule{;}& \astate{}{}{}{(rev(C_2);rev(C_1))}
+    \end{align*}
+    \caption{Abstract Machine rules for commands}
+    \label{fig:abstract_machine_commands}
+\end{figure}
+
+\begin{figure}[hbt!]
+    \centering
+    \footnotesize
+    \begin{align*}
+    \astate{(if\ E\ then\ C_1\ else\ C_2)}{}{}{} \arule{cond}& \astate{E \cdot if \cdot cond}{C_1\cdot C_2}{}{\underline{cond}} \\
+    \bstate{\underline{cond}}{C_1 \cdot C_2}{}{E \cdot if \cdot cond} \arule{donc}&
+    \bstate{}{}{}{(if\ E\ then\ C_1\ else\ C_2)} \\
+    \\
+    \astate{if \cdot cond}{true \cdot C_1 \cdot C_2}{}{\underline{E} \cdot \underline{cond}}
+    \arule{if_T}&
+    \astate{C_1 \cdot cond}{C_1 \cdot C_2}{}{E \cdot \underline{if} \cdot \underline{cond}} \\
+    \bstate{\underline{if} \cdot \underline{cond}}{true \cdot C_1 \cdot C_2}{}{\underline{E} \cdot C_1 \cdot cond} 
+    \arule{fi_T}&
+    \bstate{\underline{E} \cdot \underline{cond}}{true \cdot C_1 \cdot C_2}{}{if \cdot cond} \\
+    \\
+    \astate{if \cdot cond}{false \cdot C_1 \cdot C_2}{}{\underline{E} \cdot \underline{cond}}
+    \arule{if_F}&
+    \astate{C_2 \cdot cond}{C_1 \cdot C_2}{}{E \cdot \underline{if} \cdot \underline{cond}} \\
+    \bstate{\underline{if} \cdot \underline{cond}}{false \cdot C_1 \cdot C_2}{}{\underline{E} \cdot C_2 \cdot cond} 
+    \arule{fi_F}&
+    \bstate{\underline{E} \cdot \underline{cond}}{false \cdot C_1 \cdot C_2}{}{if \cdot cond} \\
+    \\
+    \astate{cond}{C_1 \cdot C_2}{}{rev(C) \cdot E \cdot \underline{if} \cdot \underline{cond}}
+    \arule{endif}& \astate{}{}{}{(if\ E\ then\ rev(C_1)\ else\ rev(C_2))} \\
+    \\
+    \bstate{\underline{E} \cdot \underline{cond}}{true \cdot C_1 \cdot C_2}{}{} 
+    \arule{ifrexp_T*}&
+    \bstate{\underline{cond}}{C_1 \cdot C_2}{}{rev(C_1) \cdot E} \\
+    \bstate{\underline{E} \cdot \underline{cond}}{false \cdot C_1 \cdot C_2}{}{} 
+    \arule{ifrexp_F*}&
+    \bstate{\underline{cond}}{C_1 \cdot C_2}{}{rev(C_2) \cdot E}
+    \end{align*}
+    \caption{Abstract Machine rules for conditionals}
+    \label{fig:abstract_machine_condition}
+\end{figure}
+
+The conditionals add two additional rules to handle the explicitly inverted expressions, these rules will only be required when reversing midway through an if statement.
+
+\begin{figure}[ht]
+    \centering
+    \footnotesize
+    \begin{align*}
+    \astate{(while_i\ E\ do\ C)}{}{}{} 
+    \arule{loop}& 
+    \astate{E \cdot while_i \cdot loop_i}{E \cdot C}{}{\underline{loop_i}} \\
+    % 
+    \bstate{\underline{loop_i}}{E \cdot C}{}{E \cdot while_i \cdot loop_i} \arule{pool}&
+    \bstate{}{}{}{(while_i\ E\ do\ C)} \\
+    \\
+    % 
+    \astate{while_i \cdot loop_i}{true \cdot E \cdot C}{}{\underline{E} \cdot \underline{loop_i}} 
+    \arule{loop_T*}&\\
+    \astate{C \cdot (while_i\ E\ do\ C)}{E \cdot C&}{}{true \cdot \underline{while_i} \cdot \underline{loop_i}} \\
+    &\quad\quad \text{where } counter_i = counter_i + 1\\&\quad\quad\quad if\ counter_i \not\in E \\
+    % 
+    \bstate{\underline{while_i} \cdot \underline{loop_i}}{true \cdot E \cdot C}{}{\underline{true} \cdot C \cdot (while_i\ E\ do\ C)&}
+    \arule{pool_T}\\&
+    \bstate{\underline{E} \cdot \underline{loop_i}}{true \cdot E \cdot C}{}{while_i \cdot loop_i} \\
+    \\
+    % 
+    \astate{while_i \cdot loop_i}{false \cdot E \cdot C}{}{\underline{E} \cdot \underline{loop_i}} 
+    \arule{loop_F}&
+    \astate{loop_i}{E \cdot C}{}{false \cdot \underline{while_i} \cdot \underline{loop_i}} \\
+    % 
+    \bstate{\underline{while_i} \cdot \underline{loop_i}}{false \cdot E \cdot C}{}{\underline{false} \cdot loop_i}
+    \arule{pool_F}&
+    \bstate{\underline{E} \cdot \underline{loop_i}}{fasle \cdot E \cdot C}{}{while_i \cdot loop_i}\\
+    \\
+    % 
+    \astate{loop_i}{E \cdot C}{}{false \cdot \underline{while_i} \cdot \underline{loop_i}} 
+    \arule{endw_F}\\
+    \astate{loop_i}{0 \cdot &rev(while_i\ E\ do\ C) \cdot E \cdot C}{}{\underline{endw_i}} \\
+    % 
+    \bstate{\underline{endw_i}}{0 \cdot rev(while_i\ E\ do\ C) \cdot E \cdot C}{}{loop_i}
+    \arule{wend_F}&
+    \bstate{false \cdot \underline{while_i} \cdot \underline{loop_i}}{E \cdot C}{}{loop_i} \\
+    \\
+    % 
+    \astate{loop_i}{n \cdot rev(while_i\ E\ do\ C) \cdot E \cdot C}{}{\underline{endw_i} \cdot rev(C)& \cdot true \cdot \underline{while_i} \cdot \underline{loop_i}} 
+    \arule{endw_T}\\
+    \astate{loop_i}{n + 1 \cdot &rev(while_i\ E\ do\ C) \cdot E \cdot C}{}{\underline{endw_i}} \\
+    % 
+    \bstate{\underline{endw_i}}{n + 1 \cdot rev(while_i\ E\ do\ C) \cdot E \cdot C}{}{loop_i&} 
+    \arule{wend_T}\\
+    \bstate{\underline{endw_i} \cdot rev(C) \cdot true \cdot \underline{while_i} \cdot \underline{loop_i}}{n \cdot &rev(while_i\ E\ do\ C) \cdot E \cdot C}{}{loop_i} \\
+    \\
+    \astate{loop_i}{n \cdot rev(while_i\ E\ do\ C) \cdot E \cdot C}{}{\underline{endw_i}} \arule{endw*}& \astate{}{}{}{rev(while_i\ E\ do\ C)} \\
+    \\
+    \astate{}{E \cdot C}{}{} \arule{cloop*} \astate{}{}{}{} \\
+    \\
+    \bstate{\underline{E} \cdot \underline{loop_i}}{n \cdot E \cdot C}{}{while_i \cdot loop_i} \arule{wrexp*}& \bstate{\underline{loop_i}}{E \cdot C}{}{E \cdot while_i \cdot loop_i}
+    \end{align*}
+    \caption{Abstract Machine rules for loops}
+    \label{fig:abstract_machine_loops}
+\end{figure}
+\newpage
+Finally, with the loop rules, we have four main modifications. As with the conditional, we have an explicit inverse expression rule. We also explicitly mark the counter modification within $loop_T$. 
+In order to overcome the issues with looping state, we have modified the $endw$ rule in order to also remove the $\underline{endw_i}$ from the back stack, and then introduced a new rule $cloop$ to clean the remaining copies of the loop's condition and body from the result stack.
