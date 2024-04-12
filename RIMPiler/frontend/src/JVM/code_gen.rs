@@ -118,15 +118,12 @@ impl JVMCompiler {
 
     pub fn _compile(&mut self, program: &Program) -> String {
         let content = self.compile_program(program);
-        let mut file = std::fs::File::open("./data/Main.j").unwrap();
-
-        let mut file_content = String::new();
-        file.read_to_string(&mut file_content).unwrap();
+        let file = include_str!("../../../../data/Main.j");
 
         let content = self.compile_assignments() + &content;
 
-        let file_content = file_content.replace("<code>", &content);
-
+        let file_content = file.replace("<code>", &content);
+        
         let max_stack = self.max_stack + 1;
         let max_locals = self.last_variable_index + 1;
 

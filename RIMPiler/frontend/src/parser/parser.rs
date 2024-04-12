@@ -218,7 +218,6 @@ impl Parser {
                 }
                 RIMPToken::Keyword(keyword) => match keyword {
                     Keyword::While => {
-                        // TODO: Accept maths in here as well
                         let condition = self.parse_boolean_expression(tokens, 0);
 
                         if condition.is_err() {

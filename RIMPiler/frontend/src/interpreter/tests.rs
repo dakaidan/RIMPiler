@@ -1,5 +1,5 @@
 use crate::interpreter::memory_store::Value;
-use super::super::interpreter::InterpreterEngine;
+use super::interpreter::InterpreterEngine;
 use super::super::lexer::lexer::Tokeniser;
 use super::super::parser::parser::parse;
 use super::super::post_parse::inverter::invert_and_combine;
