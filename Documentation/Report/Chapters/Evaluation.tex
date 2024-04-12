@@ -3,16 +3,72 @@
 %2 to 6 pages
 
 \section{Testing}
-How was testing approached?
-How effective was it?
-Why not use another approach? Diff testing, fuzzing, AI?
+
+\rimp was largely tested using unit testing, covering a large proportion of the core library features. We reach an average of 80\% coverage across all library areas, and 50\% across interpreter implementation.
+This enabled several edge cases to be caught and corrected. Additionally, \rimp was tested using semi-manual means through compilation of the example programs across all targets. Unit testing was not used here due to it largely being insufficient to test the future evolving language. This was largely to cover the remaining blind spots of the interpreters tests, as well as to address the lack of tests for the compiler and abstract machine.
+Through this method of testing, we find that \rimp passes all expected tests, providing the correct behaviour in the expected time.
+
+\rimp aims to utilise a grammar based fuzzing approach\cite{GrammarFuzz}, which could have the potential to catch a larger variety of bugs in the implementation without requiring static test cases or manual testing by producing programs in \rimplang using a grammar, and a corresponding program in some oracle language such as C using CompCert\cite{CompCert}. This however was not implemented due to time constraints on the implementation. 
+Another potential approach to fuzz testing would also be through the use of LLM's which has proven valuable in identifying edge cases, or as test oracles\cite{TestOracles, SearchGem5}.
 
 \section{Requirements}
-Were the requirements met?
-To what standard?
-What was not met?
 
+\rimp has been able to achieve all required goals, as well as some additional targets, details of which are given below.
+
+\subsection{Functional Requirements}
+
+\begin{enumerate}
+    \item \rimp must produce a token stream from a valid \rimplang source file.\\
+    \textit{\rimp is able to produce tokens from a valid \rimplang program. Further, \rimp is able to provide feedback on unexpected tokens including where the error originates to enable developers to correct mistakes. \rimp also uses an extensible system in order to allow for quick adaptation of the language tokens.}
+    \item \rimp must produce a valid abstract syntax tree from a token stream produced by \rimp. \\
+    \textit{\rimp is able to produce an AST from a token stream produced by \rimp or a third party source, additionally, \rimp is capable of providing error messages to indicate where and how a program is malformed. The parsing process, however, uses a top-down algorithm, which could in the future become a bottleneck to performance.}
+    \item \rimp must be able to perform transformations on the abstract syntax tree to ensure the reversibility of the language. \\
+    \textit{\rimp is able to perform all transformations required, or a subset, and is flexible in its application, allowing developer control as needed in future extensions to the framework.}
+    \item \rimp must be able to produce an abstract syntax tree corresponding to the reverse of another abstract syntax tree. \\
+    \textit{\rimp fully sufficiently implements the reverse function, providing a sufficient minimal implementation for reversing correct \rimp programs in the conventional backend, and a complete implementation in the abstract machine.}
+    \item \rimp must be able to evaluate an abstract syntax tree, providing information about the value of variables until the reversal point. \\
+    \textit{The abstract machine of \rimp provides fine-grained execution control and probing to the developer, allowing them to view all internal state of the abstract machine between any rule applications of the program.}
+    \item \rimp must be able to be run through an abstract machine. \\
+    \textit{The \rimp abstract machine is capable of running a program. However, the abstract machine can currently only be run when you have access to the \rimplang source code, and has no binary form, additionally, there is currently not debug information associating each command in the abstract machine with source code, potentially complicating debugging.}
+    \item The \rimp abstract machine must allow to step forwards and backwards \\
+    \textit{\rimp's abstract machine completely implements the rules allowing for forward stepping and backward stepping.}
+    \item \rimp must be able to compile to the JVM providing information about the value of variables until the reversal point. \\
+    \textit{\rimp is able to produce binaries targetting the JVM, allowing for the compilation, and distribution of \rimp programs for later execution. The issue of Java's verification system is present, however, forcing the users to not verify the class file produced.}
+    \item \rimp should be able to compile to an intermediate representation in SSA form. \\
+    \textit{\rimp currently does not support any intermediate representation, however, is designed to be modular as to allow for this to be added in future revisions.}
+    \item \rimp should be able to target a reversible backend. \\
+    \textit{\rimp provides a reversible abstract machine implementation, however, not yet a fully reversible ISA such as PISA\cite{pisa}.}
+    \item \rimp should be extended to allow for arrays. \\
+    \textit{\rimp currently does not support data types other than integers and floats, but provides the facilities to extend this in the future.}
+    \item \rimp should be extended to allow for user defined structures. \\
+    \textit{\rimp currently does not support data types other than integers and floats, but provides the facilities to extend this in the future.}
+    \item \rimp should be extended to allow for procedures. \\
+    \textit{\rimp currently does not provide procedures, in order to implement these, we will need to extend the definitions of \rimp to these, being careful to maintain reversibility, and balance the memory consumption, especially in cases where we have recursive functions.}
+    \item \rimp should be extended to allow for multi-threading. \\
+    \textit{\rimp provides no facilities for starting threads, or interacting with the underlying operating system.}
+\end{enumerate}
+
+\subsection{Non-Functional Requirements}
+
+\begin{enumerate}
+    \item \rimp must compile short programs within 10 seconds on a modern desktop computer. \\
+    \textit{On a system using an i7-1185G7 with 32 GB of RAM, \rimp's release build is able to compile all example programs within 0.3 seconds as measured using the time utility\cite{time}.}
+    \item \rimp must give some level of feedback when things go wrong to help guide the user to the issue. \\
+    \textit{\rimp provides feedback on errors in order to help a user resolve these. The effectiveness of these messages has not been evaluated yet outside the author.}
+    \item \rimp must be an extensible system which is able to evolve over time. \\
+    \textit{\rimp follows literate programming principles throughout, and so aims to be an approachable system to extend and develop, however, this has not been evaluated outside the author.}
+    \item \rimp should be easy to learn for a developer coming from conventional languages such as C or Python. \\
+    \textit{\rimp's syntax closely follows that of C's with some minor differences, as does its semantics, and as such is likely easy to learn, however, this has not been evaluated outside the author.}
+    \item \rimp should be a portable system, able to run on a range of system. \\
+    \textit{\rimp is written in Rust, and uses no platform specific code, as such, it can be compiled for any target Rust is available, and its compiled results can run on any system capable of running compatible Java versions.\footnote{\rimp has only been tested on Linux distributions with x86 processors.}}
+    \item \rimp should be easy to develop on and extend. \\
+    \textit{This requirement is not assessable due to the need of additional developers.}
+\end{enumerate}
+\newpage
 \section{Limitations}
-What are some issues with any of the requirements?
-Are there any requirements that were met, but jeopardised something else? 
-Or any requirements which were fundamentally bad?
+
+While \rimp provides a complete system for development, there are several areas in which it could be improved. 
+\rimp has a limiting and slightly odd structure around conditionals of branching and looping structures (see \ref{fig:grammar}), reducing the ease of use for developers. 
+\rimp also is only capable of targetting the JVM for compilation, further limited by the use of the Krakatau assembler, which has limitations on what it can target, and the verification abilities of it.
+Aside from this, the greater limitation on \rimp is the limited nature and feature set of the language, missing many core features modern developers would expect, such as functions, user defined data types, I/O operations\footnote{I/O operations are a particular issue among all existing reversible languages, as the issue of how to maintain reversibility at the I/O layer becomes more complex.}, and threading. While these features are not present, there are significant barriers to the complexity reasonably achievable by a \rimplang program. 
+\rimp also lacks sufficient supporting tooling such as a language server, or linter. While the infrastructure exists within the libraries provided by \rimp, no such tools have been developed yet. 

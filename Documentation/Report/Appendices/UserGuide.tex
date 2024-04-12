@@ -1,3 +1,125 @@
 \chapter{User Guide}
 % \section{Instructions}
 % You must provide an adequate user guide for your software. The guide should provide easily understood instructions on how to use your software. A particularly useful approach is to treat the user guide as a walk-through of a typical session, or set of sessions, which collectively display all of the features of your package. Technical details of how the package works are rarely required. Keep the guide concise and simple. The extensive use of diagrams, illustrating the package in action, can often be particularly helpful. The user guide is sometimes included as a chapter in the main body of the report, but is often better included in an appendix to the main report.
+
+\section{Installation}
+
+In order to install \rimp you must first obtain a copy of the source. This will include a git folder. The project relies on an external utility called Krakatau, this can be added using git:
+
+\begin{lstlisting}
+git submodule update --init --recursive
+\end{lstlisting}
+
+This will pull the project into your local files\footnote{You may need to set up git on your computer for this to work.}. In the event you forget this, you will receive an error indicating the build is failing in a future step.
+
+In order to build the project, you then need to install cargo from Rust. This can be found at \url{https://doc.rust-lang.org/cargo/getting-started/installation.html}, or, on Linux systems you can do the following:
+
+\begin{lstlisting}
+curl https://sh.rustup.rs -sSf | sh
+\end{lstlisting}
+
+If you have issues here, please refer to the Rust documentation for help. 
+
+You can now, from the root of the source project build \rimp using cargo:
+
+\begin{lstlisting}
+cargo build --release
+\end{lstlisting}
+
+This will create a release binary in \lstinline{./target/release/RIMPiler}, and also produce a binary for Krakatau in \lstinline{./target/release/krak2}. You can now move both of these files wherever you would like on your system, including adding them to your PATH to access them across your system. 
+If you add them to the PATH please ensure you add both files, \rimp has fail safes to try to recover from a missing Krakatau binary, however, this may not work in all cases, especially in locations such as \lstinline{/urs/bin}, and so the easiest way to ensure Krakatau is available to \rimp in this case is to add it to your PATH.
+
+\section{\rimplang Programs}
+
+\rimplang's syntax is provided, however, for ease, some explanations, and examples are provided here. 
+
+All statements in \rimp must be followed by a semicolon, this includes conditionals and loops:
+
+\begin{lstlisting}
+int n = 7;
+int m = 0;
+
+while n > 0 do {
+       n = n - 1;
+       m = m + n;
+};
+
+if m > 11 then {
+    m = m * 2;
+} else {
+    m = m - 1;
+};
+\end{lstlisting}
+
+If statements also require an else branch, if this is not needed you can simply put \lstinline{skip} here instead.
+
+\begin{lstlisting}
+if n == 1 then {
+    skip;
+} else {
+    skip;
+};
+\end{lstlisting}
+
+variable declarations can only occur once, and must be preceded by their type, either \lstinline{int} or \lstinline{float}:
+\newpage
+\begin{lstlisting}
+int x = 0;
+float y = 1.2;
+
+x = y * 4;
+y = 4.5;
+\end{lstlisting}
+
+It is also suggested to avoid doing any arithmetic in the conditions of loops and conditionals, this is due to the complicated nature of the grammar around this point, and can produce some errors which may be confusing to new users, for this reason, it is suggested to keep to just binary operations here.
+
+For more examples, check the \lstinline{./examples} folder of the project.
+
+\section{Running \rimp}
+
+To run \rimp you simply call the executable \lstinline{RIMPiler}. If you run this without any arguments, you will be greeted with some help information. 
+
+To pass an input file to \rimp you can use the \lstinline{-i <input>} flag. 
+In the event you are compiling, you will use the \lstinline{-c} flag to indicate this, you will also then need to provide an output folder, this can be done with \lstinline{-o <output>}.
+If you wish to use the interpreter, you can provide the \lstinline{-r} flag.
+To use the abstract machine, you use the \lstinline{-m} flag.
+
+\subsection{Using the Abstract Machine}
+
+If you are running the abstract machine, you have many commands available to you. If at any point you wish to remind yourself of them, while in the abstract machine you can type \lstinline{h} or \lstinline{help} to bring up a list of available commands.
+
+Some of the most useful commands are as follows:
+
+\begin{enumerate}
+    \item[-] \lstinline{r}: This will run the entire program through to completion in the same direction it is currently in.
+    \item[-] \lstinline{s}: This will perform a single step through the program.
+    \item[-] \lstinline{rv}: This will reverse the direction of the program.
+    \item[-] \lstinline{d}: This will display the current direction.
+    \item[-] \lstinline{pa}: This will print the contents of all stacks and the store.
+\end{enumerate}
+
+There are many more options provided for ease of use, please refer to the help menu for more details.
+
+\subsection{Running Compiled Programs}
+
+Once compiled, you should have a folder with the name you provided in the output option. Within there should be a \lstinline{Main.class}, this is the entry point.
+
+Due to limitations in the assembler, there are some considerations when running the compiled Java programs.
+
+Please ensure you use the following Java configuration if you have issues:
+
+\begin{lstlisting}
+java version "17.0.10" 2024-01-16 LTS
+Java(TM) SE Runtime Environment (build 17.0.10+11-LTS-240)
+Java HotSpot(TM) 64-Bit Server VM (build 17.0.10+11-LTS-240, mixed mode, sharing)
+\end{lstlisting}
+
+It is likely that many other versions before Java version 18 will work, however this has not been verified.
+
+To run your compiled program, you use:
+
+\begin{lstlisting}
+java -noverify -cp <output> Main   
+\end{lstlisting}
+
+The \lstinline{-noverify} flag is not always necessary, but programs are not guaranteed to run without it.
