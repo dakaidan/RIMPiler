@@ -216,7 +216,7 @@ In order to prove the correctness of our implementation of the abstract machine,
     \label{fig:expression_correspondence}
 \end{figure}
 
-From figure \ref{fig:expression_correspondence} using $const$ and $var$ as base cases, we can show all expressions correspond to big-step semantics of \rimplang. One thing missing here is an explicit proof of the reverse, however, this follows through the application of the as all inverse expressions are just wrapped versions of the original, we can achieve this through one of the unwrapping rules provided with the conditional and loop structures.
+From figure \ref{fig:expression_correspondence} using $const$ and $var$ as base cases, we can show all expressions correspond to big-step semantics of \rimplang. One thing missing here is an explicit proof of the reverse, however, this follows as all inverse expressions are just wrapped versions of the original, we can achieve this through one of the unwrapping rules provided with the conditional and loop structures.
 
 \begin{figure}[hbt!]
     \centering
@@ -366,7 +366,7 @@ Similar to before, we use $skip$, $:=$, and $=:$ as base cases, as well as all e
 
 With conditionals and loops, we treat all commands and expressions as the base cases.
 
-\textit{Note that the proofs given here are informal and do not provide an entirely complete proof, skipping some steps for simplicity. particularly in the case of the while, as the complete proof is very long and cumborsome.}
+\textit{Note that the proofs given here are informal and do not provide an entirely complete proof, skipping some steps for simplicity. Particularly in the case of the while, as the complete proof is very long and cumbersome.}
 
 % \begin{figure}[hbt!]
 %     \centering
